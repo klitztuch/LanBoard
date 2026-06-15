@@ -1,0 +1,23 @@
+@rendermode InteractiveServer
+@implements IDisposable
+@inject ILanBoardNotifier Notifier
+@inject AuthenticationStateProvider Auth
+
+@code {
+    private Guid? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        var claim = state.User.FindFirst("lanboard:userid");
+        if (claim is null || !Guid.TryParse(claim.Value, out var id)) return;
+        _userId = id;
+        Notifier.SetUserOnline(id);
+    }
+
+    public void Dispose()
+    {
+        if (_userId.HasValue)
+            Notifier.SetUserOffline(_userId.Value);
+    }
+}

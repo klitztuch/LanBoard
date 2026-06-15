@@ -1,0 +1,139 @@
+@rendermode InteractiveServer
+@implements IDisposable
+@inject ISeatService SeatService
+@inject ILanBoardNotifier Notifier
+@inject AuthenticationStateProvider Auth
+
+@if (_seats is null)
+{
+    <p class="text-gray-400 text-sm">Lade Sitzplätze...</p>
+}
+else if (_seats.Count == 0)
+{
+    <p class="text-gray-400 text-sm">Keine Sitzplätze angelegt.</p>
+}
+else
+{
+    <div class="grid grid-cols-4 gap-3">
+        @foreach (var seat in _seats)
+        {
+            <div class="@SeatClass(seat) rounded-xl p-3 flex flex-col gap-2 min-h-24">
+                <span class="text-xs font-mono text-gray-400">@seat.Label</span>
+
+                @if (seat.AssignedUser is not null)
+                {
+                    <div class="flex items-center gap-2 flex-1">
+                        <div class="relative shrink-0">
+                            @if (seat.AssignedUser.AvatarUrl is not null)
+                            {
+                                <img src="@seat.AssignedUser.AvatarUrl" alt="Avatar"
+                                     class="w-8 h-8 rounded-full"/>
+                            }
+                            else
+                            {
+                                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white">
+                                    @seat.AssignedUser.DisplayName[..1]
+                                </div>
+                            }
+                            @if (Notifier.OnlineUserIds.Contains(seat.AssignedUserId!.Value))
+                            {
+                                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></span>
+                            }
+                        </div>
+                        <span class="text-sm text-white truncate">@seat.AssignedUser.DisplayName</span>
+                    </div>
+
+                    @if (seat.AssignedUserId == _userId)
+                    {
+                        <button class="text-xs text-gray-400 hover:text-red-400 transition-colors text-left"
+                                @onclick="() => ReleaseSeat(seat.Id)">
+                            Freigeben
+                        </button>
+                    }
+                }
+                else
+                {
+                    <button class="flex-1 flex items-center justify-center text-sm text-gray-500 hover:text-white transition-colors"
+                            @onclick="() => ClaimSeat(seat.Id)"
+                            disabled="@(_userId is null)">
+                        Frei
+                    </button>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Guid PartyId { get; set; }
+
+    private List<Seat>? _seats;
+    private Guid? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        var claim = state.User.FindFirst("lanboard:userid");
+        if (claim is not null && Guid.TryParse(claim.Value, out var id))
+            _userId = id;
+
+        Notifier.OnChange += OnNotified;
+        await LoadSeatsAsync();
+    }
+
+    private async Task LoadSeatsAsync()
+    {
+        var result = await SeatService.GetSeatsByPartyAsync(PartyId);
+        _seats = result.ToList();
+    }
+
+    private bool _loading;
+
+    private void OnNotified()
+    {
+        if (_disposed || _loading) return;
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed || _loading) return;
+            _loading = true;
+            try
+            {
+                await LoadSeatsAsync();
+                StateHasChanged();
+            }
+            finally
+            {
+                _loading = false;
+            }
+        });
+    }
+
+    private async Task ClaimSeat(Guid seatId)
+    {
+        if (_userId is null) return;
+        await SeatService.ClaimSeatAsync(seatId, _userId.Value);
+    }
+
+    private async Task ReleaseSeat(Guid seatId)
+    {
+        if (_userId is null) return;
+        await SeatService.ReleaseSeatAsync(seatId, _userId.Value);
+    }
+
+    private string SeatClass(Seat seat)
+    {
+        if (seat.AssignedUserId == _userId)
+            return "bg-blue-900 border border-blue-600";
+        if (seat.AssignedUser is not null)
+            return "bg-gray-800 border border-gray-700";
+        return "bg-gray-900 border border-gray-700 hover:border-gray-500 cursor-pointer";
+    }
+
+    private volatile bool _disposed;
+
+    public void Dispose()
+    {
+        _disposed = true;
+        Notifier.OnChange -= OnNotified;
+    }
+}
