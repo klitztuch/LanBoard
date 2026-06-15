@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+.blazor-error-boundary {
+    @apply bg-red-700 text-white p-4 rounded;
+}
+
+.blazor-error-boundary::after {
+    content: "An unhandled error has occurred.";
+}
