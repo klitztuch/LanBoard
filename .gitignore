@@ -1,0 +1,42 @@
+# .NET / MSBuild
+bin/
+obj/
+/packages/
+*.user
+*.suo
+.vs/
+*.nupkg
+*.snupkg
+project.lock.json
+TestResults/
+*.trx
+*.log
+
+# Rider / JetBrains
+riderModule.iml
+/_ReSharper.Caches/
+.idea/
+
+# Aspire
+.dcproj.user
+
+# Docker Compose Overrides
+docker-compose.override.yml
+
+# Secrets & Umgebungsvariablen
+appsettings.local.json
+appsettings.*.local.json
+secrets.json
+*.pfx
+*.cer
+*.key
+.env
+.env.*
+
+# Node / Frontend
+node_modules/
+LanBoard.Web/wwwroot/app.css
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
