@@ -1,3 +1,4 @@
+using LanBoard.Application.Admin;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Seats;
 using LanBoard.Application.Users;
@@ -24,6 +25,7 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<ISeatRepository, SeatRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<ISeatService, SeatService>();
+        builder.Services.AddScoped<IAdminService, AdminService>();
 
         builder.Services.AddOptions<SteamConfiguration>()
             .BindConfiguration("Steam")

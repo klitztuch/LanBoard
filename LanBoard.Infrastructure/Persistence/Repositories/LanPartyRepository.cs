@@ -9,6 +9,12 @@ public class LanPartyRepository(AppDbContext db) : ILanPartyRepository
     public async Task<LanParty?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await db.LanParties.FindAsync([id], ct);
 
+    public async Task<IReadOnlyList<LanParty>> GetAllAsync(CancellationToken ct = default)
+        => await db.LanParties
+            .Include(p => p.Seats)
+            .OrderByDescending(p => p.Date)
+            .ToListAsync(ct);
+
     public async Task<LanParty?> GetActiveAsync(CancellationToken ct = default)
         => await db.LanParties.OrderByDescending(p => p.Date).FirstOrDefaultAsync(ct);
 
