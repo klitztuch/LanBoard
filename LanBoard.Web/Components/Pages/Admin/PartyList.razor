@@ -1,0 +1,97 @@
+@page "/admin/party"
+@attribute [Authorize(Policy = "Admin")]
+@rendermode InteractiveServer
+@inject IAdminService AdminService
+@inject NavigationManager Nav
+
+<PageTitle>Parties – Admin</PageTitle>
+
+<div class="p-8">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-white">LAN-Parties</h1>
+        <a href="/admin/party/new"
+           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+            Neue Party
+        </a>
+    </div>
+
+    @if (_parties is null)
+    {
+        <p class="text-gray-400">Laden...</p>
+    }
+    else if (_parties.Count == 0)
+    {
+        <p class="text-gray-400">Noch keine Parties angelegt.</p>
+    }
+    else
+    {
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-400 uppercase border-b border-gray-800">
+                    <tr>
+                        <th class="py-3 pr-6">Name</th>
+                        <th class="py-3 pr-6">Datum</th>
+                        <th class="py-3 pr-6">Ort</th>
+                        <th class="py-3 pr-6">InviteCode</th>
+                        <th class="py-3 pr-6">Seats</th>
+                        <th class="py-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var party in _parties)
+                    {
+                        <tr class="border-b border-gray-800 text-gray-300">
+                            <td class="py-3 pr-6 text-white font-medium">@party.Name</td>
+                            <td class="py-3 pr-6">@party.Date.ToString("dd.MM.yyyy")</td>
+                            <td class="py-3 pr-6">@party.Location</td>
+                            <td class="py-3 pr-6 font-mono text-xs">@party.InviteCode</td>
+                            <td class="py-3 pr-6">@party.Seats.Count</td>
+                            <td class="py-3 flex items-center gap-3">
+                                <a href="/admin/party/@party.Id"
+                                   class="text-blue-400 hover:text-blue-300 transition-colors">
+                                    Bearbeiten
+                                </a>
+                                @if (_confirmDeleteId == party.Id)
+                                {
+                                    <button class="text-red-400 hover:text-red-300 transition-colors"
+                                            @onclick="() => DeleteParty(party.Id)">
+                                        Bestätigen
+                                    </button>
+                                    <button class="text-gray-400 hover:text-gray-300 transition-colors"
+                                            @onclick="() => _confirmDeleteId = null">
+                                        Abbrechen
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="text-gray-500 hover:text-red-400 transition-colors"
+                                            @onclick="() => _confirmDeleteId = party.Id">
+                                        Löschen
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<LanParty>? _parties;
+    private Guid? _confirmDeleteId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await AdminService.GetAllPartiesAsync();
+        _parties = result.ToList();
+    }
+
+    private async Task DeleteParty(Guid id)
+    {
+        await AdminService.DeletePartyAsync(id);
+        _parties?.RemoveAll(p => p.Id == id);
+        _confirmDeleteId = null;
+    }
+}
