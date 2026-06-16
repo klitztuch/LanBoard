@@ -10,6 +10,8 @@ public class SeatConfiguration : IEntityTypeConfiguration<Seat>
     {
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Label).HasMaxLength(100).IsRequired();
+        builder.Property(s => s.X).IsRequired().HasDefaultValue(0);
+        builder.Property(s => s.Y).IsRequired().HasDefaultValue(0);
 
         builder.HasOne(s => s.Party)
             .WithMany(p => p.Seats)

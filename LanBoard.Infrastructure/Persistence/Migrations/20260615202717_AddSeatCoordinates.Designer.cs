@@ -3,6 +3,7 @@ using System;
 using LanBoard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LanBoard.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615202717_AddSeatCoordinates")]
+    partial class AddSeatCoordinates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,7 +58,7 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.HasIndex("InviteCode")
                         .IsUnique();
 
-                    b.ToTable("LanParties", (string)null);
+                    b.ToTable("LanParties");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>
@@ -91,7 +94,7 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PartyId");
 
-                    b.ToTable("Seats", (string)null);
+                    b.ToTable("Seats");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Session", b =>
@@ -126,7 +129,7 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Sessions", (string)null);
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.User", b =>
@@ -152,7 +155,7 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.UserIdentity", b =>
@@ -184,7 +187,7 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.HasIndex("Provider", "ProviderUserId")
                         .IsUnique();
 
-                    b.ToTable("UserIdentities", (string)null);
+                    b.ToTable("UserIdentities");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.LanParty", b =>
