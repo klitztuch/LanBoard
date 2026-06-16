@@ -30,17 +30,21 @@ public static class AuthExtensions
                     if (steamId is null) return;
 
                     var steamApiClient = ctx.HttpContext.RequestServices
-                        .GetRequiredService<SteamApiClient>();
+                        .GetRequiredService<ISteamApiClient>();
                     var avatarUrl = await steamApiClient.GetAvatarUrlAsync(steamId);
 
                     var userService = ctx.HttpContext.RequestServices.GetRequiredService<IUserService>();
                     var user = await userService.GetOrCreateAndSyncSteamProfileAsync(steamId, displayName, avatarUrl);
 
-                    (ctx.Principal?.Identity as ClaimsIdentity)?.AddClaim(new Claim("lanboard:userid", user.Id.ToString()));
+                    var identity = ctx.Principal?.Identity as ClaimsIdentity;
+                    identity?.AddClaim(new Claim("lanboard:userid", user.Id.ToString()));
+                    if (user.IsAdmin)
+                        identity?.AddClaim(new Claim("lanboard:isadmin", "true"));
                 };
             });
 
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options =>
+            options.AddPolicy("Admin", p => p.RequireClaim("lanboard:isadmin", "true")));
         builder.Services.AddCascadingAuthenticationState();
 
         return builder;
