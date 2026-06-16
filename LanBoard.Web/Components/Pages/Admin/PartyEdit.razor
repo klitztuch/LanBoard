@@ -52,25 +52,16 @@
         <h2 class="text-lg font-semibold text-white mb-4">Sitzplätze</h2>
         <p class="text-xs text-gray-500 mb-4">Klick auf eine leere Zelle = Seat hinzufügen · Klick auf einen Seat = Seat entfernen</p>
 
-        <div style="display:grid; grid-template-columns: repeat(@_gridW, 2.5rem); grid-template-rows: repeat(@_gridH, 2.5rem); gap: 4px;">
-            @for (var y = 1; y <= _gridH; y++)
-            {
-                @for (var x = 1; x <= _gridW; x++)
-                {
-                    var cx = x;
-                    var cy = y;
-                    var seat = _seatMap.GetValueOrDefault((cx, cy));
-                    <div style="grid-column-start: @cx; grid-row-start: @cy;"
-                         class="@CellClass(seat)"
-                         @onclick="() => ToggleSeat(cx, cy, seat)">
-                        @if (seat is not null)
-                        {
-                            <span class="text-xs font-mono leading-none">@seat.Label</span>
-                        }
-                    </div>
-                }
-            }
-        </div>
+        <SeatGridLayout Seats="_displaySeats" ShowExpandBorder="true" CellSize="2.5rem" GapSize="4px">
+            <CellTemplate Context="cell">
+                <div class="@CellClass(cell.Seat) h-full w-full" @onclick="() => ToggleSeat(cell.X, cell.Y, cell.Seat)">
+                    @if (cell.Seat is not null)
+                    {
+                        <span class="text-xs font-mono leading-none">@cell.Seat.Label</span>
+                    }
+                </div>
+            </CellTemplate>
+        </SeatGridLayout>
     </div>
 }
 
@@ -78,9 +69,7 @@
     [Parameter] public Guid? Id { get; set; }
 
     private LanParty? _party;
-    private Dictionary<(int x, int y), Seat> _seatMap = [];
-    private int _gridW;
-    private int _gridH;
+    private List<Seat> _displaySeats = [];
 
     private readonly PartyForm _form = new();
 
@@ -94,19 +83,9 @@
                 _form.Name = _party.Name;
                 _form.Date = _party.Date;
                 _form.Location = _party.Location;
-                RebuildGrid();
+                _displaySeats = [.. _party.Seats];
             }
         }
-    }
-
-    private void RebuildGrid()
-    {
-        _seatMap = [];
-        foreach (var seat in _party!.Seats)
-            _seatMap.TryAdd((seat.X, seat.Y), seat);
-        var positioned = _seatMap.Keys.Where(k => k.x >= 1 && k.y >= 1).ToList();
-        _gridW = positioned.Count > 0 ? positioned.Max(k => k.x) + 1 : 3;
-        _gridH = positioned.Count > 0 ? positioned.Max(k => k.y) + 1 : 3;
     }
 
     private async Task SaveAsync()
@@ -124,7 +103,7 @@
         {
             await AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, _form.Location);
             _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
-            RebuildGrid();
+            _displaySeats = [.. _party?.Seats ?? []];
         }
     }
 
@@ -134,14 +113,12 @@
         {
             if (seat.AssignedUserId is not null) return;
             await AdminService.RemoveSeatAsync(seat.Id);
-            _seatMap.Remove((x, y));
+            _displaySeats.RemoveAll(s => s.X == x && s.Y == y);
         }
         else
         {
             var newSeat = await AdminService.AddSeatAsync(_party!.Id, x, y);
-            _seatMap[(x, y)] = newSeat;
-            _gridW = Math.Max(_gridW, x + 1);
-            _gridH = Math.Max(_gridH, y + 1);
+            _displaySeats.Add(newSeat);
         }
     }
 
