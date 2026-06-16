@@ -1,0 +1,48 @@
+@using LanBoard.Core.Entities
+
+@if (_gridW > 0 && _gridH > 0)
+{
+    <div style="display:grid; grid-template-columns: repeat(@_gridW, @CellSize); grid-template-rows: repeat(@_gridH, @CellSize); gap: @GapSize;">
+        @for (var y = 1; y <= _gridH; y++)
+        {
+            @for (var x = 1; x <= _gridW; x++)
+            {
+                var cx = x;
+                var cy = y;
+                <div style="grid-column-start: @cx; grid-row-start: @cy;" class="h-full">
+                    @CellTemplate(new SeatCellContext(cx, cy, _seatMap.GetValueOrDefault((cx, cy))))
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<Seat> Seats { get; set; } = [];
+    [Parameter, EditorRequired] public RenderFragment<SeatCellContext> CellTemplate { get; set; } = null!;
+    [Parameter] public bool ShowExpandBorder { get; set; } = false;
+    [Parameter] public string CellSize { get; set; } = "2.5rem";
+    [Parameter] public string GapSize { get; set; } = "4px";
+
+    private Dictionary<(int x, int y), Seat> _seatMap = [];
+    private int _gridW;
+    private int _gridH;
+
+    protected override void OnParametersSet()
+    {
+        RebuildGrid();
+    }
+
+    private void RebuildGrid()
+    {
+        _seatMap = [];
+        foreach (var seat in Seats)
+            _seatMap.TryAdd((seat.X, seat.Y), seat);
+        var positioned = _seatMap.Keys.Where(k => k.x >= 1 && k.y >= 1).ToList();
+        var fallback = ShowExpandBorder ? 2 : 0;
+        var maxX = positioned.Count > 0 ? positioned.Max(k => k.x) : fallback;
+        var maxY = positioned.Count > 0 ? positioned.Max(k => k.y) : fallback;
+        _gridW = maxX + (ShowExpandBorder ? 1 : 0);
+        _gridH = maxY + (ShowExpandBorder ? 1 : 0);
+    }
+}
