@@ -15,6 +15,12 @@ public class UserRepository(AppDbContext db) : IUserRepository
             .Select(i => i.User)
             .FirstOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<User>> GetAllWithIdentitiesAsync(CancellationToken ct = default)
+        => await db.Users
+            .Include(u => u.Identities)
+            .OrderBy(u => u.DisplayName)
+            .ToListAsync(ct);
+
     public async Task AddAsync(User entity, CancellationToken ct = default)
         => await db.Users.AddAsync(entity, ct);
 
