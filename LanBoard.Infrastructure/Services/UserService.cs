@@ -6,6 +6,9 @@ namespace LanBoard.Infrastructure.Services;
 
 public class UserService(IUserRepository users) : IUserService
 {
+    public Task<IReadOnlyList<User>> GetAllWithIdentitiesAsync(CancellationToken ct = default)
+        => users.GetAllWithIdentitiesAsync(ct);
+
     public async Task<User> GetOrCreateAndSyncSteamProfileAsync(string steamId, string displayName, string? avatarUrl, CancellationToken ct = default)
     {
         var user = await users.FindByProviderAsync("Steam", steamId, ct);
