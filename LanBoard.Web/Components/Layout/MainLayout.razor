@@ -1,10 +1,8 @@
 @inherits LayoutComponentBase
 
 <OnlinePresence/>
-<div class="flex h-screen bg-gray-950 text-gray-100 overflow-hidden">
-    <aside class="w-64 flex-shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col">
-        <NavMenu/>
-    </aside>
+<div class="min-h-screen bg-gray-950 text-gray-100 flex flex-col">
+    <NavMenu/>
     <main class="flex-1 overflow-auto">
         @Body
     </main>

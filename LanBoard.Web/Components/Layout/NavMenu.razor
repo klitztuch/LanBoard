@@ -1,52 +1,70 @@
-<div class="flex flex-col h-full">
-    <div class="px-4 py-5 border-b border-gray-800">
+<nav class="bg-gray-900 border-b border-gray-800">
+    <div class="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-4 py-3">
+
         <a href="/" class="text-xl font-bold text-white tracking-tight">LanBoard</a>
-    </div>
 
-    <nav class="flex-1 px-2 py-4">
-        <NavLink href="/"
-                 Match="NavLinkMatch.All"
-                 class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                 ActiveClass="bg-gray-800 text-white">
-            Home
-        </NavLink>
-        <AuthorizeView>
-            <Authorized Context="ctx">
-                <NavLink href="/attendees"
-                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                         ActiveClass="bg-gray-800 text-white">
-                    Teilnehmer
-                </NavLink>
-                @if (ctx.User.HasClaim("lanboard:isadmin", "true"))
-                {
-                    <NavLink href="/admin/party"
-                             class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+        <div class="flex items-center gap-3 md:order-2">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="flex items-center gap-2">
+                        @if (context.User.FindFirst("lanboard:avatarurl")?.Value is { } avatarUrl)
+                        {
+                            <img src="@avatarUrl" alt="Avatar" class="w-8 h-8 rounded-full shrink-0"/>
+                        }
+                        <span class="hidden sm:block text-sm text-white truncate max-w-32">@context.User.Identity?.Name</span>
+                        <a href="/auth/logout" class="text-xs text-gray-400 hover:text-white transition-colors shrink-0">Logout</a>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/auth/login"
+                       class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        Login with Steam
+                    </a>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <button data-collapse-toggle="navbar-menu" type="button"
+                    class="inline-flex items-center justify-center w-10 h-10 text-gray-400 rounded-lg md:hidden hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                    aria-controls="navbar-menu" aria-expanded="false">
+                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="hidden w-full md:flex md:w-auto md:order-1" id="navbar-menu">
+            <ul class="flex flex-col w-full mt-3 md:flex-row md:mt-0 md:space-x-1 border border-gray-700 rounded-lg md:border-0 bg-gray-800 md:bg-transparent p-2 md:p-0">
+                <li>
+                    <NavLink href="/"
+                             Match="NavLinkMatch.All"
+                             class="flex px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
                              ActiveClass="bg-gray-800 text-white">
-                        Admin
+                        Home
                     </NavLink>
-                }
-            </Authorized>
-        </AuthorizeView>
-    </nav>
+                </li>
+                <AuthorizeView>
+                    <Authorized Context="ctx">
+                        <li>
+                            <NavLink href="/attendees"
+                                     class="flex px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                                     ActiveClass="bg-gray-800 text-white">
+                                Teilnehmer
+                            </NavLink>
+                        </li>
+                        @if (ctx.User.HasClaim("lanboard:isadmin", "true"))
+                        {
+                            <li>
+                                <NavLink href="/admin/party"
+                                         class="flex px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                                         ActiveClass="bg-gray-800 text-white">
+                                    Admin
+                                </NavLink>
+                            </li>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+            </ul>
+        </div>
 
-    <div class="border-t border-gray-800 p-4">
-        <AuthorizeView>
-            <Authorized>
-                <div class="flex items-center gap-3">
-                    @if (context.User.FindFirst("urn:steam:avatar:full")?.Value is { } avatarUrl)
-                    {
-                        <img src="@avatarUrl" alt="Avatar" class="w-8 h-8 rounded-full flex-shrink-0"/>
-                    }
-                    <p class="flex-1 text-sm font-medium text-white truncate min-w-0">@context.User.Identity?.Name</p>
-                    <a href="/auth/logout" class="text-xs text-gray-400 hover:text-white flex-shrink-0 transition-colors">Logout</a>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <a href="/auth/login"
-                   class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
-                    Login with Steam
-                </a>
-            </NotAuthorized>
-        </AuthorizeView>
     </div>
-</div>
+</nav>

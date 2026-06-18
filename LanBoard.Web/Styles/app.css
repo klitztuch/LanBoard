@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "flowbite/plugin";
 
 .blazor-error-boundary {
     @apply bg-red-700 text-white p-4 rounded;

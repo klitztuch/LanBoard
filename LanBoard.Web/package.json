@@ -2,11 +2,15 @@
   "name": "lanboard-web",
   "private": true,
   "scripts": {
-    "css:build": "tailwindcss -i ./Styles/app.css -o ./wwwroot/app.css --minify",
-    "css:watch": "tailwindcss -i ./Styles/app.css -o ./wwwroot/app.css --watch"
+    "css:build": "tailwindcss -i ./Styles/app.css -o ./wwwroot/app.css --minify && cp node_modules/flowbite/dist/flowbite.min.js wwwroot/js/flowbite.min.js",
+    "css:watch": "tailwindcss -i ./Styles/app.css -o ./wwwroot/app.css --watch",
+    "copy:flowbite": "cp node_modules/flowbite/dist/flowbite.min.js wwwroot/js/flowbite.min.js"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.0",
     "tailwindcss": "^4.3.0"
+  },
+  "dependencies": {
+    "flowbite": "^4.0.2"
   }
 }

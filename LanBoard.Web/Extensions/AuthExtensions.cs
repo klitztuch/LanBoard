@@ -40,6 +40,8 @@ public static class AuthExtensions
                     identity?.AddClaim(new Claim("lanboard:userid", user.Id.ToString()));
                     if (user.IsAdmin)
                         identity?.AddClaim(new Claim("lanboard:isadmin", "true"));
+                    if (user.AvatarUrl is not null)
+                        identity?.AddClaim(new Claim("lanboard:avatarurl", user.AvatarUrl));
                 };
             });
 
