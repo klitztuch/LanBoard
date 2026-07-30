@@ -1,5 +1,6 @@
 using LanBoard.Application.Notifications;
 using LanBoard.Infrastructure;
+using LanBoard.ServiceDefaults;
 using LanBoard.Web.Components;
 using LanBoard.Web.Extensions;
 using LanBoard.Web.Services;
