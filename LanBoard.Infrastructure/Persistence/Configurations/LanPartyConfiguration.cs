@@ -15,6 +15,7 @@ public class LanPartyConfiguration : IEntityTypeConfiguration<LanParty>
         builder.Property(p => p.Date).IsRequired();
 
         builder.HasIndex(p => p.InviteCode).IsUnique();
+        builder.HasIndex(p => p.IsActive).IsUnique().HasFilter("\"IsActive\" = true");
 
         builder.HasOne(p => p.CreatedByUser)
             .WithMany(u => u.CreatedParties)

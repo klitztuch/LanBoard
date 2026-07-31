@@ -15,7 +15,7 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats) : 
         {
             Id = Guid.NewGuid(),
             Name = name,
-            Date = date,
+            Date = AsUtc(date),
             Location = location,
             InviteCode = GenerateInviteCode(),
             CreatedByUserId = createdByUserId
@@ -30,7 +30,7 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats) : 
         var party = await parties.GetByIdAsync(id, ct)
             ?? throw new InvalidOperationException("Party not found.");
         party.Name = name;
-        party.Date = date;
+        party.Date = AsUtc(date);
         party.Location = location;
         await parties.SaveChangesAsync(ct);
     }
@@ -45,6 +45,27 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats) : 
 
     public Task<LanParty?> GetPartyWithSeatsAsync(Guid id, CancellationToken ct = default)
         => parties.GetWithSeatsAndSessionsAsync(id, ct);
+
+    public async Task SetActivePartyAsync(Guid partyId, CancellationToken ct = default)
+    {
+        // Deactivate and activate in separate SaveChanges calls: the partial unique
+        // index on IsActive can't be deferred (Postgres doesn't support deferrable
+        // constraints with a WHERE clause), and EF doesn't guarantee statement order
+        // between two Modified entities in one SaveChanges batch — writing both
+        // changes in one transaction risks two rows being IsActive=true at once,
+        // even briefly, and violating the index.
+        var currentlyActive = await parties.GetActiveAsync(ct);
+        if (currentlyActive is not null && currentlyActive.Id != partyId)
+        {
+            currentlyActive.IsActive = false;
+            await parties.SaveChangesAsync(ct);
+        }
+
+        var target = await parties.GetByIdAsync(partyId, ct)
+            ?? throw new InvalidOperationException("Party not found.");
+        target.IsActive = true;
+        await parties.SaveChangesAsync(ct);
+    }
 
     public async Task<Seat> AddSeatAsync(Guid partyId, int x, int y, CancellationToken ct = default)
     {
@@ -73,4 +94,7 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats) : 
 
     private static string GenerateInviteCode()
         => Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+
+    private static DateTime AsUtc(DateTime date)
+        => DateTime.SpecifyKind(date, DateTimeKind.Utc);
 }
