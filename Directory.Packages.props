@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup Label="Auth">
     <PackageVersion Include="AspNet.Security.OpenId.Steam" Version="10.0.0" />
+    <PackageVersion Include="AngleSharp" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
