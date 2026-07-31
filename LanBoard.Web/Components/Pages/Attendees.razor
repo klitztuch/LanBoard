@@ -111,9 +111,12 @@
     {
         _users = await UserService.GetAllWithIdentitiesAsync();
         var party = await SeatService.GetActivePartyWithSeatsAsync();
-        _seatByUser = party?.Seats
-            .Where(s => s.AssignedUserId is not null)
-            .ToDictionary(s => s.AssignedUserId!.Value) ?? [];
+        _seatByUser = [];
+        foreach (var seat in party?.Seats ?? [])
+        {
+            if (seat.AssignedUserId is { } userId)
+                _seatByUser[userId] = seat;
+        }
         _sessionsByUser = party is not null
             ? await SessionService.GetActiveSessionsByPartyAsync(party.Id)
             : new Dictionary<Guid, Session>();
