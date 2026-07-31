@@ -109,6 +109,8 @@
 
     private async Task ToggleSeat(int x, int y, Seat? seat)
     {
+        if (_party is null) return;
+
         if (seat is not null)
         {
             if (seat.AssignedUserId is not null) return;
@@ -117,7 +119,7 @@
         }
         else
         {
-            var newSeat = await AdminService.AddSeatAsync(_party!.Id, x, y);
+            var newSeat = await AdminService.AddSeatAsync(_party.Id, x, y);
             _displaySeats.Add(newSeat);
         }
     }

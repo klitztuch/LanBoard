@@ -28,26 +28,26 @@ else
                 <div class="@SeatClass(seat) rounded-xl p-3 flex flex-col gap-2 h-full">
                     <span class="text-xs font-mono text-gray-400">@seat.Label</span>
 
-                    @if (seat.AssignedUser is not null)
+                    @if (seat.AssignedUser is { } assignedUser && seat.AssignedUserId is { } assignedUserId)
                     {
                         <div class="flex items-center gap-2 flex-1">
                             <div class="relative shrink-0">
-                                @if (seat.AssignedUser.AvatarUrl is not null)
+                                @if (assignedUser.AvatarUrl is not null)
                                 {
-                                    <img src="@seat.AssignedUser.AvatarUrl" alt="Avatar"
+                                    <img src="@assignedUser.AvatarUrl" alt="Avatar"
                                          class="w-8 h-8 rounded-full"/>
                                 }
                                 else
                                 {
                                     <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white">
-                                        @seat.AssignedUser.DisplayName[..1]
+                                        @assignedUser.DisplayName[..1]
                                     </div>
                                 }
-                                @if (Notifier.OnlineUserIds.Contains(seat.AssignedUserId!.Value))
+                                @if (Notifier.OnlineUserIds.Contains(assignedUserId))
                                 {
                                     <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></span>
                                 }
-                                @if (_sessionsByUser.TryGetValue(seat.AssignedUserId!.Value, out var session))
+                                @if (_sessionsByUser.TryGetValue(assignedUserId, out var session))
                                 {
                                     <span class="absolute -top-1 -right-1 text-[10px] leading-none bg-violet-600 rounded-full w-4 h-4 flex items-center justify-center border-2 border-gray-800"
                                           title="@(session.GameName ?? session.GameAppId)">
@@ -55,10 +55,10 @@ else
                                     </span>
                                 }
                             </div>
-                            <span class="text-sm text-white truncate">@seat.AssignedUser.DisplayName</span>
+                            <span class="text-sm text-white truncate">@assignedUser.DisplayName</span>
                         </div>
 
-                        @if (seat.AssignedUserId == _userId)
+                        @if (assignedUserId == _userId)
                         {
                             <button class="text-xs text-gray-400 hover:text-red-400 transition-colors text-left"
                                     @onclick="() => ReleaseSeat(seat.Id)">
