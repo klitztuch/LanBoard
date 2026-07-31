@@ -41,7 +41,8 @@ public class SessionService(
             .ToDictionary(g => g.Key, g => g.First());
 
         var now = DateTime.UtcNow;
-        var changed = false;
+        var dataChanged = false;
+        var visibleChanged = false;
 
         foreach (var summary in summaries)
         {
@@ -54,9 +55,12 @@ public class SessionService(
             if (activeByUser.TryGetValue(userId, out var active) && active.GameAppId == summary.GameId)
             {
                 active.LastSeen = now;
+                dataChanged = true;
             }
             else
             {
+                // Intentionally adds a new row instead of updating the previous one when the
+                // game changes, so past sessions remain in the table as a history log.
                 await sessions.AddAsync(new Session
                 {
                     Id = Guid.NewGuid(),
@@ -67,16 +71,17 @@ public class SessionService(
                     JoinedAt = now,
                     LastSeen = now
                 }, ct);
+
+                dataChanged = true;
+                visibleChanged = true;
             }
-
-            changed = true;
         }
 
-        if (changed)
-        {
+        if (dataChanged)
             await sessions.SaveChangesAsync(ct);
+
+        if (visibleChanged)
             notifier.NotifyChanged();
-        }
     }
 
     public async Task<IReadOnlyDictionary<Guid, Session>> GetActiveSessionsByPartyAsync(Guid partyId, CancellationToken ct = default)

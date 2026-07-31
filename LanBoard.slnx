@@ -3,6 +3,7 @@
   <Project Path="LanBoard.Application/LanBoard.Application.csproj" />
   <Project Path="LanBoard.Core/LanBoard.Core.csproj" />
   <Project Path="LanBoard.Infrastructure\LanBoard.Infrastructure.csproj" />
+  <Project Path="LanBoard.Infrastructure.Tests/LanBoard.Infrastructure.Tests.csproj" />
   <Project Path="LanBoard.ServiceDefaults/LanBoard.ServiceDefaults.csproj" />
   <Project Path="LanBoard.Web/LanBoard.Web.csproj" />
 </Solution>
