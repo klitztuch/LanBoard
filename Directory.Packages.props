@@ -12,6 +12,7 @@
   <ItemGroup Label="EntityFramework">
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
   <ItemGroup Label="OpenTelemetry">
@@ -29,6 +30,7 @@
   </ItemGroup>
   <ItemGroup Label="Auth">
     <PackageVersion Include="AspNet.Security.OpenId.Steam" Version="10.0.0" />
+    <PackageVersion Include="AngleSharp" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
