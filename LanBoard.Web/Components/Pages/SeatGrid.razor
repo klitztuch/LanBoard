@@ -1,6 +1,7 @@
 @rendermode InteractiveServer
 @implements IDisposable
 @inject ISeatService SeatService
+@inject ISessionService SessionService
 @inject ILanBoardNotifier Notifier
 @inject AuthenticationStateProvider Auth
 
@@ -46,6 +47,13 @@ else
                                 {
                                     <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></span>
                                 }
+                                @if (_sessionsByUser.TryGetValue(seat.AssignedUserId!.Value, out var session))
+                                {
+                                    <span class="absolute -top-1 -right-1 text-[10px] leading-none bg-violet-600 rounded-full w-4 h-4 flex items-center justify-center border-2 border-gray-800"
+                                          title="@(session.GameName ?? session.GameAppId)">
+                                        🎮
+                                    </span>
+                                }
                             </div>
                             <span class="text-sm text-white truncate">@seat.AssignedUser.DisplayName</span>
                         </div>
@@ -78,6 +86,7 @@ else
 
     private List<Seat>? _seats;
     private Guid? _userId;
+    private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,13 +96,22 @@ else
             _userId = id;
 
         Notifier.OnChange += OnNotified;
-        await LoadSeatsAsync();
+        _loading = true;
+        try
+        {
+            await LoadSeatsAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     private async Task LoadSeatsAsync()
     {
         var result = await SeatService.GetSeatsByPartyAsync(PartyId);
         _seats = result.ToList();
+        _sessionsByUser = await SessionService.GetActiveSessionsByPartyAsync(PartyId);
     }
 
     private bool _loading;

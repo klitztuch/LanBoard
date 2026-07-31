@@ -14,6 +14,7 @@ builder.AddInfrastructure();
 builder.AddAuth();
 
 builder.Services.AddSingleton<ILanBoardNotifier, LanBoardNotifier>();
+builder.Services.AddHostedService<SessionPollingService>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(options =>

@@ -1,9 +1,11 @@
 using LanBoard.Application.Admin;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Seats;
+using LanBoard.Application.Sessions;
 using LanBoard.Application.Users;
 using LanBoard.Infrastructure.ApiClients;
 using LanBoard.Infrastructure.ApiClients.Steam;
+using LanBoard.Infrastructure.Configuration;
 using LanBoard.Infrastructure.Persistence;
 using LanBoard.Infrastructure.Persistence.Repositories;
 using LanBoard.Infrastructure.Services;
@@ -23,12 +25,19 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ILanPartyRepository, LanPartyRepository>();
         builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+        builder.Services.AddScoped<ISessionRepository, SessionRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<ISeatService, SeatService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
+        builder.Services.AddScoped<ISessionService, SessionService>();
 
         builder.Services.AddOptions<SteamConfiguration>()
             .BindConfiguration("Steam")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.AddOptions<SessionTrackingConfiguration>()
+            .BindConfiguration("SessionTracking")
             .ValidateDataAnnotations()
             .ValidateOnStart();
 

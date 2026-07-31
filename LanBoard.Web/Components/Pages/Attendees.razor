@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject IUserService UserService
 @inject ISeatService SeatService
+@inject ISessionService SessionService
 @inject ILanBoardNotifier Notifier
 
 <PageTitle>Teilnehmer</PageTitle>
@@ -51,6 +52,28 @@
                         @(seat is not null ? seat.Label : "–")
                     </span>
 
+                    <span class="text-sm text-gray-400 shrink-0">
+                        @if (_sessionsByUser.TryGetValue(user.Id, out var session))
+                        {
+                            @if (session.GameAppId is not null)
+                            {
+                                <a href="https://store.steampowered.com/app/@session.GameAppId"
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="hover:text-white hover:underline transition-colors">
+                                    @(session.GameName ?? session.GameAppId)
+                                </a>
+                            }
+                            else
+                            {
+                                @(session.GameName ?? "–")
+                            }
+                        }
+                        else
+                        {
+                            @:–
+                        }
+                    </span>
+
                     @if (steamUrl is not null)
                     {
                         <a href="@steamUrl" target="_blank" rel="noopener noreferrer"
@@ -68,11 +91,20 @@
 @code {
     private IReadOnlyList<User>? _users;
     private Dictionary<Guid, Seat> _seatByUser = [];
+    private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
 
     protected override async Task OnInitializedAsync()
     {
         Notifier.OnChange += OnNotified;
-        await LoadAsync();
+        _loading = true;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     private async Task LoadAsync()
@@ -82,6 +114,9 @@
         _seatByUser = party?.Seats
             .Where(s => s.AssignedUserId is not null)
             .ToDictionary(s => s.AssignedUserId!.Value) ?? [];
+        _sessionsByUser = party is not null
+            ? await SessionService.GetActiveSessionsByPartyAsync(party.Id)
+            : new Dictionary<Guid, Session>();
     }
 
     private bool _loading;
