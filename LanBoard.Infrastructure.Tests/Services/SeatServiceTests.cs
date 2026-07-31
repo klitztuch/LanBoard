@@ -49,6 +49,19 @@ public class SeatServiceTests
     }
 
     [Fact]
+    public async Task GetActivePartyWithSeatsAsync_ExplicitPartyId_BypassesActivePartyLookup()
+    {
+        var explicitPartyId = Guid.NewGuid();
+        var withSeats = new LanParty { Id = explicitPartyId, Name = "Other Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        _parties.GetWithSeatsAndSessionsAsync(explicitPartyId, Arg.Any<CancellationToken>()).Returns(withSeats);
+
+        var result = await _sut.GetActivePartyWithSeatsAsync(explicitPartyId);
+
+        Assert.Same(withSeats, result);
+        await _parties.DidNotReceive().GetActiveAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ClaimSeatAsync_SeatNotFound_Throws()
     {
         _seats.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Seat?)null);

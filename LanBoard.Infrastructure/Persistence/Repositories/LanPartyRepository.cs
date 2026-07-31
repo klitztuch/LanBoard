@@ -16,7 +16,7 @@ public class LanPartyRepository(AppDbContext db) : ILanPartyRepository
             .ToListAsync(ct);
 
     public async Task<LanParty?> GetActiveAsync(CancellationToken ct = default)
-        => await db.LanParties.OrderByDescending(p => p.Date).FirstOrDefaultAsync(ct);
+        => await db.LanParties.FirstOrDefaultAsync(p => p.IsActive, ct);
 
     public async Task<LanParty?> FindByInviteCodeAsync(string inviteCode, CancellationToken ct = default)
         => await db.LanParties.FirstOrDefaultAsync(p => p.InviteCode == inviteCode, ct);

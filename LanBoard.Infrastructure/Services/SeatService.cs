@@ -7,8 +7,11 @@ namespace LanBoard.Infrastructure.Services;
 
 public class SeatService(ILanPartyRepository parties, ISeatRepository seats, ILanBoardNotifier notifier) : ISeatService
 {
-    public async Task<LanParty?> GetActivePartyWithSeatsAsync(CancellationToken ct = default)
+    public async Task<LanParty?> GetActivePartyWithSeatsAsync(Guid? partyId = null, CancellationToken ct = default)
     {
+        if (partyId is { } id)
+            return await parties.GetWithSeatsAndSessionsAsync(id, ct);
+
         var party = await parties.GetActiveAsync(ct);
         if (party is null) return null;
         return await parties.GetWithSeatsAndSessionsAsync(party.Id, ct);

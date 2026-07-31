@@ -119,4 +119,41 @@ public class AdminServiceTests
         _seats.Received(1).Remove(seat);
         await _seats.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task SetActivePartyAsync_PreviouslyActiveParty_DeactivatesItAndActivatesTarget()
+    {
+        var previouslyActive = new LanParty { Id = Guid.NewGuid(), Name = "Old", Location = "Loc", CreatedByUserId = Guid.NewGuid(), IsActive = true };
+        var target = new LanParty { Id = Guid.NewGuid(), Name = "New", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns(previouslyActive);
+        _parties.GetByIdAsync(target.Id, Arg.Any<CancellationToken>()).Returns(target);
+
+        await _sut.SetActivePartyAsync(target.Id);
+
+        Assert.False(previouslyActive.IsActive);
+        Assert.True(target.IsActive);
+        await _parties.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SetActivePartyAsync_NoPreviouslyActiveParty_ActivatesTarget()
+    {
+        var target = new LanParty { Id = Guid.NewGuid(), Name = "New", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns((LanParty?)null);
+        _parties.GetByIdAsync(target.Id, Arg.Any<CancellationToken>()).Returns(target);
+
+        await _sut.SetActivePartyAsync(target.Id);
+
+        Assert.True(target.IsActive);
+        await _parties.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SetActivePartyAsync_TargetNotFound_Throws()
+    {
+        _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns((LanParty?)null);
+        _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetActivePartyAsync(Guid.NewGuid()));
+    }
 }

@@ -89,6 +89,8 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery] public Guid? PartyId { get; set; }
+
     private IReadOnlyList<User>? _users;
     private Dictionary<Guid, Seat> _seatByUser = [];
     private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
@@ -110,7 +112,7 @@
     private async Task LoadAsync()
     {
         _users = await UserService.GetAllWithIdentitiesAsync();
-        var party = await SeatService.GetActivePartyWithSeatsAsync();
+        var party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
         _seatByUser = [];
         foreach (var seat in party?.Seats ?? [])
         {

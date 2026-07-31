@@ -37,7 +37,7 @@ public class SessionPollingService(
         var seatService = scope.ServiceProvider.GetRequiredService<ISeatService>();
         var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
 
-        var party = await seatService.GetActivePartyWithSeatsAsync(ct);
+        var party = await seatService.GetActivePartyWithSeatsAsync(ct: ct);
         if (party is null || party.Seats.All(s => s.AssignedUserId is null))
             return;
 

@@ -36,10 +36,12 @@
 </AuthorizeView>
 
 @code {
+    [SupplyParameterFromQuery] public Guid? PartyId { get; set; }
+
     private LanParty? _party;
 
     protected override async Task OnInitializedAsync()
     {
-        _party = await SeatService.GetActivePartyWithSeatsAsync();
+        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
     }
 }

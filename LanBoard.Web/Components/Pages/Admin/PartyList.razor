@@ -34,6 +34,7 @@
                         <th class="py-3 pr-6">Ort</th>
                         <th class="py-3 pr-6">InviteCode</th>
                         <th class="py-3 pr-6">Seats</th>
+                        <th class="py-3 pr-6">Aktiv</th>
                         <th class="py-3"></th>
                     </tr>
                 </thead>
@@ -46,6 +47,19 @@
                             <td class="py-3 pr-6">@party.Location</td>
                             <td class="py-3 pr-6 font-mono text-xs">@party.InviteCode</td>
                             <td class="py-3 pr-6">@party.Seats.Count</td>
+                            <td class="py-3 pr-6">
+                                @if (party.IsActive)
+                                {
+                                    <span class="px-2 py-0.5 bg-green-900 text-green-300 text-xs rounded-full border border-green-700">Aktiv</span>
+                                }
+                                else
+                                {
+                                    <button class="text-gray-500 hover:text-white transition-colors text-xs"
+                                            @onclick="() => SetActive(party.Id)">
+                                        Aktiv setzen
+                                    </button>
+                                }
+                            </td>
                             <td class="py-3 flex items-center gap-3">
                                 <a href="/admin/party/@party.Id"
                                    class="text-blue-400 hover:text-blue-300 transition-colors">
@@ -93,5 +107,12 @@
         await AdminService.DeletePartyAsync(id);
         _parties?.RemoveAll(p => p.Id == id);
         _confirmDeleteId = null;
+    }
+
+    private async Task SetActive(Guid id)
+    {
+        await AdminService.SetActivePartyAsync(id);
+        var result = await AdminService.GetAllPartiesAsync();
+        _parties = result.ToList();
     }
 }
