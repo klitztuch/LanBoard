@@ -6,8 +6,21 @@
 @inject ISeatService SeatService
 @inject ISessionService SessionService
 @inject ILanBoardNotifier Notifier
+@inject IJSRuntime JS
 
 <PageTitle>Teilnehmer</PageTitle>
+
+@if (_toasts.Count > 0)
+{
+    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-72">
+        @foreach (var toast in _toasts)
+        {
+            <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm text-white shadow-lg">
+                @toast.Message
+            </div>
+        }
+    </div>
+}
 
 <div class="p-8">
     <h1 class="text-2xl font-bold text-white mb-6">Teilnehmer</h1>
@@ -94,6 +107,7 @@
     private IReadOnlyList<User>? _users;
     private Dictionary<Guid, Seat> _seatByUser = [];
     private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
+    private readonly List<(Guid Id, string Message)> _toasts = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,13 +149,69 @@
             _loading = true;
             try
             {
+                var previousOnline = new HashSet<Guid>(Notifier.OnlineUserIds);
+                var previousSeatByUser = _seatByUser;
+
                 await LoadAsync();
+
+                await RaiseToastsAsync(previousOnline, previousSeatByUser);
                 StateHasChanged();
+            }
+            catch (Exception)
+            {
+                // Blazor Server prerenders this page in a short-lived DI scope before the real
+                // interactive circuit takes over; the prerendered instance's OnChange
+                // subscription can still fire in the brief window before its own Dispose()
+                // runs, hitting an already-disposed AppDbContext (or, transiently, other
+                // exceptions from reading a half-torn-down component). Harmless — that
+                // instance is being disposed anyway, so there's nothing to recover into.
             }
             finally
             {
                 _loading = false;
             }
+        });
+    }
+
+    private async Task RaiseToastsAsync(HashSet<Guid> previousOnline, Dictionary<Guid, Seat> previousSeatByUser)
+    {
+        if (_users is not { Count: > 0 } users) return;
+        var nameById = users.ToDictionary(u => u.Id, u => u.DisplayName);
+
+        var newToasts = new List<string>();
+
+        foreach (var userId in Notifier.OnlineUserIds)
+        {
+            if (!previousOnline.Contains(userId) && nameById.TryGetValue(userId, out var name))
+                newToasts.Add($"{name} ist online");
+        }
+
+        foreach (var (userId, seat) in previousSeatByUser)
+        {
+            if (!_seatByUser.ContainsKey(userId))
+                newToasts.Add($"Sitzplatz {seat.Label} wurde frei");
+        }
+
+        if (newToasts.Count == 0) return;
+
+        foreach (var message in newToasts)
+        {
+            var toast = (Id: Guid.NewGuid(), Message: message);
+            _toasts.Add(toast);
+            _ = RemoveToastAfterDelayAsync(toast.Id);
+        }
+
+        await JS.InvokeVoidAsync("lanBoardNotify.beep");
+    }
+
+    private async Task RemoveToastAfterDelayAsync(Guid toastId)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(5));
+        if (_disposed) return;
+        await InvokeAsync(() =>
+        {
+            _toasts.RemoveAll(t => t.Id == toastId);
+            StateHasChanged();
         });
     }
 
