@@ -1,0 +1,65 @@
+@page "/join"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IPartyMembershipService MembershipService
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+
+<PageTitle>Party beitreten – LanBoard</PageTitle>
+
+<div class="flex flex-col items-center justify-center h-full py-24 px-4">
+    <h1 class="text-2xl font-bold text-white mb-2">Party beitreten</h1>
+    <p class="text-gray-400 text-sm mb-6 text-center max-w-sm">
+        Gib den Invite-Code der LAN-Party ein, den du vom Orga-Team erhalten hast.
+    </p>
+
+    <EditForm Model="_form" OnValidSubmit="JoinAsync" class="flex flex-col gap-3 w-full max-w-xs">
+        <DataAnnotationsValidator/>
+        <InputText @bind-Value="_form.InviteCode" placeholder="Invite-Code"
+                   class="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm font-mono uppercase tracking-wider focus:outline-none focus:border-blue-500"/>
+        @if (_error is not null)
+        {
+            <p class="text-red-400 text-xs">@_error</p>
+        }
+        <button type="submit"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+            Beitreten
+        </button>
+    </EditForm>
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    private readonly JoinForm _form = new();
+    private string? _error;
+
+    private async Task JoinAsync()
+    {
+        _error = null;
+
+        var state = await Auth.GetAuthenticationStateAsync();
+        var userIdClaim = state.User.FindFirst("lanboard:userid")?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            _error = "Nicht angemeldet.";
+            return;
+        }
+
+        try
+        {
+            await MembershipService.JoinByInviteCodeAsync(userId, _form.InviteCode);
+            Nav.NavigateTo(string.IsNullOrWhiteSpace(ReturnUrl) ? "/" : ReturnUrl);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private sealed class JoinForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Invite-Code erforderlich.")]
+        public string InviteCode { get; set; } = "";
+    }
+}

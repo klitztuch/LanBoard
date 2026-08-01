@@ -12,4 +12,5 @@ public class User
     public ICollection<LanParty> CreatedParties { get; set; } = [];
     public ICollection<Seat> AssignedSeats { get; set; } = [];
     public ICollection<Session> Sessions { get; set; } = [];
+    public ICollection<PartyMembership> Memberships { get; set; } = [];
 }

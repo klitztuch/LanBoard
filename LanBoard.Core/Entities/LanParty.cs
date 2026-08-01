@@ -13,4 +13,5 @@ public class LanParty
     public User CreatedByUser { get; set; } = null!;
     public ICollection<Seat> Seats { get; set; } = [];
     public ICollection<Session> Sessions { get; set; } = [];
+    public ICollection<PartyMembership> Memberships { get; set; } = [];
 }
