@@ -1,0 +1,97 @@
+@page "/stats"
+@attribute [Authorize]
+@inject ISeatService SeatService
+@inject IPartyStatsService StatsService
+
+<PageTitle>Statistik</PageTitle>
+
+<div class="p-8">
+    <h1 class="text-2xl font-bold text-white mb-6">Statistik</h1>
+
+    @if (_party is null || _stats is null)
+    {
+        <p class="text-gray-400 text-sm">Keine aktive LAN-Party gefunden.</p>
+    }
+    else
+    {
+        <div class="mb-6">
+            <p class="text-gray-400 text-sm">
+                @_party.Name · Gesamt-Spielzeit: @FormatDuration(_stats.TotalPlaytime)
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <h2 class="text-lg font-semibold text-white mb-3">Meistgespielte Spiele</h2>
+                @if (_stats.TopGames.Count == 0)
+                {
+                    <p class="text-gray-500 text-sm">Noch keine Daten.</p>
+                }
+                else
+                {
+                    <div class="flex flex-col gap-2">
+                        @foreach (var game in _stats.TopGames)
+                        {
+                            <div class="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
+                                <div>
+                                    <p class="text-white font-medium">@game.GameName</p>
+                                    <p class="text-xs text-gray-400">@game.PlayerCount Spieler</p>
+                                </div>
+                                <span class="text-sm text-gray-300 font-mono">@FormatDuration(game.TotalPlaytime)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div>
+                <h2 class="text-lg font-semibold text-white mb-3">Aktivste Teilnehmer</h2>
+                @if (_stats.TopUsers.Count == 0)
+                {
+                    <p class="text-gray-500 text-sm">Noch keine Daten.</p>
+                }
+                else
+                {
+                    <div class="flex flex-col gap-2">
+                        @foreach (var user in _stats.TopUsers)
+                        {
+                            <div class="flex items-center gap-3 bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
+                                @if (user.AvatarUrl is not null)
+                                {
+                                    <img src="@user.AvatarUrl" alt="Avatar" class="w-8 h-8 rounded-full"/>
+                                }
+                                else
+                                {
+                                    <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white">
+                                        @user.DisplayName[..1]
+                                    </div>
+                                }
+                                <span class="flex-1 text-white font-medium truncate">@user.DisplayName</span>
+                                <span class="text-sm text-gray-300 font-mono">@FormatDuration(user.TotalPlaytime)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public Guid? PartyId { get; set; }
+
+    private LanParty? _party;
+    private PartyStats? _stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        if (_party is not null)
+            _stats = await StatsService.GetStatsAsync(_party.Id);
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+        => duration.TotalHours >= 1
+            ? $"{(int)duration.TotalHours}h {duration.Minutes}min"
+            : $"{duration.Minutes}min";
+}
