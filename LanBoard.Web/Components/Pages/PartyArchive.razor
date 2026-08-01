@@ -1,0 +1,55 @@
+@page "/parties"
+@attribute [Authorize]
+@inject IAdminService AdminService
+
+<PageTitle>Partys</PageTitle>
+
+<div class="p-8">
+    <h1 class="text-2xl font-bold text-white mb-6">Partys</h1>
+
+    @if (_parties is null)
+    {
+        <p class="text-gray-400 text-sm">Lade...</p>
+    }
+    else if (_parties.Count == 0)
+    {
+        <p class="text-gray-400 text-sm">Noch keine Partys angelegt.</p>
+    }
+    else
+    {
+        <div class="flex flex-col gap-2">
+            @foreach (var party in _parties)
+            {
+                <div class="flex items-center gap-4 bg-gray-800 rounded-xl px-4 py-3 border border-gray-700">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-white font-medium truncate">@party.Name</span>
+                            @if (party.IsActive)
+                            {
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300 shrink-0">Aktiv</span>
+                            }
+                        </div>
+                        <p class="text-sm text-gray-400 truncate">@party.Location · @party.Date.ToString("dd.MM.yyyy")</p>
+                    </div>
+                    <a href="@($"/?partyId={party.Id}")"
+                       class="text-sm text-gray-300 hover:text-white transition-colors shrink-0">
+                        Sitzplan
+                    </a>
+                    <a href="@($"/attendees?partyId={party.Id}")"
+                       class="text-sm text-gray-300 hover:text-white transition-colors shrink-0">
+                        Teilnehmer
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<LanParty>? _parties;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _parties = await AdminService.GetAllPartiesAsync();
+    }
+}
