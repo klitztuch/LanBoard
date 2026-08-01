@@ -10,7 +10,17 @@
 <PageTitle>Teilnehmer</PageTitle>
 
 <div class="p-8">
-    <h1 class="text-2xl font-bold text-white mb-6">Teilnehmer</h1>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-white">Teilnehmer</h1>
+        <AuthorizeView Policy="Admin">
+            <Authorized>
+                <a href="/export/attendees"
+                   class="text-sm px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg border border-gray-700 transition-colors">
+                    CSV exportieren
+                </a>
+            </Authorized>
+        </AuthorizeView>
+    </div>
 
     @if (_users is null)
     {
