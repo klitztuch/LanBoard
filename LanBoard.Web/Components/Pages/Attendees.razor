@@ -5,6 +5,7 @@
 @inject IUserService UserService
 @inject ISeatService SeatService
 @inject ISessionService SessionService
+@inject IRsvpService RsvpService
 @inject ILanBoardNotifier Notifier
 
 <PageTitle>Teilnehmer</PageTitle>
@@ -47,6 +48,13 @@
                     </div>
 
                     <span class="flex-1 text-white font-medium truncate min-w-0">@user.DisplayName</span>
+
+                    @if (_rsvpByUser.TryGetValue(user.Id, out var rsvp))
+                    {
+                        <span class="@(rsvp.IsAttending ? "text-green-400" : "text-red-400") text-xs shrink-0">
+                            @(rsvp.IsAttending ? "Zugesagt" : "Abgesagt")
+                        </span>
+                    }
 
                     <span class="text-sm text-gray-400 shrink-0">
                         @(seat is not null ? seat.Label : "–")
@@ -94,6 +102,7 @@
     private IReadOnlyList<User>? _users;
     private Dictionary<Guid, Seat> _seatByUser = [];
     private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
+    private IReadOnlyDictionary<Guid, Rsvp> _rsvpByUser = new Dictionary<Guid, Rsvp>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,6 +131,9 @@
         _sessionsByUser = party is not null
             ? await SessionService.GetActiveSessionsByPartyAsync(party.Id)
             : new Dictionary<Guid, Session>();
+        _rsvpByUser = party is not null
+            ? await RsvpService.GetRsvpsByPartyAsync(party.Id)
+            : new Dictionary<Guid, Rsvp>();
     }
 
     private bool _loading;
