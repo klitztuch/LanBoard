@@ -90,18 +90,18 @@
 
     private async Task SaveAsync()
     {
+        var state = await Auth.GetAuthenticationStateAsync();
+        var userIdClaim = state.User.FindFirst("lanboard:userid")?.Value;
+        if (!Guid.TryParse(userIdClaim, out var userId)) return;
+
         if (Id is null)
         {
-            var state = await Auth.GetAuthenticationStateAsync();
-            var userIdClaim = state.User.FindFirst("lanboard:userid")?.Value;
-            if (!Guid.TryParse(userIdClaim, out var userId)) return;
-
             var party = await AdminService.CreatePartyAsync(_form.Name, _form.Date, _form.Location, userId);
             Nav.NavigateTo($"/admin/party/{party.Id}");
         }
         else
         {
-            await AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, _form.Location);
+            await AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, _form.Location, userId);
             _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
             _displaySeats = [.. _party?.Seats ?? []];
         }

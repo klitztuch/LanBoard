@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LanParty> LanParties => Set<LanParty>();
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<AdminAuditLogEntry> AdminAuditLogEntries => Set<AdminAuditLogEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
