@@ -6,12 +6,22 @@
 <div class="p-8">
     <h1 class="text-2xl font-bold text-white mb-6">Admin</h1>
 
-    <a href="/admin/party"
-       class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors max-w-md">
-        <div>
-            <p class="text-white font-medium">LAN-Parties</p>
-            <p class="text-sm text-gray-400">Parties anlegen, bearbeiten und Sitzplätze verwalten</p>
-        </div>
-        <span class="text-gray-500">→</span>
-    </a>
+    <div class="flex flex-col gap-3 max-w-md">
+        <a href="/admin/party"
+           class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+            <div>
+                <p class="text-white font-medium">LAN-Parties</p>
+                <p class="text-sm text-gray-400">Parties anlegen, bearbeiten und Sitzplätze verwalten</p>
+            </div>
+            <span class="text-gray-500">→</span>
+        </a>
+        <a href="/admin/audit-log"
+           class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+            <div>
+                <p class="text-white font-medium">Audit-Log</p>
+                <p class="text-sm text-gray-400">Protokoll durchgeführter Admin-Aktionen</p>
+            </div>
+            <span class="text-gray-500">→</span>
+        </a>
+    </div>
 </div>
