@@ -56,6 +56,27 @@ public class AdminServiceTests
     }
 
     [Fact]
+    public async Task UpdateInfoBoardAsync_PartyNotFound_Throws()
+    {
+        _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.UpdateInfoBoardAsync(Guid.NewGuid(), "WLAN: lan2026"));
+    }
+
+    [Fact]
+    public async Task UpdateInfoBoardAsync_SetsFieldAndSaves()
+    {
+        var party = new LanParty { Id = Guid.NewGuid(), Name = "Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        _parties.GetByIdAsync(party.Id, Arg.Any<CancellationToken>()).Returns(party);
+
+        await _sut.UpdateInfoBoardAsync(party.Id, "WLAN: lan2026");
+
+        Assert.Equal("WLAN: lan2026", party.InfoBoard);
+        await _parties.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task DeletePartyAsync_PartyNotFound_Throws()
     {
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);

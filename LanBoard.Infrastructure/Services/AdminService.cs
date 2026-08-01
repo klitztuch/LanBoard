@@ -43,6 +43,14 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats) : 
         await parties.SaveChangesAsync(ct);
     }
 
+    public async Task UpdateInfoBoardAsync(Guid id, string? infoBoard, CancellationToken ct = default)
+    {
+        var party = await parties.GetByIdAsync(id, ct)
+            ?? throw new InvalidOperationException("Party not found.");
+        party.InfoBoard = infoBoard;
+        await parties.SaveChangesAsync(ct);
+    }
+
     public Task<LanParty?> GetPartyWithSeatsAsync(Guid id, CancellationToken ct = default)
         => parties.GetWithSeatsAndSessionsAsync(id, ct);
 
