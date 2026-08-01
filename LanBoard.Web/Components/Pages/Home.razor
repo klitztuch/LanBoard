@@ -1,5 +1,7 @@
 @page "/"
 @inject ISeatService SeatService
+@inject IPartyMembershipService MembershipService
+@inject AuthenticationStateProvider Auth
 
 <PageTitle>LanBoard</PageTitle>
 
@@ -9,6 +11,19 @@
         {
             <div class="p-4 md:p-8">
                 <p class="text-gray-400">Keine aktive LAN-Party gefunden.</p>
+            </div>
+        }
+        else if (!_hasAccess)
+        {
+            <div class="flex flex-col items-center justify-center h-full py-24 px-4">
+                <h1 class="text-xl font-bold text-white mb-2">@_party.Name</h1>
+                <p class="text-gray-400 text-sm mb-6 text-center max-w-sm">
+                    Du brauchst den Invite-Code dieser Party, um Sitzplätze und Teilnehmer zu sehen.
+                </p>
+                <a href="/join?returnUrl=%2F"
+                   class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    Invite-Code eingeben
+                </a>
             </div>
         }
         else
@@ -39,9 +54,22 @@
     [SupplyParameterFromQuery] public Guid? PartyId { get; set; }
 
     private LanParty? _party;
+    private bool _hasAccess;
 
     protected override async Task OnInitializedAsync()
     {
         _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        if (_party is null) return;
+
+        var state = await Auth.GetAuthenticationStateAsync();
+        if (state.User.HasClaim("lanboard:isadmin", "true"))
+        {
+            _hasAccess = true;
+            return;
+        }
+
+        var userIdClaim = state.User.FindFirst("lanboard:userid")?.Value;
+        _hasAccess = Guid.TryParse(userIdClaim, out var userId)
+            && await MembershipService.IsMemberAsync(userId, _party.Id);
     }
 }
