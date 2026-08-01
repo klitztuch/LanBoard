@@ -1,5 +1,6 @@
 using LanBoard.Application.Admin;
 using LanBoard.Application.Interfaces;
+using LanBoard.Application.Rsvps;
 using LanBoard.Application.Seats;
 using LanBoard.Application.Sessions;
 using LanBoard.Application.Users;
@@ -26,10 +27,12 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<ILanPartyRepository, LanPartyRepository>();
         builder.Services.AddScoped<ISeatRepository, SeatRepository>();
         builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+        builder.Services.AddScoped<IRsvpRepository, RsvpRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<ISeatService, SeatService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<ISessionService, SessionService>();
+        builder.Services.AddScoped<IRsvpService, RsvpService>();
 
         builder.Services.AddOptions<SteamConfiguration>()
             .BindConfiguration("Steam")
