@@ -156,6 +156,19 @@ public class SessionServiceTests
     }
 
     [Fact]
+    public async Task GetActiveSessionsByPartyAsync_UsesNoTrackingDisplayQuery_GroupedByUser()
+    {
+        var userId = Guid.NewGuid();
+        var session = new Session { Id = Guid.NewGuid(), UserId = userId, PartyId = PartyId, JoinedAt = DateTime.UtcNow, LastSeen = DateTime.UtcNow };
+        _sessions.GetActiveByPartyForDisplayAsync(PartyId, Arg.Any<CancellationToken>()).Returns([session]);
+
+        var result = await _sut.GetActiveSessionsByPartyAsync(PartyId);
+
+        Assert.Same(session, result[userId]);
+        await _sessions.DidNotReceive().GetActiveByPartyAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task NoSeatedUsers_ReturnsEarlyWithoutCallingSteamApi()
     {
         SetSeatedUsers();

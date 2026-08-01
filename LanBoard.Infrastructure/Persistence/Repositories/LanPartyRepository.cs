@@ -23,6 +23,7 @@ public class LanPartyRepository(AppDbContext db) : ILanPartyRepository
 
     public async Task<LanParty?> GetWithSeatsAndSessionsAsync(Guid id, CancellationToken ct = default)
         => await db.LanParties
+            .AsNoTracking()
             .Include(p => p.Seats).ThenInclude(s => s.AssignedUser)
             .Include(p => p.Sessions)
             .FirstOrDefaultAsync(p => p.Id == id, ct);

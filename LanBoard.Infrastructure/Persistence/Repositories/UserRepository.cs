@@ -17,6 +17,7 @@ public class UserRepository(AppDbContext db) : IUserRepository
 
     public async Task<IReadOnlyList<User>> GetAllWithIdentitiesAsync(CancellationToken ct = default)
         => await db.Users
+            .AsNoTracking()
             .Include(u => u.Identities)
             .OrderBy(u => u.DisplayName)
             .ToListAsync(ct);
