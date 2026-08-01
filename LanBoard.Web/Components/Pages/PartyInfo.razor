@@ -1,0 +1,33 @@
+@page "/info"
+@attribute [Authorize]
+@inject ISeatService SeatService
+
+<PageTitle>Info</PageTitle>
+
+<div class="p-8 max-w-2xl">
+    <h1 class="text-2xl font-bold text-white mb-6">Info</h1>
+
+    @if (_party is null)
+    {
+        <p class="text-gray-400 text-sm">Keine aktive LAN-Party gefunden.</p>
+    }
+    else if (string.IsNullOrWhiteSpace(_party.InfoBoard))
+    {
+        <p class="text-gray-400 text-sm">Für @_party.Name wurden noch keine Infos hinterlegt.</p>
+    }
+    else
+    {
+        <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 text-gray-200 text-sm whitespace-pre-wrap">@_party.InfoBoard</div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public Guid? PartyId { get; set; }
+
+    private LanParty? _party;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+    }
+}

@@ -48,6 +48,19 @@
 
 @if (_party is not null)
 {
+    <div class="p-8 pt-0 max-w-2xl">
+        <h2 class="text-lg font-semibold text-white mb-4">Info-Board</h2>
+        <p class="text-xs text-gray-500 mb-3">Wird auf der öffentlichen Info-Seite der Party angezeigt (z.B. WLAN, Regeln, Zeitplan).</p>
+        <EditForm Model="_infoForm" OnValidSubmit="SaveInfoBoardAsync" class="flex flex-col gap-3">
+            <InputTextArea @bind-Value="_infoForm.InfoBoard" rows="8"
+                           class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"/>
+            <button type="submit"
+                    class="self-start px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                Info-Board speichern
+            </button>
+        </EditForm>
+    </div>
+
     <div class="p-8 pt-0 max-w-5xl">
         <h2 class="text-lg font-semibold text-white mb-4">Sitzplätze</h2>
         <p class="text-xs text-gray-500 mb-4">Klick auf eine leere Zelle = Seat hinzufügen · Klick auf einen Seat = Seat entfernen</p>
@@ -72,6 +85,7 @@
     private List<Seat> _displaySeats = [];
 
     private readonly PartyForm _form = new();
+    private readonly InfoBoardForm _infoForm = new();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -83,9 +97,16 @@
                 _form.Name = _party.Name;
                 _form.Date = _party.Date;
                 _form.Location = _party.Location;
+                _infoForm.InfoBoard = _party.InfoBoard ?? "";
                 _displaySeats = [.. _party.Seats];
             }
         }
+    }
+
+    private async Task SaveInfoBoardAsync()
+    {
+        if (Id is null) return;
+        await AdminService.UpdateInfoBoardAsync(Id.Value, _infoForm.InfoBoard);
     }
 
     private async Task SaveAsync()
@@ -138,5 +159,10 @@
         public DateTime Date { get; set; } = DateTime.Today;
         [System.ComponentModel.DataAnnotations.Required]
         public string Location { get; set; } = "";
+    }
+
+    private sealed class InfoBoardForm
+    {
+        public string InfoBoard { get; set; } = "";
     }
 }
