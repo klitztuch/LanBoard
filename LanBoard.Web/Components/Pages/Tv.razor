@@ -1,0 +1,191 @@
+@page "/tv"
+@layout LanBoard.Web.Components.Layout.TvLayout
+@rendermode InteractiveServer
+@implements IDisposable
+@inject ISeatService SeatService
+@inject IUserService UserService
+@inject ISessionService SessionService
+@inject ILanBoardNotifier Notifier
+
+<PageTitle>LanBoard – TV</PageTitle>
+<HeadContent>
+    <meta http-equiv="refresh" content="300"/>
+</HeadContent>
+
+@if (_party is null)
+{
+    <div class="flex items-center justify-center h-screen">
+        <p class="text-gray-500 text-3xl">Keine aktive LAN-Party</p>
+    </div>
+}
+else
+{
+    <div class="p-8 flex flex-col h-screen gap-6">
+        <div>
+            <h1 class="text-4xl font-bold text-white">@_party.Name</h1>
+            <p class="text-gray-400 text-lg mt-1">@_party.Location · @_party.Date.ToString("dd.MM.yyyy")</p>
+        </div>
+
+        <div class="flex-1 grid grid-cols-3 gap-8 min-h-0">
+            <div class="col-span-2 overflow-auto">
+                @if (_seats.Count == 0)
+                {
+                    <p class="text-gray-500 text-xl">Keine Sitzplätze angelegt.</p>
+                }
+                else
+                {
+                    <SeatGridLayout Seats="_seats" CellSize="7rem" GapSize="10px">
+                        <CellTemplate Context="cell">
+                            @if (cell.Seat is null)
+                            {
+                                <div></div>
+                            }
+                            else
+                            {
+                                var seat = cell.Seat;
+                                <div class="@SeatClass(seat) rounded-xl p-3 flex flex-col gap-2 h-full">
+                                    <span class="text-xs font-mono text-gray-400">@seat.Label</span>
+                                    @if (seat.AssignedUser is { } assignedUser && seat.AssignedUserId is { } assignedUserId)
+                                    {
+                                        <div class="flex items-center gap-2 flex-1">
+                                            <div class="relative shrink-0">
+                                                @if (assignedUser.AvatarUrl is not null)
+                                                {
+                                                    <img src="@assignedUser.AvatarUrl" alt="Avatar" class="w-10 h-10 rounded-full"/>
+                                                }
+                                                else
+                                                {
+                                                    <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white">
+                                                        @assignedUser.DisplayName[..1]
+                                                    </div>
+                                                }
+                                                @if (Notifier.OnlineUserIds.Contains(assignedUserId))
+                                                {
+                                                    <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></span>
+                                                }
+                                                @if (_sessionsByUser.TryGetValue(assignedUserId, out var session))
+                                                {
+                                                    <span class="absolute -top-1 -right-1 text-[10px] leading-none bg-violet-600 rounded-full w-4 h-4 flex items-center justify-center border-2 border-gray-900"
+                                                          title="@(session.GameName ?? session.GameAppId)">
+                                                        🎮
+                                                    </span>
+                                                }
+                                            </div>
+                                            <span class="text-sm text-white truncate">@assignedUser.DisplayName</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </CellTemplate>
+                    </SeatGridLayout>
+                }
+            </div>
+
+            <div class="overflow-auto flex flex-col gap-2">
+                <h2 class="text-lg font-semibold text-gray-300 mb-1">Teilnehmer</h2>
+                @foreach (var user in _attendees)
+                {
+                    <div class="flex items-center gap-3 bg-gray-900 rounded-lg px-3 py-2 border border-gray-800">
+                        <div class="relative shrink-0">
+                            @if (user.AvatarUrl is not null)
+                            {
+                                <img src="@user.AvatarUrl" alt="Avatar" class="w-8 h-8 rounded-full"/>
+                            }
+                            else
+                            {
+                                <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white">
+                                    @user.DisplayName[..1]
+                                </div>
+                            }
+                            @if (Notifier.OnlineUserIds.Contains(user.Id))
+                            {
+                                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-gray-900"></span>
+                            }
+                        </div>
+                        <span class="flex-1 text-sm text-white truncate">@user.DisplayName</span>
+                        <span class="text-xs text-gray-400 truncate max-w-32">
+                            @(_sessionsByUser.TryGetValue(user.Id, out var session) ? session.GameName ?? session.GameAppId : "–")
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private LanParty? _party;
+    private List<Seat> _seats = [];
+    private List<User> _attendees = [];
+    private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Notifier.OnChange += OnNotified;
+        _loading = true;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _party = await SeatService.GetActivePartyWithSeatsAsync();
+        if (_party is null)
+        {
+            _seats = [];
+            _attendees = [];
+            _sessionsByUser = new Dictionary<Guid, Session>();
+            return;
+        }
+
+        _seats = [.. _party.Seats];
+        _sessionsByUser = await SessionService.GetActiveSessionsByPartyAsync(_party.Id);
+
+        var users = await UserService.GetAllWithIdentitiesAsync();
+        var seatedUserIds = _seats.Select(s => s.AssignedUserId).OfType<Guid>().ToHashSet();
+        _attendees = [.. users
+            .Where(u => seatedUserIds.Contains(u.Id))
+            .OrderByDescending(u => Notifier.OnlineUserIds.Contains(u.Id))
+            .ThenBy(u => u.DisplayName)];
+    }
+
+    private bool _loading;
+
+    private void OnNotified()
+    {
+        if (_disposed || _loading) return;
+        _ = InvokeAsync(async () =>
+        {
+            if (_disposed || _loading) return;
+            _loading = true;
+            try
+            {
+                await LoadAsync();
+                StateHasChanged();
+            }
+            finally
+            {
+                _loading = false;
+            }
+        });
+    }
+
+    private static string SeatClass(Seat seat)
+        => seat.AssignedUser is not null
+            ? "bg-gray-800 border border-gray-700"
+            : "bg-gray-900 border border-gray-700";
+
+    private volatile bool _disposed;
+
+    public void Dispose()
+    {
+        _disposed = true;
+        Notifier.OnChange -= OnNotified;
+    }
+}
