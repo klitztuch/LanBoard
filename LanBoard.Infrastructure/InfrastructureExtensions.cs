@@ -3,6 +3,7 @@ using LanBoard.Application.Interfaces;
 using LanBoard.Application.Seats;
 using LanBoard.Application.Sessions;
 using LanBoard.Application.Tournaments;
+using LanBoard.Application.Stats;
 using LanBoard.Application.Users;
 using LanBoard.Infrastructure.ApiClients;
 using LanBoard.Infrastructure.ApiClients.Steam;
@@ -35,6 +36,7 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<ISessionService, SessionService>();
         builder.Services.AddScoped<ITournamentService, TournamentService>();
+        builder.Services.AddScoped<IPartyStatsService, PartyStatsService>();
 
         builder.Services.AddOptions<SteamConfiguration>()
             .BindConfiguration("Steam")
