@@ -49,6 +49,8 @@ app.MapGet("/auth/logout", async (HttpContext ctx) =>
     return Results.Redirect("/");
 });
 
+app.MapExportEndpoints();
+
 await app.MigrateDatabaseAsync();
 
 app.MapStaticAssets();
