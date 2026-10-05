@@ -65,7 +65,7 @@
                                 Statistik
                             </NavLink>
                         </li>
-                        @if (ctx.User.HasClaim("lanboard:isadmin", "true"))
+                        @if (ctx.User.HasClaim(AdminClaim.Type, AdminClaim.Value))
                         {
                             <li>
                                 <NavLink href="/admin"

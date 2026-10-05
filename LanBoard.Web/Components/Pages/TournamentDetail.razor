@@ -19,6 +19,14 @@ else
             <h1 class="text-2xl font-bold text-white">@_tournament.Name</h1>
         </div>
 
+        @if (_error is not null)
+        {
+            <div class="flex items-center justify-between gap-4 mb-6 px-4 py-3 rounded-lg bg-red-900/40 border border-red-700 text-sm text-red-200">
+                <span>@_error</span>
+                <button class="text-red-300 hover:text-white transition-colors" @onclick="() => _error = null">✕</button>
+            </div>
+        }
+
         @if (!_tournament.IsStarted)
         {
             <div class="max-w-md">
@@ -94,12 +102,13 @@ else
     private Tournament? _tournament;
     private IReadOnlyList<User>? _allUsers;
     private bool _isAdmin;
+    private string? _error;
     private List<IGrouping<int, TournamentMatch>> _roundsOrdered = [];
 
     protected override async Task OnInitializedAsync()
     {
         var state = await Auth.GetAuthenticationStateAsync();
-        _isAdmin = state.User.HasClaim("lanboard:isadmin", "true");
+        _isAdmin = state.User.HasClaim(AdminClaim.Type, AdminClaim.Value);
         _allUsers = await UserService.GetAllWithIdentitiesAsync();
         await LoadAsync();
     }
@@ -113,24 +122,27 @@ else
             .ToList() ?? [];
     }
 
-    private async Task ToggleParticipantAsync(Guid userId, bool add)
-    {
-        if (add)
-            await TournamentService.AddParticipantAsync(Id, userId);
-        else
-            await TournamentService.RemoveParticipantAsync(Id, userId);
-        await LoadAsync();
-    }
+    private Task ToggleParticipantAsync(Guid userId, bool add)
+        => RunAdminActionAsync(() => add
+            ? TournamentService.AddParticipantAsync(Id, userId)
+            : TournamentService.RemoveParticipantAsync(Id, userId));
 
-    private async Task StartAsync()
-    {
-        await TournamentService.StartAsync(Id);
-        await LoadAsync();
-    }
+    private Task StartAsync()
+        => RunAdminActionAsync(() => TournamentService.StartAsync(Id));
 
-    private async Task SetWinnerAsync(Guid matchId, Guid winnerParticipantId)
+    private Task SetWinnerAsync(Guid matchId, Guid winnerParticipantId)
+        => RunAdminActionAsync(() => TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId));
+
+    private async Task RunAdminActionAsync(Func<Task> action)
     {
-        await TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId);
+        try
+        {
+            await action();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _error = "Keine Berechtigung für diese Aktion.";
+        }
         await LoadAsync();
     }
 

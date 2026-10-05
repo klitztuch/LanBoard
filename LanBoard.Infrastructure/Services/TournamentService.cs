@@ -1,5 +1,6 @@
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Tournaments;
+using LanBoard.Application.Users;
 using LanBoard.Core.Entities;
 
 namespace LanBoard.Infrastructure.Services;
@@ -7,13 +8,15 @@ namespace LanBoard.Infrastructure.Services;
 public class TournamentService(
     ITournamentRepository tournaments,
     ITournamentParticipantRepository participants,
-    ITournamentMatchRepository matches) : ITournamentService
+    ITournamentMatchRepository matches,
+    ICurrentUser currentUser) : ITournamentService
 {
     public Task<IReadOnlyList<Tournament>> GetByPartyAsync(Guid partyId, CancellationToken ct = default)
         => tournaments.GetByPartyAsync(partyId, ct);
 
     public async Task<Tournament> CreateAsync(Guid partyId, string name, CancellationToken ct = default)
     {
+        await EnsureAdminAsync(ct);
         var tournament = new Tournament { Id = Guid.NewGuid(), PartyId = partyId, Name = name, CreatedAt = DateTime.UtcNow };
         await tournaments.AddAsync(tournament, ct);
         await tournaments.SaveChangesAsync(ct);
@@ -25,6 +28,7 @@ public class TournamentService(
 
     public async Task AddParticipantAsync(Guid tournamentId, Guid userId, CancellationToken ct = default)
     {
+        await EnsureAdminAsync(ct);
         var tournament = await tournaments.GetByIdAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
         if (tournament.IsStarted)
@@ -39,6 +43,7 @@ public class TournamentService(
 
     public async Task RemoveParticipantAsync(Guid tournamentId, Guid userId, CancellationToken ct = default)
     {
+        await EnsureAdminAsync(ct);
         var tournament = await tournaments.GetByIdAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
         if (tournament.IsStarted)
@@ -53,6 +58,7 @@ public class TournamentService(
 
     public async Task StartAsync(Guid tournamentId, CancellationToken ct = default)
     {
+        await EnsureAdminAsync(ct);
         var tournament = await tournaments.GetWithDetailsAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
         if (tournament.IsStarted)
@@ -104,6 +110,7 @@ public class TournamentService(
 
     public async Task SetMatchWinnerAsync(Guid tournamentId, Guid matchId, Guid winnerParticipantId, CancellationToken ct = default)
     {
+        await EnsureAdminAsync(ct);
         var tournament = await tournaments.GetWithDetailsAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
 
@@ -126,6 +133,12 @@ public class TournamentService(
         }
 
         await tournaments.SaveChangesAsync(ct);
+    }
+
+    private async Task EnsureAdminAsync(CancellationToken ct)
+    {
+        if (!await currentUser.IsAdminAsync(ct))
+            throw new UnauthorizedAccessException("Only admins can modify tournaments.");
     }
 
     private static void AdvanceWinner(
