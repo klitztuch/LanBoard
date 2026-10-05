@@ -85,7 +85,7 @@ public class SessionService(
     }
 
     public async Task<IReadOnlyDictionary<Guid, Session>> GetActiveSessionsByPartyAsync(Guid partyId, CancellationToken ct = default)
-        => (await sessions.GetActiveByPartyAsync(partyId, ct))
+        => (await sessions.GetActiveByPartyForDisplayAsync(partyId, ct))
             .GroupBy(s => s.UserId)
             .ToDictionary(g => g.Key, g => g.First());
 }
