@@ -1,0 +1,43 @@
+@page "/admin/audit-log"
+@attribute [Authorize(Policy = "Admin")]
+@inject IAdminService AdminService
+
+<PageTitle>Audit-Log – Admin</PageTitle>
+
+<div class="p-8">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/admin" class="text-gray-400 hover:text-white transition-colors text-sm">← Admin</a>
+        <h1 class="text-2xl font-bold text-white">Audit-Log</h1>
+    </div>
+
+    @if (_entries is null)
+    {
+        <p class="text-gray-400 text-sm">Lade...</p>
+    }
+    else if (_entries.Count == 0)
+    {
+        <p class="text-gray-400 text-sm">Noch keine Admin-Aktionen protokolliert.</p>
+    }
+    else
+    {
+        <div class="flex flex-col gap-2 max-w-2xl">
+            @foreach (var entry in _entries)
+            {
+                <div class="flex items-center gap-4 bg-gray-800 rounded-xl px-4 py-3 border border-gray-700">
+                    <span class="text-xs text-gray-500 font-mono shrink-0 w-36">@entry.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                    <span class="text-sm text-white flex-1">@entry.Details</span>
+                    <span class="text-xs text-gray-400 shrink-0">@entry.User.DisplayName</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<AdminAuditLogEntry>? _entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _entries = await AdminService.GetRecentAuditLogAsync();
+    }
+}

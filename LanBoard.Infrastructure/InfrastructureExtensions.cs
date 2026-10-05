@@ -28,6 +28,7 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<ILanPartyRepository, LanPartyRepository>();
         builder.Services.AddScoped<ISeatRepository, SeatRepository>();
         builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+        builder.Services.AddScoped<IAdminAuditLogRepository, AdminAuditLogRepository>();
         builder.Services.AddScoped<ITournamentRepository, TournamentRepository>();
         builder.Services.AddScoped<ITournamentParticipantRepository, TournamentParticipantRepository>();
         builder.Services.AddScoped<ITournamentMatchRepository, TournamentMatchRepository>();
