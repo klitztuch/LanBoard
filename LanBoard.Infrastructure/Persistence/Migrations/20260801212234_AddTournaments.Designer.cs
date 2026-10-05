@@ -3,6 +3,7 @@ using System;
 using LanBoard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LanBoard.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801212234_AddTournaments")]
+    partial class AddTournaments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,34 +24,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("LanBoard.Core.Entities.AdminAuditLogEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Details")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AdminAuditLogEntries");
-                });
 
             modelBuilder.Entity("LanBoard.Core.Entities.LanParty", b =>
                 {
@@ -91,34 +66,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .HasFilter("\"IsActive\" = true");
 
                     b.ToTable("LanParties");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsAttending")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("PartyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("RespondedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartyId");
-
-                    b.HasIndex("UserId", "PartyId")
-                        .IsUnique();
-
-                    b.ToTable("Rsvps");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>
@@ -337,17 +284,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.ToTable("UserIdentities");
                 });
 
-            modelBuilder.Entity("LanBoard.Core.Entities.AdminAuditLogEntry", b =>
-                {
-                    b.HasOne("LanBoard.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("LanBoard.Core.Entities.LanParty", b =>
                 {
                     b.HasOne("LanBoard.Core.Entities.User", "CreatedByUser")
@@ -357,25 +293,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
-                {
-                    b.HasOne("LanBoard.Core.Entities.LanParty", "Party")
-                        .WithMany()
-                        .HasForeignKey("PartyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LanBoard.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Party");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>

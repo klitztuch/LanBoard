@@ -3,6 +3,7 @@ using System;
 using LanBoard.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LanBoard.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801213758_AddAdminAuditLog")]
+    partial class AddAdminAuditLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,34 +96,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.ToTable("LanParties");
                 });
 
-            modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsAttending")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("PartyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("RespondedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartyId");
-
-                    b.HasIndex("UserId", "PartyId")
-                        .IsUnique();
-
-                    b.ToTable("Rsvps");
-                });
-
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>
                 {
                     b.Property<Guid>("Id")
@@ -190,93 +165,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Sessions");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.Tournament", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsStarted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<Guid>("PartyId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartyId");
-
-                    b.ToTable("Tournaments");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.TournamentMatch", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("Participant1Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("Participant2Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Round")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Slot")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("TournamentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("WinnerId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Participant1Id");
-
-                    b.HasIndex("Participant2Id");
-
-                    b.HasIndex("WinnerId");
-
-                    b.HasIndex("TournamentId", "Round", "Slot")
-                        .IsUnique();
-
-                    b.ToTable("TournamentMatches");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.TournamentParticipant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TournamentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("TournamentId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("TournamentParticipants");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.User", b =>
@@ -359,25 +247,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
-            modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
-                {
-                    b.HasOne("LanBoard.Core.Entities.LanParty", "Party")
-                        .WithMany()
-                        .HasForeignKey("PartyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LanBoard.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Party");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>
                 {
                     b.HasOne("LanBoard.Core.Entities.User", "AssignedUser")
@@ -415,68 +284,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LanBoard.Core.Entities.Tournament", b =>
-                {
-                    b.HasOne("LanBoard.Core.Entities.LanParty", "Party")
-                        .WithMany()
-                        .HasForeignKey("PartyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Party");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.TournamentMatch", b =>
-                {
-                    b.HasOne("LanBoard.Core.Entities.TournamentParticipant", "Participant1")
-                        .WithMany()
-                        .HasForeignKey("Participant1Id")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("LanBoard.Core.Entities.TournamentParticipant", "Participant2")
-                        .WithMany()
-                        .HasForeignKey("Participant2Id")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("LanBoard.Core.Entities.Tournament", "Tournament")
-                        .WithMany("Matches")
-                        .HasForeignKey("TournamentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LanBoard.Core.Entities.TournamentParticipant", "Winner")
-                        .WithMany()
-                        .HasForeignKey("WinnerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Participant1");
-
-                    b.Navigation("Participant2");
-
-                    b.Navigation("Tournament");
-
-                    b.Navigation("Winner");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.TournamentParticipant", b =>
-                {
-                    b.HasOne("LanBoard.Core.Entities.Tournament", "Tournament")
-                        .WithMany("Participants")
-                        .HasForeignKey("TournamentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LanBoard.Core.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tournament");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("LanBoard.Core.Entities.UserIdentity", b =>
                 {
                     b.HasOne("LanBoard.Core.Entities.User", "User")
@@ -493,13 +300,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Navigation("Seats");
 
                     b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("LanBoard.Core.Entities.Tournament", b =>
-                {
-                    b.Navigation("Matches");
-
-                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.User", b =>
