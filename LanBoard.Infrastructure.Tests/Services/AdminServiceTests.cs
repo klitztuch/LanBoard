@@ -9,11 +9,12 @@ public class AdminServiceTests
 {
     private readonly ILanPartyRepository _parties = Substitute.For<ILanPartyRepository>();
     private readonly ISeatRepository _seats = Substitute.For<ISeatRepository>();
+    private readonly IAdminAuditLogRepository _auditLog = Substitute.For<IAdminAuditLogRepository>();
     private readonly AdminService _sut;
 
     public AdminServiceTests()
     {
-        _sut = new AdminService(_parties, _seats);
+        _sut = new AdminService(_parties, _seats, _auditLog);
     }
 
     [Fact]
@@ -32,12 +33,25 @@ public class AdminServiceTests
     }
 
     [Fact]
+    public async Task CreatePartyAsync_LogsAuditEntry()
+    {
+        var createdByUserId = Guid.NewGuid();
+
+        await _sut.CreatePartyAsync("LAN #1", new DateTime(2026, 8, 1), "Garage", createdByUserId);
+
+        await _auditLog.Received(1).AddAsync(
+            Arg.Is<AdminAuditLogEntry>(e => e.UserId == createdByUserId && e.Action == "PartyCreated" && e.Details!.Contains("LAN #1")),
+            Arg.Any<CancellationToken>());
+        await _auditLog.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task UpdatePartyAsync_PartyNotFound_Throws()
     {
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _sut.UpdatePartyAsync(Guid.NewGuid(), "Name", DateTime.Today, "Loc"));
+            () => _sut.UpdatePartyAsync(Guid.NewGuid(), "Name", DateTime.Today, "Loc", Guid.NewGuid()));
     }
 
     [Fact]
@@ -47,12 +61,16 @@ public class AdminServiceTests
         _parties.GetByIdAsync(party.Id, Arg.Any<CancellationToken>()).Returns(party);
         var newDate = new DateTime(2026, 9, 1);
 
-        await _sut.UpdatePartyAsync(party.Id, "New", newDate, "New Loc");
+        var performedByUserId = Guid.NewGuid();
+        await _sut.UpdatePartyAsync(party.Id, "New", newDate, "New Loc", performedByUserId);
 
         Assert.Equal("New", party.Name);
         Assert.Equal(newDate, party.Date);
         Assert.Equal("New Loc", party.Location);
         await _parties.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _auditLog.Received(1).AddAsync(
+            Arg.Is<AdminAuditLogEntry>(e => e.UserId == performedByUserId && e.Action == "PartyUpdated"),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -60,7 +78,7 @@ public class AdminServiceTests
     {
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.DeletePartyAsync(Guid.NewGuid()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.DeletePartyAsync(Guid.NewGuid(), Guid.NewGuid()));
     }
 
     [Fact]
@@ -69,10 +87,14 @@ public class AdminServiceTests
         var party = new LanParty { Id = Guid.NewGuid(), Name = "Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
         _parties.GetByIdAsync(party.Id, Arg.Any<CancellationToken>()).Returns(party);
 
-        await _sut.DeletePartyAsync(party.Id);
+        var performedByUserId = Guid.NewGuid();
+        await _sut.DeletePartyAsync(party.Id, performedByUserId);
 
         _parties.Received(1).Remove(party);
         await _parties.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _auditLog.Received(1).AddAsync(
+            Arg.Is<AdminAuditLogEntry>(e => e.UserId == performedByUserId && e.Action == "PartyDeleted" && e.Details!.Contains("Party")),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -128,11 +150,15 @@ public class AdminServiceTests
         _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns(previouslyActive);
         _parties.GetByIdAsync(target.Id, Arg.Any<CancellationToken>()).Returns(target);
 
-        await _sut.SetActivePartyAsync(target.Id);
+        var performedByUserId = Guid.NewGuid();
+        await _sut.SetActivePartyAsync(target.Id, performedByUserId);
 
         Assert.False(previouslyActive.IsActive);
         Assert.True(target.IsActive);
         await _parties.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _auditLog.Received(1).AddAsync(
+            Arg.Is<AdminAuditLogEntry>(e => e.UserId == performedByUserId && e.Action == "PartyActivated" && e.Details!.Contains("New")),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -142,7 +168,7 @@ public class AdminServiceTests
         _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns((LanParty?)null);
         _parties.GetByIdAsync(target.Id, Arg.Any<CancellationToken>()).Returns(target);
 
-        await _sut.SetActivePartyAsync(target.Id);
+        await _sut.SetActivePartyAsync(target.Id, Guid.NewGuid());
 
         Assert.True(target.IsActive);
         await _parties.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -154,6 +180,17 @@ public class AdminServiceTests
         _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns((LanParty?)null);
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetActivePartyAsync(Guid.NewGuid()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetActivePartyAsync(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task GetRecentAuditLogAsync_DelegatesToRepository()
+    {
+        var entry = new AdminAuditLogEntry { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Action = "PartyCreated", CreatedAt = DateTime.UtcNow };
+        _auditLog.GetRecentAsync(10, Arg.Any<CancellationToken>()).Returns([entry]);
+
+        var result = await _sut.GetRecentAuditLogAsync(10);
+
+        Assert.Same(entry, Assert.Single(result));
     }
 }

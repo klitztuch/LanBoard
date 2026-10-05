@@ -1,0 +1,143 @@
+@page "/tournaments/{Id:guid}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject ITournamentService TournamentService
+@inject IUserService UserService
+@inject AuthenticationStateProvider Auth
+
+<PageTitle>@(_tournament?.Name ?? "Turnier")</PageTitle>
+
+@if (_tournament is null)
+{
+    <p class="p-8 text-gray-400 text-sm">Lade...</p>
+}
+else
+{
+    <div class="p-8">
+        <div class="flex items-center gap-3 mb-6">
+            <a href="/tournaments" class="text-gray-400 hover:text-white transition-colors text-sm">← Turniere</a>
+            <h1 class="text-2xl font-bold text-white">@_tournament.Name</h1>
+        </div>
+
+        @if (!_tournament.IsStarted)
+        {
+            <div class="max-w-md">
+                <h2 class="text-lg font-semibold text-white mb-3">Teilnehmer (@_tournament.Participants.Count)</h2>
+                <div class="flex flex-col gap-2 mb-4">
+                    @foreach (var user in _allUsers ?? [])
+                    {
+                        var isIn = _tournament.Participants.Any(p => p.UserId == user.Id);
+                        <label class="flex items-center gap-3 bg-gray-800 rounded-lg px-3 py-2 border border-gray-700 @(_isAdmin ? "cursor-pointer" : "")">
+                            <input type="checkbox" checked="@isIn" disabled="@(!_isAdmin)"
+                                   @onchange="e => ToggleParticipantAsync(user.Id, (bool)(e.Value ?? false))"/>
+                            <span class="text-sm text-white">@user.DisplayName</span>
+                        </label>
+                    }
+                </div>
+                @if (_isAdmin)
+                {
+                    <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+                            disabled="@(_tournament.Participants.Count < 2)"
+                            @onclick="StartAsync">
+                        Turnier starten
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex gap-8 overflow-x-auto pb-4">
+                @foreach (var round in _roundsOrdered)
+                {
+                    <div class="flex flex-col gap-4 justify-center shrink-0 w-56">
+                        <h3 class="text-sm text-gray-400 font-medium">@RoundLabel(round.Key, _roundsOrdered.Count)</h3>
+                        @foreach (var match in round.OrderBy(m => m.Slot))
+                        {
+                            <div class="bg-gray-800 rounded-xl border border-gray-700 p-3 flex flex-col gap-1">
+                                @{
+                                    var canDecide = _isAdmin && match.WinnerId is null && match.Participant1Id is not null && match.Participant2Id is not null;
+                                    var participant1Id = match.Participant1Id ?? Guid.Empty;
+                                    var participant2Id = match.Participant2Id ?? Guid.Empty;
+                                }
+                                <div class="flex items-center justify-between gap-2 @(match.WinnerId is not null && match.WinnerId == match.Participant1Id ? "text-green-400 font-medium" : "text-gray-300")">
+                                    <span class="text-sm truncate">@(match.Participant1?.User.DisplayName ?? "–")</span>
+                                    @if (canDecide)
+                                    {
+                                        <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
+                                                @onclick="() => SetWinnerAsync(match.Id, participant1Id)">
+                                            Sieg
+                                        </button>
+                                    }
+                                </div>
+                                <div class="flex items-center justify-between gap-2 @(match.WinnerId is not null && match.WinnerId == match.Participant2Id ? "text-green-400 font-medium" : "text-gray-300")">
+                                    <span class="text-sm truncate">@(match.Participant2?.User.DisplayName ?? "–")</span>
+                                    @if (canDecide)
+                                    {
+                                        <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
+                                                @onclick="() => SetWinnerAsync(match.Id, participant2Id)">
+                                            Sieg
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Tournament? _tournament;
+    private IReadOnlyList<User>? _allUsers;
+    private bool _isAdmin;
+    private List<IGrouping<int, TournamentMatch>> _roundsOrdered = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        _isAdmin = state.User.HasClaim("lanboard:isadmin", "true");
+        _allUsers = await UserService.GetAllWithIdentitiesAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _tournament = await TournamentService.GetWithDetailsAsync(Id);
+        _roundsOrdered = _tournament?.Matches
+            .GroupBy(m => m.Round)
+            .OrderBy(g => g.Key)
+            .ToList() ?? [];
+    }
+
+    private async Task ToggleParticipantAsync(Guid userId, bool add)
+    {
+        if (add)
+            await TournamentService.AddParticipantAsync(Id, userId);
+        else
+            await TournamentService.RemoveParticipantAsync(Id, userId);
+        await LoadAsync();
+    }
+
+    private async Task StartAsync()
+    {
+        await TournamentService.StartAsync(Id);
+        await LoadAsync();
+    }
+
+    private async Task SetWinnerAsync(Guid matchId, Guid winnerParticipantId)
+    {
+        await TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId);
+        await LoadAsync();
+    }
+
+    private static string RoundLabel(int round, int totalRounds)
+    {
+        if (round == totalRounds) return "Finale";
+        if (round == totalRounds - 1) return "Halbfinale";
+        return $"Runde {round}";
+    }
+}
