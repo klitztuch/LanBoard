@@ -2,6 +2,7 @@
 @attribute [Authorize(Policy = "Admin")]
 @rendermode InteractiveServer
 @inject IAdminService AdminService
+@inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
 
 <PageTitle>Parties – Admin</PageTitle>
@@ -102,16 +103,23 @@
         _parties = result.ToList();
     }
 
+    private async Task<Guid> CurrentUserIdAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        var claim = state.User.FindFirst("lanboard:userid")?.Value;
+        return Guid.TryParse(claim, out var userId) ? userId : Guid.Empty;
+    }
+
     private async Task DeleteParty(Guid id)
     {
-        await AdminService.DeletePartyAsync(id);
+        await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync());
         _parties?.RemoveAll(p => p.Id == id);
         _confirmDeleteId = null;
     }
 
     private async Task SetActive(Guid id)
     {
-        await AdminService.SetActivePartyAsync(id);
+        await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync());
         var result = await AdminService.GetAllPartiesAsync();
         _parties = result.ToList();
     }
