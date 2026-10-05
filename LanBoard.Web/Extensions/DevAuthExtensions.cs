@@ -40,7 +40,7 @@ public static class DevAuthExtensions
                 new("lanboard:userid", user.Id.ToString())
             };
             if (user.IsAdmin)
-                claims.Add(new Claim("lanboard:isadmin", "true"));
+                claims.Add(new Claim(AdminClaim.Type, AdminClaim.Value));
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
             await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
             return Results.Redirect("/");

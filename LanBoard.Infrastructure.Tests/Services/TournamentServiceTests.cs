@@ -1,4 +1,5 @@
 using LanBoard.Application.Interfaces;
+using LanBoard.Application.Users;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
 using NSubstitute;
@@ -12,12 +13,14 @@ public class TournamentServiceTests
     private readonly ITournamentRepository _tournaments = Substitute.For<ITournamentRepository>();
     private readonly ITournamentParticipantRepository _participants = Substitute.For<ITournamentParticipantRepository>();
     private readonly ITournamentMatchRepository _matches = Substitute.For<ITournamentMatchRepository>();
+    private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
 
     private readonly TournamentService _sut;
 
     public TournamentServiceTests()
     {
-        _sut = new TournamentService(_tournaments, _participants, _matches);
+        _currentUser.IsAdminAsync(Arg.Any<CancellationToken>()).Returns(true);
+        _sut = new TournamentService(_tournaments, _participants, _matches, _currentUser);
     }
 
     private static Tournament CreateTournament(bool isStarted = false, params TournamentParticipant[] participants)
@@ -217,5 +220,130 @@ public class TournamentServiceTests
 
         Assert.Equal(p1.Id, finalMatch.WinnerId);
         await _tournaments.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    private void SetNotAdmin()
+        => _currentUser.IsAdminAsync(Arg.Any<CancellationToken>()).Returns(false);
+
+    private void AssertNoRepositoryCalls()
+    {
+        Assert.Empty(_tournaments.ReceivedCalls());
+        Assert.Empty(_participants.ReceivedCalls());
+        Assert.Empty(_matches.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task CreateAsync_NotAdmin_ThrowsUnauthorizedAccess()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.CreateAsync(PartyId, "Cup"));
+    }
+
+    [Fact]
+    public async Task CreateAsync_NotAdmin_DoesNotTouchRepositories()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _sut.CreateAsync(PartyId, "Cup"));
+
+        AssertNoRepositoryCalls();
+    }
+
+    [Fact]
+    public async Task AddParticipantAsync_NotAdmin_ThrowsUnauthorizedAccess()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.AddParticipantAsync(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task AddParticipantAsync_NotAdmin_DoesNotTouchRepositories()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _sut.AddParticipantAsync(Guid.NewGuid(), Guid.NewGuid()));
+
+        AssertNoRepositoryCalls();
+    }
+
+    [Fact]
+    public async Task RemoveParticipantAsync_NotAdmin_ThrowsUnauthorizedAccess()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.RemoveParticipantAsync(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task RemoveParticipantAsync_NotAdmin_DoesNotTouchRepositories()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _sut.RemoveParticipantAsync(Guid.NewGuid(), Guid.NewGuid()));
+
+        AssertNoRepositoryCalls();
+    }
+
+    [Fact]
+    public async Task StartAsync_NotAdmin_ThrowsUnauthorizedAccess()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.StartAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task StartAsync_NotAdmin_DoesNotTouchRepositories()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _sut.StartAsync(Guid.NewGuid()));
+
+        AssertNoRepositoryCalls();
+    }
+
+    [Fact]
+    public async Task SetMatchWinnerAsync_NotAdmin_ThrowsUnauthorizedAccess()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _sut.SetMatchWinnerAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task SetMatchWinnerAsync_NotAdmin_DoesNotTouchRepositories()
+    {
+        SetNotAdmin();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _sut.SetMatchWinnerAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
+
+        AssertNoRepositoryCalls();
+    }
+
+    [Fact]
+    public async Task GetWithDetailsAsync_NotAdmin_ReturnsTournament()
+    {
+        SetNotAdmin();
+        var tournament = CreateTournament();
+        _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
+
+        var result = await _sut.GetWithDetailsAsync(tournament.Id);
+
+        Assert.Same(tournament, result);
+    }
+
+    [Fact]
+    public async Task GetByPartyAsync_NotAdmin_ReturnsTournaments()
+    {
+        SetNotAdmin();
+        IReadOnlyList<Tournament> list = [CreateTournament(), CreateTournament()];
+        _tournaments.GetByPartyAsync(PartyId, Arg.Any<CancellationToken>()).Returns(list);
+
+        var result = await _sut.GetByPartyAsync(PartyId);
+
+        Assert.Same(list, result);
     }
 }

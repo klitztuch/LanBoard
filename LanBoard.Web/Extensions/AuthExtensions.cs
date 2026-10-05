@@ -4,9 +4,16 @@ using System.Text.Json.Serialization;
 using LanBoard.Application.Users;
 using LanBoard.Infrastructure.ApiClients;
 using LanBoard.Infrastructure.ApiClients.Steam;
+using LanBoard.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace LanBoard.Web.Extensions;
+
+public static class AdminClaim
+{
+    public const string Type = "lanboard:isadmin";
+    public const string Value = "true";
+}
 
 public static class AuthExtensions
 {
@@ -39,15 +46,16 @@ public static class AuthExtensions
                     var identity = ctx.Principal?.Identity as ClaimsIdentity;
                     identity?.AddClaim(new Claim("lanboard:userid", user.Id.ToString()));
                     if (user.IsAdmin)
-                        identity?.AddClaim(new Claim("lanboard:isadmin", "true"));
+                        identity?.AddClaim(new Claim(AdminClaim.Type, AdminClaim.Value));
                     if (user.AvatarUrl is not null)
                         identity?.AddClaim(new Claim("lanboard:avatarurl", user.AvatarUrl));
                 };
             });
 
         builder.Services.AddAuthorization(options =>
-            options.AddPolicy("Admin", p => p.RequireClaim("lanboard:isadmin", "true")));
+            options.AddPolicy("Admin", p => p.RequireClaim(AdminClaim.Type, AdminClaim.Value)));
         builder.Services.AddCascadingAuthenticationState();
+        builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
         return builder;
     }
