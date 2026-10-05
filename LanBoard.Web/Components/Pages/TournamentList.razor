@@ -1,0 +1,86 @@
+@page "/tournaments"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject ISeatService SeatService
+@inject ITournamentService TournamentService
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+
+<PageTitle>Turniere</PageTitle>
+
+<div class="p-8 max-w-2xl">
+    <h1 class="text-2xl font-bold text-white mb-6">Turniere</h1>
+
+    @if (_party is null)
+    {
+        <p class="text-gray-400 text-sm">Keine aktive LAN-Party gefunden.</p>
+    }
+    else
+    {
+        @if (_tournaments is null)
+        {
+            <p class="text-gray-400 text-sm">Lade...</p>
+        }
+        else if (_tournaments.Count == 0)
+        {
+            <p class="text-gray-400 text-sm mb-6">Noch keine Turniere für @_party.Name.</p>
+        }
+        else
+        {
+            <div class="flex flex-col gap-2 mb-6">
+                @foreach (var tournament in _tournaments)
+                {
+                    <a href="@($"/tournaments/{tournament.Id}")"
+                       class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-4 py-3 border border-gray-700 transition-colors">
+                        <span class="text-white font-medium">@tournament.Name</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full @(tournament.IsStarted ? "bg-green-900 text-green-300" : "bg-gray-700 text-gray-300")">
+                            @(tournament.IsStarted ? "Läuft" : "Anmeldung")
+                        </span>
+                    </a>
+                }
+            </div>
+        }
+
+        <AuthorizeView Policy="Admin">
+            <Authorized Context="authContext">
+                <EditForm Model="_form" OnValidSubmit="CreateAsync" class="flex gap-2">
+                    <DataAnnotationsValidator/>
+                    <InputText @bind-Value="_form.Name" placeholder="Turniername"
+                               class="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"/>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        Neues Turnier
+                    </button>
+                </EditForm>
+            </Authorized>
+        </AuthorizeView>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public Guid? PartyId { get; set; }
+
+    private LanParty? _party;
+    private IReadOnlyList<Tournament>? _tournaments;
+    private readonly TournamentForm _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        if (_party is not null)
+            _tournaments = await TournamentService.GetByPartyAsync(_party.Id);
+    }
+
+    private async Task CreateAsync()
+    {
+        if (_party is null) return;
+        var tournament = await TournamentService.CreateAsync(_party.Id, _form.Name);
+        Nav.NavigateTo($"/tournaments/{tournament.Id}");
+    }
+
+    private sealed class TournamentForm
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Name { get; set; } = "";
+    }
+}

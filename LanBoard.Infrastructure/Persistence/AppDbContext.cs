@@ -11,6 +11,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LanParty> LanParties => Set<LanParty>();
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<Tournament> Tournaments => Set<Tournament>();
+    public DbSet<TournamentParticipant> TournamentParticipants => Set<TournamentParticipant>();
+    public DbSet<TournamentMatch> TournamentMatches => Set<TournamentMatch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
