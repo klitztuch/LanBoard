@@ -1,3 +1,4 @@
+using LanBoard.Application.Authorization;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
@@ -10,11 +11,12 @@ public class AdminServiceTests
     private readonly ILanPartyRepository _parties = Substitute.For<ILanPartyRepository>();
     private readonly ISeatRepository _seats = Substitute.For<ISeatRepository>();
     private readonly IAdminAuditLogRepository _auditLog = Substitute.For<IAdminAuditLogRepository>();
+    private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();
     private readonly AdminService _sut;
 
     public AdminServiceTests()
     {
-        _sut = new AdminService(_parties, _seats, _auditLog);
+        _sut = new AdminService(_parties, _seats, _auditLog, _permissions);
     }
 
     [Fact]
@@ -102,7 +104,7 @@ public class AdminServiceTests
     {
         var partyId = Guid.NewGuid();
 
-        var seat = await _sut.AddSeatAsync(partyId, 3, 5);
+        var seat = await _sut.AddSeatAsync(partyId, 3, 5, Guid.NewGuid());
 
         Assert.Equal(partyId, seat.PartyId);
         Assert.Equal(3, seat.X);
@@ -117,7 +119,7 @@ public class AdminServiceTests
     {
         _seats.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Seat?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RemoveSeatAsync(Guid.NewGuid()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RemoveSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
     }
 
     [Fact]
@@ -126,7 +128,7 @@ public class AdminServiceTests
         var seat = new Seat { Id = Guid.NewGuid(), Label = "A1", AssignedUserId = Guid.NewGuid() };
         _seats.GetByIdAsync(seat.Id, Arg.Any<CancellationToken>()).Returns(seat);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RemoveSeatAsync(seat.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RemoveSeatAsync(seat.Id, Guid.NewGuid()));
         _seats.DidNotReceive().Remove(Arg.Any<Seat>());
     }
 
@@ -136,7 +138,7 @@ public class AdminServiceTests
         var seat = new Seat { Id = Guid.NewGuid(), Label = "A1" };
         _seats.GetByIdAsync(seat.Id, Arg.Any<CancellationToken>()).Returns(seat);
 
-        await _sut.RemoveSeatAsync(seat.Id);
+        await _sut.RemoveSeatAsync(seat.Id, Guid.NewGuid());
 
         _seats.Received(1).Remove(seat);
         await _seats.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -189,8 +191,52 @@ public class AdminServiceTests
         var entry = new AdminAuditLogEntry { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Action = "PartyCreated", CreatedAt = DateTime.UtcNow };
         _auditLog.GetRecentAsync(10, Arg.Any<CancellationToken>()).Returns([entry]);
 
-        var result = await _sut.GetRecentAuditLogAsync(10);
+        var result = await _sut.GetRecentAuditLogAsync(Guid.NewGuid(), 10);
 
         Assert.Same(entry, Assert.Single(result));
+    }
+
+    public static TheoryData<string> PartyManageMethods => ["CreateParty", "UpdateParty", "DeleteParty", "SetActiveParty", "AddSeat", "RemoveSeat"];
+
+    [Theory]
+    [MemberData(nameof(PartyManageMethods))]
+    public async Task PartyMutation_CallerLacksPartyManage_ThrowsAndChangesNothing(string method)
+    {
+        var deniedUserId = Guid.NewGuid();
+        _permissions.EnsureAsync(deniedUserId, Permissions.PartyManage, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new PermissionDeniedException(Permissions.PartyManage)));
+
+        Func<Task> act = method switch
+        {
+            "CreateParty" => () => _sut.CreatePartyAsync("LAN", DateTime.Today, "Loc", deniedUserId),
+            "UpdateParty" => () => _sut.UpdatePartyAsync(Guid.NewGuid(), "LAN", DateTime.Today, "Loc", deniedUserId),
+            "DeleteParty" => () => _sut.DeletePartyAsync(Guid.NewGuid(), deniedUserId),
+            "SetActiveParty" => () => _sut.SetActivePartyAsync(Guid.NewGuid(), deniedUserId),
+            "AddSeat" => () => _sut.AddSeatAsync(Guid.NewGuid(), 1, 1, deniedUserId),
+            "RemoveSeat" => () => _sut.RemoveSeatAsync(Guid.NewGuid(), deniedUserId),
+            _ => throw new ArgumentOutOfRangeException(nameof(method))
+        };
+
+        await Assert.ThrowsAsync<PermissionDeniedException>(act);
+
+        await _parties.DidNotReceive().AddAsync(Arg.Any<LanParty>(), Arg.Any<CancellationToken>());
+        _parties.DidNotReceive().Remove(Arg.Any<LanParty>());
+        await _parties.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _seats.DidNotReceive().AddAsync(Arg.Any<Seat>(), Arg.Any<CancellationToken>());
+        _seats.DidNotReceive().Remove(Arg.Any<Seat>());
+        await _seats.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _auditLog.DidNotReceive().AddAsync(Arg.Any<AdminAuditLogEntry>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetRecentAuditLogAsync_CallerLacksAuditView_Throws()
+    {
+        var deniedUserId = Guid.NewGuid();
+        _permissions.EnsureAsync(deniedUserId, Permissions.AuditView, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new PermissionDeniedException(Permissions.AuditView)));
+
+        await Assert.ThrowsAsync<PermissionDeniedException>(() => _sut.GetRecentAuditLogAsync(deniedUserId));
+
+        await _auditLog.DidNotReceive().GetRecentAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
     }
 }

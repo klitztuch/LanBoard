@@ -1,9 +1,9 @@
 @page "/admin/party/new"
 @page "/admin/party/{Id:guid}"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @inject IAdminService AdminService
-@inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
 
 <PageTitle>@(_party is null ? "Neue Party" : _party.Name) – Admin</PageTitle>
@@ -13,6 +13,8 @@
         <a href="/admin/party" class="text-gray-400 hover:text-white transition-colors text-sm">← Parties</a>
         <h1 class="text-2xl font-bold text-white">@(Id is null ? "Neue Party" : _party?.Name ?? "Bearbeiten")</h1>
     </div>
+
+    <ErrorBanner Message="@Error" />
 
     <EditForm Model="_form" OnValidSubmit="SaveAsync" class="space-y-4">
         <DataAnnotationsValidator />
@@ -90,18 +92,15 @@
 
     private async Task SaveAsync()
     {
-        var state = await Auth.GetAuthenticationStateAsync();
-        var userIdClaim = state.User.FindFirst("lanboard:userid")?.Value;
-        if (!Guid.TryParse(userIdClaim, out var userId)) return;
+        var userId = await CurrentUserIdAsync();
 
         if (Id is null)
         {
-            var party = await AdminService.CreatePartyAsync(_form.Name, _form.Date, _form.Location, userId);
-            Nav.NavigateTo($"/admin/party/{party.Id}");
+            if (await RunAsync(() => AdminService.CreatePartyAsync(_form.Name, _form.Date, _form.Location, userId)) is { } party)
+                Nav.NavigateTo($"/admin/party/{party.Id}");
         }
-        else
+        else if (await RunAsync(() => AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, _form.Location, userId)))
         {
-            await AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, _form.Location, userId);
             _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
             _displaySeats = [.. _party?.Seats ?? []];
         }
@@ -114,13 +113,14 @@
         if (seat is not null)
         {
             if (seat.AssignedUserId is not null) return;
-            await AdminService.RemoveSeatAsync(seat.Id);
-            _displaySeats.RemoveAll(s => s.X == x && s.Y == y);
+            if (await RunAsync(async () => await AdminService.RemoveSeatAsync(seat.Id, await CurrentUserIdAsync())))
+                _displaySeats.RemoveAll(s => s.X == x && s.Y == y);
         }
         else
         {
-            var newSeat = await AdminService.AddSeatAsync(_party.Id, x, y);
-            _displaySeats.Add(newSeat);
+            var userId = await CurrentUserIdAsync();
+            if (await RunAsync(() => AdminService.AddSeatAsync(_party.Id, x, y, userId)) is { } newSeat)
+                _displaySeats.Add(newSeat);
         }
     }
 

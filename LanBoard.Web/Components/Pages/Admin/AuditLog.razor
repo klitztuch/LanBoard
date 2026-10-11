@@ -1,5 +1,6 @@
 @page "/admin/audit-log"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = Permissions.AuditView)]
+@inherits ServicePageBase
 @inject IAdminService AdminService
 
 <PageTitle>Audit-Log – Admin</PageTitle>
@@ -10,9 +11,14 @@
         <h1 class="text-2xl font-bold text-white">Audit-Log</h1>
     </div>
 
+    <ErrorBanner Message="@Error" />
+
     @if (_entries is null)
     {
-        <p class="text-gray-400 text-sm">Lade...</p>
+        if (Error is null)
+        {
+            <p class="text-gray-400 text-sm">Lade...</p>
+        }
     }
     else if (_entries.Count == 0)
     {
@@ -38,6 +44,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _entries = await AdminService.GetRecentAuditLogAsync();
+        var userId = await CurrentUserIdAsync();
+        _entries = await RunAsync(() => AdminService.GetRecentAuditLogAsync(userId));
     }
 }

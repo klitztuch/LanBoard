@@ -1,9 +1,8 @@
 @page "/admin/party"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @inject IAdminService AdminService
-@inject AuthenticationStateProvider Auth
-@inject NavigationManager Nav
 
 <PageTitle>Parties – Admin</PageTitle>
 
@@ -15,6 +14,8 @@
             Neue Party
         </a>
     </div>
+
+    <ErrorBanner Message="@Error" />
 
     @if (_parties is null)
     {
@@ -103,23 +104,17 @@
         _parties = result.ToList();
     }
 
-    private async Task<Guid> CurrentUserIdAsync()
-    {
-        var state = await Auth.GetAuthenticationStateAsync();
-        var claim = state.User.FindFirst("lanboard:userid")?.Value;
-        return Guid.TryParse(claim, out var userId) ? userId : Guid.Empty;
-    }
-
     private async Task DeleteParty(Guid id)
     {
-        await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync());
-        _parties?.RemoveAll(p => p.Id == id);
         _confirmDeleteId = null;
+        if (await RunAsync(async () => await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync())))
+            _parties?.RemoveAll(p => p.Id == id);
     }
 
     private async Task SetActive(Guid id)
     {
-        await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync());
+        if (!await RunAsync(async () => await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync())))
+            return;
         var result = await AdminService.GetAllPartiesAsync();
         _parties = result.ToList();
     }

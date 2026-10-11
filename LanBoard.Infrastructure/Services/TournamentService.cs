@@ -1,3 +1,4 @@
+using LanBoard.Application.Authorization;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Tournaments;
 using LanBoard.Core.Entities;
@@ -7,13 +8,16 @@ namespace LanBoard.Infrastructure.Services;
 public class TournamentService(
     ITournamentRepository tournaments,
     ITournamentParticipantRepository participants,
-    ITournamentMatchRepository matches) : ITournamentService
+    ITournamentMatchRepository matches,
+    IPermissionService permissions) : ITournamentService
 {
     public Task<IReadOnlyList<Tournament>> GetByPartyAsync(Guid partyId, CancellationToken ct = default)
         => tournaments.GetByPartyAsync(partyId, ct);
 
-    public async Task<Tournament> CreateAsync(Guid partyId, string name, CancellationToken ct = default)
+    public async Task<Tournament> CreateAsync(Guid partyId, string name, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
+
         var tournament = new Tournament { Id = Guid.NewGuid(), PartyId = partyId, Name = name, CreatedAt = DateTime.UtcNow };
         await tournaments.AddAsync(tournament, ct);
         await tournaments.SaveChangesAsync(ct);
@@ -23,8 +27,10 @@ public class TournamentService(
     public Task<Tournament?> GetWithDetailsAsync(Guid id, CancellationToken ct = default)
         => tournaments.GetWithDetailsAsync(id, ct);
 
-    public async Task AddParticipantAsync(Guid tournamentId, Guid userId, CancellationToken ct = default)
+    public async Task AddParticipantAsync(Guid tournamentId, Guid userId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
+
         var tournament = await tournaments.GetByIdAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
         if (tournament.IsStarted)
@@ -37,8 +43,10 @@ public class TournamentService(
         await participants.SaveChangesAsync(ct);
     }
 
-    public async Task RemoveParticipantAsync(Guid tournamentId, Guid userId, CancellationToken ct = default)
+    public async Task RemoveParticipantAsync(Guid tournamentId, Guid userId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
+
         var tournament = await tournaments.GetByIdAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
         if (tournament.IsStarted)
@@ -51,8 +59,10 @@ public class TournamentService(
         await participants.SaveChangesAsync(ct);
     }
 
-    public async Task StartAsync(Guid tournamentId, CancellationToken ct = default)
+    public async Task StartAsync(Guid tournamentId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
+
         var tournament = await tournaments.GetWithDetailsAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
         if (tournament.IsStarted)
@@ -102,8 +112,10 @@ public class TournamentService(
         await tournaments.SaveChangesAsync(ct);
     }
 
-    public async Task SetMatchWinnerAsync(Guid tournamentId, Guid matchId, Guid winnerParticipantId, CancellationToken ct = default)
+    public async Task SetMatchWinnerAsync(Guid tournamentId, Guid matchId, Guid winnerParticipantId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
+
         var tournament = await tournaments.GetWithDetailsAsync(tournamentId, ct)
             ?? throw new InvalidOperationException("Tournament not found.");
 

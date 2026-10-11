@@ -1,3 +1,4 @@
+using LanBoard.Application.Authorization;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
@@ -8,16 +9,18 @@ namespace LanBoard.Infrastructure.Tests.Services;
 public class TournamentServiceTests
 {
     private static readonly Guid PartyId = Guid.NewGuid();
+    private static readonly Guid AdminId = Guid.NewGuid();
 
     private readonly ITournamentRepository _tournaments = Substitute.For<ITournamentRepository>();
     private readonly ITournamentParticipantRepository _participants = Substitute.For<ITournamentParticipantRepository>();
     private readonly ITournamentMatchRepository _matches = Substitute.For<ITournamentMatchRepository>();
+    private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();
 
     private readonly TournamentService _sut;
 
     public TournamentServiceTests()
     {
-        _sut = new TournamentService(_tournaments, _participants, _matches);
+        _sut = new TournamentService(_tournaments, _participants, _matches, _permissions);
     }
 
     private static Tournament CreateTournament(bool isStarted = false, params TournamentParticipant[] participants)
@@ -34,7 +37,7 @@ public class TournamentServiceTests
     [Fact]
     public async Task CreateAsync_PersistsTournament()
     {
-        var result = await _sut.CreateAsync(PartyId, "Cup");
+        var result = await _sut.CreateAsync(PartyId, "Cup", AdminId);
 
         Assert.Equal(PartyId, result.PartyId);
         Assert.Equal("Cup", result.Name);
@@ -51,7 +54,7 @@ public class TournamentServiceTests
         _participants.FindAsync(tournament.Id, Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((TournamentParticipant?)null);
 
         var userId = Guid.NewGuid();
-        await _sut.AddParticipantAsync(tournament.Id, userId);
+        await _sut.AddParticipantAsync(tournament.Id, userId, AdminId);
 
         await _participants.Received(1).AddAsync(
             Arg.Is<TournamentParticipant>(p => p.TournamentId == tournament.Id && p.UserId == userId),
@@ -65,7 +68,7 @@ public class TournamentServiceTests
         var tournament = CreateTournament(isStarted: true);
         _tournaments.GetByIdAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.AddParticipantAsync(tournament.Id, Guid.NewGuid()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.AddParticipantAsync(tournament.Id, Guid.NewGuid(), AdminId));
         await _participants.DidNotReceive().AddAsync(Arg.Any<TournamentParticipant>(), Arg.Any<CancellationToken>());
     }
 
@@ -77,7 +80,7 @@ public class TournamentServiceTests
         _tournaments.GetByIdAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
         _participants.FindAsync(tournament.Id, userId, Arg.Any<CancellationToken>()).Returns(CreateParticipant(tournament.Id));
 
-        await _sut.AddParticipantAsync(tournament.Id, userId);
+        await _sut.AddParticipantAsync(tournament.Id, userId, AdminId);
 
         await _participants.DidNotReceive().AddAsync(Arg.Any<TournamentParticipant>(), Arg.Any<CancellationToken>());
     }
@@ -88,7 +91,7 @@ public class TournamentServiceTests
         var tournament = CreateTournament(participants: CreateParticipant(Guid.NewGuid()));
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.StartAsync(tournament.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.StartAsync(tournament.Id, AdminId));
     }
 
     [Fact]
@@ -97,7 +100,7 @@ public class TournamentServiceTests
         var tournament = CreateTournament(isStarted: true, CreateParticipant(Guid.NewGuid()), CreateParticipant(Guid.NewGuid()));
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.StartAsync(tournament.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.StartAsync(tournament.Id, AdminId));
     }
 
     [Fact]
@@ -118,7 +121,7 @@ public class TournamentServiceTests
         _matches.When(m => m.AddAsync(Arg.Any<TournamentMatch>(), Arg.Any<CancellationToken>()))
             .Do(call => createdMatches.Add(call.Arg<TournamentMatch>()));
 
-        await _sut.StartAsync(tournament.Id);
+        await _sut.StartAsync(tournament.Id, AdminId);
 
         Assert.True(tournament.IsStarted);
         Assert.Equal(3, createdMatches.Count); // 2 round-1 matches + 1 final
@@ -151,7 +154,7 @@ public class TournamentServiceTests
         _matches.When(m => m.AddAsync(Arg.Any<TournamentMatch>(), Arg.Any<CancellationToken>()))
             .Do(call => createdMatches.Add(call.Arg<TournamentMatch>()));
 
-        await _sut.StartAsync(tournament.Id);
+        await _sut.StartAsync(tournament.Id, AdminId);
 
         // bracketSize=4: round-1 slot0 = p1 vs p2 (real match), slot1 = p3 vs bye (auto-win for p3)
         var round1 = createdMatches.Where(m => m.Round == 1).OrderBy(m => m.Slot).ToList();
@@ -179,7 +182,7 @@ public class TournamentServiceTests
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _sut.SetMatchWinnerAsync(tournament.Id, match.Id, Guid.NewGuid()));
+            () => _sut.SetMatchWinnerAsync(tournament.Id, match.Id, Guid.NewGuid(), AdminId));
     }
 
     [Fact]
@@ -194,7 +197,7 @@ public class TournamentServiceTests
         tournament.Matches.Add(finalMatch);
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await _sut.SetMatchWinnerAsync(tournament.Id, semiMatch.Id, p2.Id);
+        await _sut.SetMatchWinnerAsync(tournament.Id, semiMatch.Id, p2.Id, AdminId);
 
         Assert.Equal(p2.Id, semiMatch.WinnerId);
         // slot 1 is odd -> feeds into the next match's Participant2 slot
@@ -213,9 +216,40 @@ public class TournamentServiceTests
         tournament.Matches.Add(finalMatch);
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await _sut.SetMatchWinnerAsync(tournament.Id, finalMatch.Id, p1.Id);
+        await _sut.SetMatchWinnerAsync(tournament.Id, finalMatch.Id, p1.Id, AdminId);
 
         Assert.Equal(p1.Id, finalMatch.WinnerId);
         await _tournaments.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    public static TheoryData<string> MutatingMethods => ["Create", "AddParticipant", "RemoveParticipant", "Start", "SetMatchWinner"];
+
+    [Theory]
+    [MemberData(nameof(MutatingMethods))]
+    public async Task MutatingMethod_CallerLacksPermission_ThrowsAndChangesNothing(string method)
+    {
+        var deniedUserId = Guid.NewGuid();
+        _permissions.EnsureAsync(deniedUserId, Permissions.TournamentManage, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new PermissionDeniedException(Permissions.TournamentManage)));
+        var tournamentId = Guid.NewGuid();
+
+        Func<Task> act = method switch
+        {
+            "Create" => () => _sut.CreateAsync(PartyId, "Cup", deniedUserId),
+            "AddParticipant" => () => _sut.AddParticipantAsync(tournamentId, Guid.NewGuid(), deniedUserId),
+            "RemoveParticipant" => () => _sut.RemoveParticipantAsync(tournamentId, Guid.NewGuid(), deniedUserId),
+            "Start" => () => _sut.StartAsync(tournamentId, deniedUserId),
+            "SetMatchWinner" => () => _sut.SetMatchWinnerAsync(tournamentId, Guid.NewGuid(), Guid.NewGuid(), deniedUserId),
+            _ => throw new ArgumentOutOfRangeException(nameof(method))
+        };
+
+        await Assert.ThrowsAsync<PermissionDeniedException>(act);
+
+        await _tournaments.DidNotReceive().AddAsync(Arg.Any<Tournament>(), Arg.Any<CancellationToken>());
+        await _participants.DidNotReceive().AddAsync(Arg.Any<TournamentParticipant>(), Arg.Any<CancellationToken>());
+        _participants.DidNotReceive().Remove(Arg.Any<TournamentParticipant>());
+        await _matches.DidNotReceive().AddAsync(Arg.Any<TournamentMatch>(), Arg.Any<CancellationToken>());
+        await _tournaments.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _participants.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

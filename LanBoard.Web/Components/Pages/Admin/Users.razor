@@ -1,0 +1,114 @@
+@page "/admin/users"
+@attribute [Authorize(Policy = Permissions.UsersManage)]
+@rendermode InteractiveServer
+@inherits ServicePageBase
+@inject IRoleService RoleService
+@inject AuthenticationStateProvider Auth
+@inject IAuthorizationService AuthorizationService
+
+<PageTitle>Benutzer – Admin</PageTitle>
+
+<div class="p-8 max-w-3xl">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/admin" class="text-gray-400 hover:text-white transition-colors text-sm">← Admin</a>
+        <h1 class="text-2xl font-bold text-white">Benutzer</h1>
+    </div>
+
+    <ErrorBanner Message="@Error" />
+
+    @if (_users is null || _roles is null)
+    {
+        if (Error is null)
+        {
+            <p class="text-gray-400 text-sm">Lade...</p>
+        }
+    }
+    else
+    {
+        <div class="flex flex-col gap-2">
+            @foreach (var user in _users)
+            {
+                var assignable = _roles.Where(r => CanManage(r) && user.Roles.All(ur => ur.Id != r.Id)).ToList();
+                <div class="flex flex-wrap items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 border border-gray-700">
+                    @if (user.AvatarUrl is not null)
+                    {
+                        <img src="@user.AvatarUrl" alt="" class="w-8 h-8 rounded-full shrink-0" />
+                    }
+                    else
+                    {
+                        <div class="w-8 h-8 rounded-full bg-gray-700 shrink-0"></div>
+                    }
+                    <span class="text-white font-medium min-w-32">@user.DisplayName</span>
+
+                    <div class="flex flex-wrap items-center gap-1 flex-1">
+                        @foreach (var role in user.Roles)
+                        {
+                            <span class="flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border @(role.IsSystem ? "bg-blue-950 border-blue-800 text-blue-300" : "bg-gray-900 border-gray-700 text-gray-300")">
+                                @role.Name
+                                @if (CanManage(role))
+                                {
+                                    <button class="text-gray-500 hover:text-red-400 transition-colors" title="Rolle entfernen"
+                                            @onclick="() => UnassignAsync(user.UserId, role.Id)">
+                                        ×
+                                    </button>
+                                }
+                            </span>
+                        }
+                    </div>
+
+                    @if (assignable.Count > 0)
+                    {
+                        <select @key="_selectVersion" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 text-xs focus:outline-none focus:border-blue-500"
+                                @onchange="e => AssignAsync(user.UserId, e.Value as string)">
+                            <option value="" selected>+ Rolle</option>
+                            @foreach (var role in assignable)
+                            {
+                                <option value="@role.Id">@role.Name</option>
+                            }
+                        </select>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<UserWithRoles>? _users;
+    private IReadOnlyList<Role>? _roles;
+    private bool _canManageRoles;
+    private int _selectVersion; // re-creates the role selects so they reset to the placeholder
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        _canManageRoles = (await AuthorizationService.AuthorizeAsync(state.User, Permissions.RolesManage)).Succeeded;
+        _roles = await RoleService.GetAllAsync();
+        await LoadUsersAsync();
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        var userId = await CurrentUserIdAsync();
+        _users = await RunAsync(() => RoleService.GetUsersWithRolesAsync(userId)) ?? _users;
+    }
+
+    // Admin role changes additionally require roles.manage; the service enforces this too.
+    private bool CanManage(Role role) => !role.IsSystem || _canManageRoles;
+
+    private async Task AssignAsync(Guid userId, string? roleIdValue)
+    {
+        if (!Guid.TryParse(roleIdValue, out var roleId)) return;
+        _selectVersion++;
+        var performedByUserId = await CurrentUserIdAsync();
+        if (await RunAsync(() => RoleService.AssignAsync(userId, roleId, performedByUserId)))
+            await LoadUsersAsync();
+    }
+
+    private async Task UnassignAsync(Guid userId, Guid roleId)
+    {
+        var performedByUserId = await CurrentUserIdAsync();
+        if (await RunAsync(() => RoleService.UnassignAsync(userId, roleId, performedByUserId)))
+            await LoadUsersAsync();
+    }
+}
