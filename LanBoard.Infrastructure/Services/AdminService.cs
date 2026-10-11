@@ -1,16 +1,23 @@
 using LanBoard.Application.Admin;
+using LanBoard.Application.Authorization;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 
 namespace LanBoard.Infrastructure.Services;
 
-public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IAdminAuditLogRepository auditLog) : IAdminService
+public class AdminService(
+    ILanPartyRepository parties,
+    ISeatRepository seats,
+    IAdminAuditLogRepository auditLog,
+    IPermissionService permissions) : IAdminService
 {
     public Task<IReadOnlyList<LanParty>> GetAllPartiesAsync(CancellationToken ct = default)
         => parties.GetAllAsync(ct);
 
     public async Task<LanParty> CreatePartyAsync(string name, DateTime date, string location, Guid createdByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(createdByUserId, Permissions.PartyManage, ct);
+
         var party = new LanParty
         {
             Id = Guid.NewGuid(),
@@ -28,6 +35,8 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
 
     public async Task UpdatePartyAsync(Guid id, string name, DateTime date, string location, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var party = await parties.GetByIdAsync(id, ct)
             ?? throw new InvalidOperationException("Party not found.");
         party.Name = name;
@@ -39,6 +48,8 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
 
     public async Task DeletePartyAsync(Guid id, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var party = await parties.GetByIdAsync(id, ct)
             ?? throw new InvalidOperationException("Party not found.");
         parties.Remove(party);
@@ -51,6 +62,8 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
 
     public async Task SetActivePartyAsync(Guid partyId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         // Deactivate and activate in separate SaveChanges calls: the partial unique
         // index on IsActive can't be deferred (Postgres doesn't support deferrable
         // constraints with a WHERE clause), and EF doesn't guarantee statement order
@@ -71,8 +84,10 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
         await LogAsync(performedByUserId, "PartyActivated", $"Party \"{target.Name}\" aktiviert", ct);
     }
 
-    public async Task<Seat> AddSeatAsync(Guid partyId, int x, int y, CancellationToken ct = default)
+    public async Task<Seat> AddSeatAsync(Guid partyId, int x, int y, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var seat = new Seat
         {
             Id = Guid.NewGuid(),
@@ -86,8 +101,10 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
         return seat;
     }
 
-    public async Task RemoveSeatAsync(Guid seatId, CancellationToken ct = default)
+    public async Task RemoveSeatAsync(Guid seatId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var seat = await seats.GetByIdAsync(seatId, ct)
             ?? throw new InvalidOperationException("Seat not found.");
         if (seat.AssignedUserId is not null)
@@ -96,8 +113,11 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
         await seats.SaveChangesAsync(ct);
     }
 
-    public Task<IReadOnlyList<AdminAuditLogEntry>> GetRecentAuditLogAsync(int count = 50, CancellationToken ct = default)
-        => auditLog.GetRecentAsync(count, ct);
+    public async Task<IReadOnlyList<AdminAuditLogEntry>> GetRecentAuditLogAsync(Guid performedByUserId, int count = 50, CancellationToken ct = default)
+    {
+        await permissions.EnsureAsync(performedByUserId, Permissions.AuditView, ct);
+        return await auditLog.GetRecentAsync(count, ct);
+    }
 
     private async Task LogAsync(Guid userId, string action, string details, CancellationToken ct)
     {

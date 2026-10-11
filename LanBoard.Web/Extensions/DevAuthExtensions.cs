@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using LanBoard.Application.Interfaces;
+using LanBoard.Application.Roles;
+using LanBoard.Web.Auth;
 using LanBoard.Core.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -10,7 +12,7 @@ public static class DevAuthExtensions
 {
     public static IEndpointRouteBuilder MapDevAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/auth/dev-login", async (string? name, HttpContext ctx, IUserRepository users, IConfiguration config) =>
+        app.MapGet("/auth/dev-login", async (string? name, HttpContext ctx, IUserRepository users, IRoleService roles, IConfiguration config) =>
         {
             if (name is null)
                 return Results.BadRequest("name is required");
@@ -33,14 +35,15 @@ public static class DevAuthExtensions
                 await users.SaveChangesAsync();
             }
 
+            var roleNames = config.GetSection($"DevUserRoles:{name}").Get<string[]>() ?? [];
+            await roles.EnsureAssignedByNameAsync(user.Id, roleNames);
+
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Name, user.DisplayName),
                 new(ClaimTypes.NameIdentifier, name),
-                new("lanboard:userid", user.Id.ToString())
+                new(LanBoardClaims.UserId, user.Id.ToString())
             };
-            if (user.IsAdmin)
-                claims.Add(new Claim("lanboard:isadmin", "true"));
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
             await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
             return Results.Redirect("/");

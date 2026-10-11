@@ -1,15 +1,17 @@
 @page "/tournaments"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @inject ISeatService SeatService
 @inject ITournamentService TournamentService
-@inject AuthenticationStateProvider Auth
 @inject NavigationManager Nav
 
 <PageTitle>Turniere</PageTitle>
 
 <div class="p-8 max-w-2xl">
     <h1 class="text-2xl font-bold text-white mb-6">Turniere</h1>
+
+    <ErrorBanner Message="@Error" />
 
     @if (_party is null)
     {
@@ -41,7 +43,7 @@
             </div>
         }
 
-        <AuthorizeView Policy="Admin">
+        <AuthorizeView Policy="@Permissions.TournamentManage">
             <Authorized Context="authContext">
                 <EditForm Model="_form" OnValidSubmit="CreateAsync" class="flex gap-2">
                     <DataAnnotationsValidator/>
@@ -74,8 +76,9 @@
     private async Task CreateAsync()
     {
         if (_party is null) return;
-        var tournament = await TournamentService.CreateAsync(_party.Id, _form.Name);
-        Nav.NavigateTo($"/tournaments/{tournament.Id}");
+        var userId = await CurrentUserIdAsync();
+        if (await RunAsync(() => TournamentService.CreateAsync(_party.Id, _form.Name, userId)) is { } tournament)
+            Nav.NavigateTo($"/tournaments/{tournament.Id}");
     }
 
     private sealed class TournamentForm
