@@ -1,0 +1,30 @@
+@using Microsoft.AspNetCore.Builder
+@using Microsoft.Extensions.Options
+@inject NavigationManager Navigation
+@inject IOptions<RequestLocalizationOptions> LocalizationOptions
+
+@* Plain links with full reload: a circuit's culture is fixed, so switching must start a new one. *@
+<div class="flex items-center gap-1 text-xs" role="group" aria-label="@L["Common.Language"]">
+    @foreach (var culture in LocalizationOptions.Value.SupportedUICultures ?? [])
+    {
+        var active = culture.Name == CultureInfo.CurrentUICulture.Name
+                     || culture.Name == CultureInfo.CurrentUICulture.Parent.Name;
+        <a href="@CultureUrl(culture.Name)"
+           data-enhance-nav="false"
+           hreflang="@culture.Name"
+           lang="@culture.Name"
+           title="@culture.NativeName"
+           aria-current="@(active ? "true" : null)"
+           class="px-1.5 py-0.5 rounded uppercase transition-colors @(active ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white")">
+            @culture.TwoLetterISOLanguageName
+        </a>
+    }
+</div>
+
+@code {
+    private string CultureUrl(string culture)
+    {
+        var returnUrl = new Uri(Navigation.Uri).PathAndQuery;
+        return $"/culture/set?culture={Uri.EscapeDataString(culture)}&returnUrl={Uri.EscapeDataString(returnUrl)}";
+    }
+}

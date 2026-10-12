@@ -9,14 +9,14 @@ public static class Permissions
     public const string RolesManage = "roles.manage";
     public const string AuditView = "audit.view";
 
-    // Key → German display label for the role editor
-    public static readonly IReadOnlyDictionary<string, string> All = new Dictionary<string, string>
-    {
-        [PartyManage] = "LAN-Parties verwalten",
-        [TournamentManage] = "Turniere verwalten",
-        [CateringManage] = "Catering verwalten",
-        [UsersManage] = "Benutzer & Rollenzuweisung verwalten",
-        [RolesManage] = "Rollen verwalten",
-        [AuditView] = "Audit-Log einsehen",
-    };
+    // Keys only, in display order; labels are localized in the Web layer (Permission.<key>).
+    public static readonly IReadOnlyList<string> All =
+    [
+        PartyManage,
+        TournamentManage,
+        CateringManage,
+        UsersManage,
+        RolesManage,
+        AuditView,
+    ];
 }

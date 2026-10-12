@@ -1,4 +1,5 @@
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
@@ -68,7 +69,8 @@ public class TournamentServiceTests
         var tournament = CreateTournament(isStarted: true);
         _tournaments.GetByIdAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.AddParticipantAsync(tournament.Id, Guid.NewGuid(), AdminId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.AddParticipantAsync(tournament.Id, Guid.NewGuid(), AdminId));
+        Assert.Equal(ErrorCodes.TournamentAlreadyStarted, ex.Code);
         await _participants.DidNotReceive().AddAsync(Arg.Any<TournamentParticipant>(), Arg.Any<CancellationToken>());
     }
 
@@ -91,7 +93,9 @@ public class TournamentServiceTests
         var tournament = CreateTournament(participants: CreateParticipant(Guid.NewGuid()));
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.StartAsync(tournament.Id, AdminId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.StartAsync(tournament.Id, AdminId));
+        Assert.Equal(ErrorCodes.TournamentTooFewParticipants, ex.Code);
+        Assert.Equal([2], ex.Args);
     }
 
     [Fact]
@@ -100,7 +104,8 @@ public class TournamentServiceTests
         var tournament = CreateTournament(isStarted: true, CreateParticipant(Guid.NewGuid()), CreateParticipant(Guid.NewGuid()));
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.StartAsync(tournament.Id, AdminId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.StartAsync(tournament.Id, AdminId));
+        Assert.Equal(ErrorCodes.TournamentAlreadyStarted, ex.Code);
     }
 
     [Fact]
@@ -181,8 +186,9 @@ public class TournamentServiceTests
         tournament.Matches.Add(match);
         _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(
             () => _sut.SetMatchWinnerAsync(tournament.Id, match.Id, Guid.NewGuid(), AdminId));
+        Assert.Equal(ErrorCodes.MatchInvalidWinner, ex.Code);
     }
 
     [Fact]

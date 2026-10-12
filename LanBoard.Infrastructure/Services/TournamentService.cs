@@ -1,4 +1,5 @@
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Tournaments;
 using LanBoard.Core.Entities;
@@ -11,6 +12,8 @@ public class TournamentService(
     ITournamentMatchRepository matches,
     IPermissionService permissions) : ITournamentService
 {
+    private const int MinParticipants = 2;
+
     public Task<IReadOnlyList<Tournament>> GetByPartyAsync(Guid partyId, CancellationToken ct = default)
         => tournaments.GetByPartyAsync(partyId, ct);
 
@@ -32,9 +35,9 @@ public class TournamentService(
         await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
 
         var tournament = await tournaments.GetByIdAsync(tournamentId, ct)
-            ?? throw new InvalidOperationException("Tournament not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.TournamentNotFound);
         if (tournament.IsStarted)
-            throw new InvalidOperationException("Tournament has already started.");
+            throw new BusinessRuleException(ErrorCodes.TournamentAlreadyStarted);
 
         if (await participants.FindAsync(tournamentId, userId, ct) is not null)
             return;
@@ -48,9 +51,9 @@ public class TournamentService(
         await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
 
         var tournament = await tournaments.GetByIdAsync(tournamentId, ct)
-            ?? throw new InvalidOperationException("Tournament not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.TournamentNotFound);
         if (tournament.IsStarted)
-            throw new InvalidOperationException("Tournament has already started.");
+            throw new BusinessRuleException(ErrorCodes.TournamentAlreadyStarted);
 
         var participant = await participants.FindAsync(tournamentId, userId, ct);
         if (participant is null) return;
@@ -64,11 +67,11 @@ public class TournamentService(
         await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
 
         var tournament = await tournaments.GetWithDetailsAsync(tournamentId, ct)
-            ?? throw new InvalidOperationException("Tournament not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.TournamentNotFound);
         if (tournament.IsStarted)
-            throw new InvalidOperationException("Tournament has already started.");
-        if (tournament.Participants.Count < 2)
-            throw new InvalidOperationException("At least 2 participants are required to start a tournament.");
+            throw new BusinessRuleException(ErrorCodes.TournamentAlreadyStarted);
+        if (tournament.Participants.Count < MinParticipants)
+            throw new BusinessRuleException(ErrorCodes.TournamentTooFewParticipants, MinParticipants);
 
         var seeded = tournament.Participants.ToList();
         var bracketSize = 1;
@@ -117,13 +120,13 @@ public class TournamentService(
         await permissions.EnsureAsync(performedByUserId, Permissions.TournamentManage, ct);
 
         var tournament = await tournaments.GetWithDetailsAsync(tournamentId, ct)
-            ?? throw new InvalidOperationException("Tournament not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.TournamentNotFound);
 
         var match = tournament.Matches.FirstOrDefault(m => m.Id == matchId)
-            ?? throw new InvalidOperationException("Match not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.MatchNotFound);
 
         if (match.Participant1Id != winnerParticipantId && match.Participant2Id != winnerParticipantId)
-            throw new InvalidOperationException("Winner must be one of the match's participants.");
+            throw new BusinessRuleException(ErrorCodes.MatchInvalidWinner);
 
         match.WinnerId = winnerParticipantId;
 

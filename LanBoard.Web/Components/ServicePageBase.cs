@@ -1,7 +1,9 @@
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Web.Auth;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Localization;
 
 namespace LanBoard.Web.Components;
 
@@ -9,6 +11,8 @@ namespace LanBoard.Web.Components;
 public abstract class ServicePageBase : ComponentBase
 {
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedResource> Localizer { get; set; } = null!;
+    [Inject] private ILogger<ServicePageBase> Logger { get; set; } = null!;
 
     protected string? Error { get; set; }
 
@@ -27,13 +31,14 @@ public abstract class ServicePageBase : ComponentBase
             await action();
             return true;
         }
-        catch (PermissionDeniedException)
+        catch (PermissionDeniedException ex)
         {
-            Error = "Keine Berechtigung.";
+            Error = ErrorMessages.For(Localizer, ex);
         }
-        catch (InvalidOperationException ex)
+        catch (BusinessRuleException ex)
         {
-            Error = ex.Message;
+            Logger.LogInformation(ex, "Business rule violated: {ErrorCode}", ex.Code);
+            Error = ErrorMessages.For(Localizer, ex);
         }
         return false;
     }

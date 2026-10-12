@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddInfrastructure();
 builder.AddAuth();
+builder.AddLanBoardLocalization();
 
 builder.Services.AddSingleton<ILanBoardNotifier, LanBoardNotifier>();
 builder.Services.AddHostedService<SessionPollingService>();
@@ -32,6 +33,7 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseLanBoardLocalization();
 app.UseAuthorization();
 app.UseAntiforgery();
 
@@ -39,6 +41,8 @@ app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
     app.MapDevAuthEndpoints();
+
+app.MapCultureEndpoint();
 
 app.MapGet("/auth/login", (HttpContext ctx, string? returnUrl) =>
     ctx.ChallengeAsync("Steam", new AuthenticationProperties { RedirectUri = returnUrl ?? "/" }));

@@ -7,17 +7,17 @@
 @inject AuthenticationStateProvider Auth
 @inject IAuthorizationService AuthorizationService
 
-<PageTitle>@(_tournament?.Name ?? "Turnier")</PageTitle>
+<PageTitle>@(_tournament?.Name ?? L["Tournament.Title"])</PageTitle>
 
 @if (_tournament is null)
 {
-    <p class="p-8 text-gray-400 text-sm">Lade...</p>
+    <p class="p-8 text-gray-400 text-sm">@L["Common.Loading"]</p>
 }
 else
 {
     <div class="p-8">
         <div class="flex items-center gap-3 mb-6">
-            <a href="/tournaments" class="text-gray-400 hover:text-white transition-colors text-sm">← Turniere</a>
+            <a href="/tournaments" class="text-gray-400 hover:text-white transition-colors text-sm">← @L["Tournaments.Title"]</a>
             <h1 class="text-2xl font-bold text-white">@_tournament.Name</h1>
         </div>
 
@@ -26,7 +26,7 @@ else
         @if (!_tournament.IsStarted)
         {
             <div class="max-w-md">
-                <h2 class="text-lg font-semibold text-white mb-3">Teilnehmer (@_tournament.Participants.Count)</h2>
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Tournament.Participants", _tournament.Participants.Count]</h2>
                 <div class="flex flex-col gap-2 mb-4">
                     @foreach (var user in _allUsers ?? [])
                     {
@@ -43,7 +43,7 @@ else
                     <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
                             disabled="@(_tournament.Participants.Count < 2)"
                             @onclick="StartAsync">
-                        Turnier starten
+                        @L["Tournament.Start"]
                     </button>
                 }
             </div>
@@ -69,7 +69,7 @@ else
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
                                                 @onclick="() => SetWinnerAsync(match.Id, participant1Id)">
-                                            Sieg
+                                            @L["Tournament.Win"]
                                         </button>
                                     }
                                 </div>
@@ -79,7 +79,7 @@ else
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
                                                 @onclick="() => SetWinnerAsync(match.Id, participant2Id)">
-                                            Sieg
+                                            @L["Tournament.Win"]
                                         </button>
                                     }
                                 </div>
@@ -138,10 +138,10 @@ else
         await LoadAsync();
     }
 
-    private static string RoundLabel(int round, int totalRounds)
+    private string RoundLabel(int round, int totalRounds)
     {
-        if (round == totalRounds) return "Finale";
-        if (round == totalRounds - 1) return "Halbfinale";
-        return $"Runde {round}";
+        if (round == totalRounds) return L["Tournament.Round.Final"];
+        if (round == totalRounds - 1) return L["Tournament.Round.SemiFinal"];
+        return L["Tournament.Round.Number", round];
     }
 }

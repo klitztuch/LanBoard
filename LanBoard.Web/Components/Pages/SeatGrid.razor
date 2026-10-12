@@ -1,4 +1,5 @@
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @implements IDisposable
 @inject ISeatService SeatService
 @inject ISessionService SessionService
@@ -6,29 +7,31 @@
 @inject ILanBoardNotifier Notifier
 @inject AuthenticationStateProvider Auth
 
+<ErrorBanner Message="@Error" />
+
 @if (_userId is not null)
 {
     <div class="flex items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 border border-gray-700 mb-6">
         <span class="text-sm text-gray-300 flex-1">
             @(_isAttending switch
             {
-                true => "Du hast zugesagt.",
-                false => "Du hast abgesagt.",
-                null => "Kommst du zur Party?"
+                true => L["Rsvp.YouAreAttending"],
+                false => L["Rsvp.YouAreNotAttending"],
+                null => L["Rsvp.Question"]
             })
         </span>
-        <button class="@RsvpButtonClass(true)" @onclick="() => SetRsvpAsync(true)">Ich komme</button>
-        <button class="@RsvpButtonClass(false)" @onclick="() => SetRsvpAsync(false)">Ich komme nicht</button>
+        <button class="@RsvpButtonClass(true)" @onclick="() => SetRsvpAsync(true)">@L["Rsvp.Yes"]</button>
+        <button class="@RsvpButtonClass(false)" @onclick="() => SetRsvpAsync(false)">@L["Rsvp.No"]</button>
     </div>
 }
 
 @if (_seats is null)
 {
-    <p class="text-gray-400 text-sm">Lade Sitzplätze...</p>
+    <p class="text-gray-400 text-sm">@L["Seats.Loading"]</p>
 }
 else if (_seats.Count == 0)
 {
-    <p class="text-gray-400 text-sm">Keine Sitzplätze angelegt.</p>
+    <p class="text-gray-400 text-sm">@L["Seats.None"]</p>
 }
 else
 {
@@ -51,7 +54,7 @@ else
                             <div class="relative shrink-0">
                                 @if (assignedUser.AvatarUrl is not null)
                                 {
-                                    <img src="@assignedUser.AvatarUrl" alt="Avatar"
+                                    <img src="@assignedUser.AvatarUrl" alt="@L["Nav.Avatar"]"
                                          class="w-8 h-8 rounded-full"/>
                                 }
                                 else
@@ -79,7 +82,7 @@ else
                         {
                             <button class="text-xs text-gray-400 hover:text-red-400 transition-colors text-left"
                                     @onclick="() => ReleaseSeat(seat.Id)">
-                                Freigeben
+                                @L["Seats.Release"]
                             </button>
                         }
                     }
@@ -88,7 +91,7 @@ else
                         <button class="flex-1 flex items-center justify-center text-sm text-gray-500 hover:text-white transition-colors"
                                 @onclick="() => ClaimSeat(seat.Id)"
                                 disabled="@(_userId is null)">
-                            Frei
+                            @L["Seats.Free"]
                         </button>
                     }
                 </div>
@@ -176,14 +179,16 @@ else
 
     private async Task ClaimSeat(Guid seatId)
     {
-        if (_userId is null) return;
-        await SeatService.ClaimSeatAsync(seatId, _userId.Value);
+        if (_userId is not { } userId) return;
+        if (await RunAsync(() => SeatService.ClaimSeatAsync(seatId, userId)) is null)
+            await LoadSeatsAsync(); // e.g. someone else claimed it first: show the current state
     }
 
     private async Task ReleaseSeat(Guid seatId)
     {
-        if (_userId is null) return;
-        await SeatService.ReleaseSeatAsync(seatId, _userId.Value);
+        if (_userId is not { } userId) return;
+        if (!await RunAsync(() => SeatService.ReleaseSeatAsync(seatId, userId)))
+            await LoadSeatsAsync();
     }
 
     private string SeatClass(Seat seat)

@@ -1,4 +1,6 @@
+using LanBoard.Application.Admin;
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Roles;
 using LanBoard.Core.Entities;
@@ -14,8 +16,6 @@ public class RoleService(
     IAdminAuditLogRepository auditLog) : IRoleService
 {
     private const int MaxNameLength = 50;
-    private const string DuplicateNameMessage = "Eine Rolle mit diesem Namen existiert bereits.";
-    private const string SystemRoleMessage = "Die Admin-Rolle kann nicht geändert oder gelöscht werden.";
 
     public Task<IReadOnlyList<Role>> GetAllAsync(CancellationToken ct = default)
         => roles.GetAllAsync(ct);
@@ -28,7 +28,7 @@ public class RoleService(
         var normalizedName = Role.Normalize(trimmedName);
         var keys = ValidatePermissions(permissions);
         if (await roles.GetByNormalizedNameAsync(normalizedName, ct) is not null)
-            throw new InvalidOperationException(DuplicateNameMessage);
+            throw new BusinessRuleException(ErrorCodes.RoleNameTaken);
 
         var role = new Role
         {
@@ -40,7 +40,7 @@ public class RoleService(
         };
         await roles.AddAsync(role, ct);
         await SaveMappingDuplicateNameAsync(ct);
-        await LogAsync(performedByUserId, "RoleCreated", $"Rolle \"{role.Name}\" erstellt ({FormatPermissions(keys)})", ct);
+        await LogAsync(performedByUserId, AuditActions.RoleCreated, $"Role \"{role.Name}\" created ({FormatPermissions(keys)})", ct);
         return role;
     }
 
@@ -49,15 +49,15 @@ public class RoleService(
         await permissionService.EnsureAsync(performedByUserId, Permissions.RolesManage, ct);
 
         var role = await roles.GetByIdAsync(roleId, ct)
-            ?? throw new InvalidOperationException("Rolle nicht gefunden.");
+            ?? throw new BusinessRuleException(ErrorCodes.RoleNotFound);
         if (role.IsSystem)
-            throw new InvalidOperationException(SystemRoleMessage);
+            throw new BusinessRuleException(ErrorCodes.RoleSystemImmutable);
 
         var trimmedName = ValidateName(name);
         var normalizedName = Role.Normalize(trimmedName);
         var keys = ValidatePermissions(permissions);
         if (await roles.GetByNormalizedNameAsync(normalizedName, ct) is { } existing && existing.Id != roleId)
-            throw new InvalidOperationException(DuplicateNameMessage);
+            throw new BusinessRuleException(ErrorCodes.RoleNameTaken);
 
         var oldName = role.Name;
         var oldKeys = role.Permissions;
@@ -66,9 +66,9 @@ public class RoleService(
         role.Permissions = keys;
         await SaveMappingDuplicateNameAsync(ct);
 
-        var renamed = oldName == trimmedName ? "" : $" (vorher \"{oldName}\")";
-        await LogAsync(performedByUserId, "RoleUpdated",
-            $"Rolle \"{trimmedName}\"{renamed} bearbeitet: {FormatPermissions(oldKeys)} → {FormatPermissions(keys)}", ct);
+        var renamed = oldName == trimmedName ? "" : $" (formerly \"{oldName}\")";
+        await LogAsync(performedByUserId, AuditActions.RoleUpdated,
+            $"Role \"{trimmedName}\"{renamed} updated: {FormatPermissions(oldKeys)} → {FormatPermissions(keys)}", ct);
     }
 
     public async Task DeleteAsync(Guid roleId, Guid performedByUserId, CancellationToken ct = default)
@@ -76,14 +76,14 @@ public class RoleService(
         await permissionService.EnsureAsync(performedByUserId, Permissions.RolesManage, ct);
 
         var role = await roles.GetByIdAsync(roleId, ct)
-            ?? throw new InvalidOperationException("Rolle nicht gefunden.");
+            ?? throw new BusinessRuleException(ErrorCodes.RoleNotFound);
         if (role.IsSystem)
-            throw new InvalidOperationException(SystemRoleMessage);
+            throw new BusinessRuleException(ErrorCodes.RoleSystemImmutable);
 
         // Assignments are removed by the cascading FK on UserRoles.RoleId.
         roles.Remove(role);
         await roles.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "RoleDeleted", $"Rolle \"{role.Name}\" gelöscht ({FormatPermissions(role.Permissions)})", ct);
+        await LogAsync(performedByUserId, AuditActions.RoleDeleted, $"Role \"{role.Name}\" deleted ({FormatPermissions(role.Permissions)})", ct);
     }
 
     public async Task<IReadOnlyList<UserWithRoles>> GetUsersWithRolesAsync(Guid performedByUserId, CancellationToken ct = default)
@@ -105,18 +105,18 @@ public class RoleService(
         await permissionService.EnsureAsync(performedByUserId, Permissions.UsersManage, ct);
 
         var role = await roles.GetByIdAsync(roleId, ct)
-            ?? throw new InvalidOperationException("Rolle nicht gefunden.");
+            ?? throw new BusinessRuleException(ErrorCodes.RoleNotFound);
         if (role.IsSystem)
             await permissionService.EnsureAsync(performedByUserId, Permissions.RolesManage, ct);
         var user = await users.GetByIdAsync(userId, ct)
-            ?? throw new InvalidOperationException("Benutzer nicht gefunden.");
+            ?? throw new BusinessRuleException(ErrorCodes.UserNotFound);
 
         if (await roles.IsAssignedAsync(userId, roleId, ct))
             return;
 
         await roles.AddAssignmentAsync(new UserRole { UserId = userId, RoleId = roleId, AssignedAt = DateTime.UtcNow }, ct);
         await roles.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "RoleAssigned", $"Rolle \"{role.Name}\" an {user.DisplayName} vergeben", ct);
+        await LogAsync(performedByUserId, AuditActions.RoleAssigned, $"Role \"{role.Name}\" assigned to {user.DisplayName}", ct);
     }
 
     public async Task UnassignAsync(Guid userId, Guid roleId, Guid performedByUserId, CancellationToken ct = default)
@@ -124,22 +124,22 @@ public class RoleService(
         await permissionService.EnsureAsync(performedByUserId, Permissions.UsersManage, ct);
 
         var role = await roles.GetByIdAsync(roleId, ct)
-            ?? throw new InvalidOperationException("Rolle nicht gefunden.");
+            ?? throw new BusinessRuleException(ErrorCodes.RoleNotFound);
         if (role.IsSystem)
             await permissionService.EnsureAsync(performedByUserId, Permissions.RolesManage, ct);
         var user = await users.GetByIdAsync(userId, ct)
-            ?? throw new InvalidOperationException("Benutzer nicht gefunden.");
+            ?? throw new BusinessRuleException(ErrorCodes.UserNotFound);
 
         if (!await roles.IsAssignedAsync(userId, roleId, ct))
             return;
 
         // Check-then-act: two admins removing each other concurrently is an accepted race for a LAN tool.
         if (role.IsSystem && await roles.CountUsersInRoleAsync(roleId, ct) <= 1)
-            throw new InvalidOperationException("Mindestens ein Benutzer muss die Admin-Rolle behalten.");
+            throw new BusinessRuleException(ErrorCodes.RoleLastAdmin);
 
         await roles.RemoveAssignmentAsync(userId, roleId, ct);
         await roles.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "RoleUnassigned", $"Rolle \"{role.Name}\" von {user.DisplayName} entfernt", ct);
+        await LogAsync(performedByUserId, AuditActions.RoleUnassigned, $"Role \"{role.Name}\" removed from {user.DisplayName}", ct);
     }
 
     public async Task EnsureAssignedByNameAsync(Guid userId, IEnumerable<string> roleNames, CancellationToken ct = default)
@@ -163,15 +163,15 @@ public class RoleService(
     {
         var trimmed = name.Trim();
         if (trimmed.Length is 0 or > MaxNameLength)
-            throw new InvalidOperationException($"Name muss 1–{MaxNameLength} Zeichen lang sein.");
+            throw new BusinessRuleException(ErrorCodes.RoleNameInvalid, MaxNameLength);
         return trimmed;
     }
 
     private static List<string> ValidatePermissions(IEnumerable<string> keys)
     {
         var distinct = keys.Distinct().ToList();
-        if (distinct.FirstOrDefault(k => !Permissions.All.ContainsKey(k)) is { } unknown)
-            throw new InvalidOperationException($"Unbekannte Berechtigung: {unknown}");
+        if (distinct.FirstOrDefault(k => !Permissions.All.Contains(k)) is { } unknown)
+            throw new BusinessRuleException(ErrorCodes.RoleUnknownPermission, unknown);
         return distinct;
     }
 
@@ -183,12 +183,12 @@ public class RoleService(
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
-            throw new InvalidOperationException(DuplicateNameMessage, ex);
+            throw new BusinessRuleException(ErrorCodes.RoleNameTaken);
         }
     }
 
     private static string FormatPermissions(IEnumerable<string> keys)
-        => keys.Any() ? string.Join(", ", keys.Order()) : "keine Berechtigungen";
+        => keys.Any() ? string.Join(", ", keys.Order()) : "no permissions";
 
     private async Task LogAsync(Guid userId, string action, string details, CancellationToken ct)
     {

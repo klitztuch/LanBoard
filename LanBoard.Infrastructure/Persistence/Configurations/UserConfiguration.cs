@@ -11,6 +11,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
         builder.Property(u => u.AvatarUrl).HasMaxLength(500);
+        builder.Property(u => u.PreferredCulture).HasMaxLength(10);
         builder.Property(u => u.CreatedAt).IsRequired();
     }
 }
