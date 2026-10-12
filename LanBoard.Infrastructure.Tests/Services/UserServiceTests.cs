@@ -1,3 +1,4 @@
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
@@ -54,5 +55,26 @@ public class UserServiceTests
         Assert.Equal("76561198000000002", identity.ProviderUserId);
         await _users.Received(1).AddAsync(result, Arg.Any<CancellationToken>());
         await _users.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SetPreferredCultureAsync_ExistingUser_PersistsCulture()
+    {
+        var user = new User { Id = Guid.NewGuid(), DisplayName = "Player", CreatedAt = DateTime.UtcNow };
+        _users.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        await _sut.SetPreferredCultureAsync(user.Id, "de");
+
+        Assert.Equal("de", user.PreferredCulture);
+        await _users.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SetPreferredCultureAsync_UnknownUser_Throws()
+    {
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.SetPreferredCultureAsync(Guid.NewGuid(), "de"));
+
+        Assert.Equal(ErrorCodes.UserNotFound, ex.Code);
+        await _users.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

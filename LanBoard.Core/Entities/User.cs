@@ -5,6 +5,7 @@ public class User
     public Guid Id { get; set; }
     public required string DisplayName { get; set; }
     public string? AvatarUrl { get; set; }
+    public string? PreferredCulture { get; set; }   // null = no explicit choice
     public DateTime CreatedAt { get; set; }
 
     public ICollection<UserIdentity> Identities { get; set; } = [];

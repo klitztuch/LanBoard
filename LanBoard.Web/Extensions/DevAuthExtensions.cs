@@ -46,6 +46,7 @@ public static class DevAuthExtensions
             };
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
             await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+            ctx.ApplyPreferredCulture(user.PreferredCulture);
             return Results.Redirect("/");
         });
 

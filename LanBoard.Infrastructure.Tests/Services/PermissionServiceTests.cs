@@ -43,7 +43,7 @@ public class PermissionServiceTests
 
         var result = await _sut.GetEffectivePermissionsAsync(UserId);
 
-        Assert.Equal(Permissions.All.Keys.Order(), result.Order());
+        Assert.Equal(Permissions.All.Order(), result.Order());
     }
 
     [Fact]

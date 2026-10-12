@@ -3,29 +3,29 @@
 @inject ISeatService SeatService
 @inject IPartyStatsService StatsService
 
-<PageTitle>Statistik</PageTitle>
+<PageTitle>@L["Stats.Title"]</PageTitle>
 
 <div class="p-8">
-    <h1 class="text-2xl font-bold text-white mb-6">Statistik</h1>
+    <h1 class="text-2xl font-bold text-white mb-6">@L["Stats.Title"]</h1>
 
     @if (_party is null || _stats is null)
     {
-        <p class="text-gray-400 text-sm">Keine aktive LAN-Party gefunden.</p>
+        <p class="text-gray-400 text-sm">@L["Home.NoActiveParty"]</p>
     }
     else
     {
         <div class="mb-6">
             <p class="text-gray-400 text-sm">
-                @_party.Name · Gesamt-Spielzeit: @FormatDuration(_stats.TotalPlaytime)
+                @_party.Name · @L["Stats.TotalPlaytime", FormatDuration(_stats.TotalPlaytime)]
             </p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-8">
             <div>
-                <h2 class="text-lg font-semibold text-white mb-3">Meistgespielte Spiele</h2>
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Stats.TopGames"]</h2>
                 @if (_stats.TopGames.Count == 0)
                 {
-                    <p class="text-gray-500 text-sm">Noch keine Daten.</p>
+                    <p class="text-gray-500 text-sm">@L["Stats.NoData"]</p>
                 }
                 else
                 {
@@ -35,7 +35,7 @@
                             <div class="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
                                 <div>
                                     <p class="text-white font-medium">@game.GameName</p>
-                                    <p class="text-xs text-gray-400">@game.PlayerCount Spieler</p>
+                                    <p class="text-xs text-gray-400">@L["Stats.PlayerCount", game.PlayerCount]</p>
                                 </div>
                                 <span class="text-sm text-gray-300 font-mono">@FormatDuration(game.TotalPlaytime)</span>
                             </div>
@@ -45,10 +45,10 @@
             </div>
 
             <div>
-                <h2 class="text-lg font-semibold text-white mb-3">Aktivste Teilnehmer</h2>
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Stats.TopUsers"]</h2>
                 @if (_stats.TopUsers.Count == 0)
                 {
-                    <p class="text-gray-500 text-sm">Noch keine Daten.</p>
+                    <p class="text-gray-500 text-sm">@L["Stats.NoData"]</p>
                 }
                 else
                 {
@@ -58,7 +58,7 @@
                             <div class="flex items-center gap-3 bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
                                 @if (user.AvatarUrl is not null)
                                 {
-                                    <img src="@user.AvatarUrl" alt="Avatar" class="w-8 h-8 rounded-full"/>
+                                    <img src="@user.AvatarUrl" alt="@L["Nav.Avatar"]" class="w-8 h-8 rounded-full"/>
                                 }
                                 else
                                 {
@@ -90,8 +90,8 @@
             _stats = await StatsService.GetStatsAsync(_party.Id);
     }
 
-    private static string FormatDuration(TimeSpan duration)
+    private string FormatDuration(TimeSpan duration)
         => duration.TotalHours >= 1
-            ? $"{(int)duration.TotalHours}h {duration.Minutes}min"
-            : $"{duration.Minutes}min";
+            ? L["Stats.Duration.HoursMinutes", (int)duration.TotalHours, duration.Minutes]
+            : L["Stats.Duration.Minutes", duration.Minutes];
 }

@@ -5,6 +5,8 @@
 @using Microsoft.AspNetCore.Components.Web
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using Microsoft.AspNetCore.Components.Web.Virtualization
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @using LanBoard.Web
 @using LanBoard.Web.Components
@@ -24,3 +26,4 @@
 @using LanBoard.Core.Entities
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@inject IStringLocalizer<SharedResource> L

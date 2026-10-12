@@ -1,5 +1,6 @@
 using LanBoard.Application.Admin;
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 
@@ -29,7 +30,7 @@ public class AdminService(
         };
         await parties.AddAsync(party, ct);
         await parties.SaveChangesAsync(ct);
-        await LogAsync(createdByUserId, "PartyCreated", $"Party \"{name}\" erstellt", ct);
+        await LogAsync(createdByUserId, AuditActions.PartyCreated, $"Party \"{name}\" created", ct);
         return party;
     }
 
@@ -38,12 +39,12 @@ public class AdminService(
         await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
 
         var party = await parties.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Party not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
         party.Name = name;
         party.Date = AsUtc(date);
         party.Location = location;
         await parties.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "PartyUpdated", $"Party \"{name}\" bearbeitet", ct);
+        await LogAsync(performedByUserId, AuditActions.PartyUpdated, $"Party \"{name}\" updated", ct);
     }
 
     public async Task DeletePartyAsync(Guid id, Guid performedByUserId, CancellationToken ct = default)
@@ -51,10 +52,10 @@ public class AdminService(
         await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
 
         var party = await parties.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Party not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
         parties.Remove(party);
         await parties.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "PartyDeleted", $"Party \"{party.Name}\" gelöscht", ct);
+        await LogAsync(performedByUserId, AuditActions.PartyDeleted, $"Party \"{party.Name}\" deleted", ct);
     }
 
     public Task<LanParty?> GetPartyWithSeatsAsync(Guid id, CancellationToken ct = default)
@@ -78,10 +79,10 @@ public class AdminService(
         }
 
         var target = await parties.GetByIdAsync(partyId, ct)
-            ?? throw new InvalidOperationException("Party not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
         target.IsActive = true;
         await parties.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "PartyActivated", $"Party \"{target.Name}\" aktiviert", ct);
+        await LogAsync(performedByUserId, AuditActions.PartyActivated, $"Party \"{target.Name}\" activated", ct);
     }
 
     public async Task<Seat> AddSeatAsync(Guid partyId, int x, int y, Guid performedByUserId, CancellationToken ct = default)
@@ -106,9 +107,9 @@ public class AdminService(
         await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
 
         var seat = await seats.GetByIdAsync(seatId, ct)
-            ?? throw new InvalidOperationException("Seat not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.SeatNotFound);
         if (seat.AssignedUserId is not null)
-            throw new InvalidOperationException("Seat is currently assigned to a user.");
+            throw new BusinessRuleException(ErrorCodes.SeatAssigned);
         seats.Remove(seat);
         await seats.SaveChangesAsync(ct);
     }

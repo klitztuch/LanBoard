@@ -1,4 +1,5 @@
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
@@ -76,7 +77,9 @@ public class RoleServiceTests
     [InlineData("123456789012345678901234567890123456789012345678901")]
     public async Task CreateAsync_InvalidName_Throws(string name)
     {
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.CreateAsync(name, [], CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.CreateAsync(name, [], CallerId));
+        Assert.Equal(ErrorCodes.RoleNameInvalid, ex.Code);
+        Assert.Equal([50], ex.Args);
         await _roles.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -86,18 +89,19 @@ public class RoleServiceTests
         _roles.GetByNormalizedNameAsync("CREW", Arg.Any<CancellationToken>())
             .Returns(new Role { Id = Guid.NewGuid(), Name = "Crew", NormalizedName = "CREW" });
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.CreateAsync("crew", [], CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.CreateAsync("crew", [], CallerId));
+        Assert.Equal(ErrorCodes.RoleNameTaken, ex.Code);
 
-        Assert.Contains("existiert bereits", ex.Message);
         await _roles.DidNotReceive().AddAsync(Arg.Any<Role>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CreateAsync_UnknownPermission_Throws()
     {
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.CreateAsync("Crew", ["nope.manage"], CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.CreateAsync("Crew", ["nope.manage"], CallerId));
+        Assert.Equal(ErrorCodes.RoleUnknownPermission, ex.Code);
+        Assert.Equal(["nope.manage"], ex.Args);
 
-        Assert.Contains("nope.manage", ex.Message);
         await _roles.DidNotReceive().AddAsync(Arg.Any<Role>(), Arg.Any<CancellationToken>());
     }
 
@@ -135,7 +139,8 @@ public class RoleServiceTests
         _roles.GetByNormalizedNameAsync("ORGA", Arg.Any<CancellationToken>())
             .Returns(new Role { Id = Guid.NewGuid(), Name = "Orga", NormalizedName = "ORGA" });
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.UpdateAsync(role.Id, "Orga", [], CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.UpdateAsync(role.Id, "Orga", [], CallerId));
+        Assert.Equal(ErrorCodes.RoleNameTaken, ex.Code);
         await _roles.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -144,7 +149,8 @@ public class RoleServiceTests
     {
         var admin = GivenRole("Admin", isSystem: true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.UpdateAsync(admin.Id, "Admin", [], CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.UpdateAsync(admin.Id, "Admin", [], CallerId));
+        Assert.Equal(ErrorCodes.RoleSystemImmutable, ex.Code);
 
         Assert.Empty(admin.Permissions);
         await _roles.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -155,7 +161,8 @@ public class RoleServiceTests
     {
         _roles.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Role?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.UpdateAsync(Guid.NewGuid(), "Crew", [], CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.UpdateAsync(Guid.NewGuid(), "Crew", [], CallerId));
+        Assert.Equal(ErrorCodes.RoleNotFound, ex.Code);
     }
 
     // --- Delete ---
@@ -177,7 +184,8 @@ public class RoleServiceTests
     {
         var admin = GivenRole("Admin", isSystem: true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.DeleteAsync(admin.Id, CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.DeleteAsync(admin.Id, CallerId));
+        Assert.Equal(ErrorCodes.RoleSystemImmutable, ex.Code);
 
         _roles.DidNotReceive().Remove(Arg.Any<Role>());
     }
@@ -245,7 +253,8 @@ public class RoleServiceTests
         var role = GivenRole("Crew");
         _users.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((User?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.AssignAsync(Guid.NewGuid(), role.Id, CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.AssignAsync(Guid.NewGuid(), role.Id, CallerId));
+        Assert.Equal(ErrorCodes.UserNotFound, ex.Code);
     }
 
     [Fact]
@@ -270,9 +279,9 @@ public class RoleServiceTests
         _roles.IsAssignedAsync(user.Id, admin.Id, Arg.Any<CancellationToken>()).Returns(true);
         _roles.CountUsersInRoleAsync(admin.Id, Arg.Any<CancellationToken>()).Returns(1);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.UnassignAsync(user.Id, admin.Id, CallerId));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.UnassignAsync(user.Id, admin.Id, CallerId));
+        Assert.Equal(ErrorCodes.RoleLastAdmin, ex.Code);
 
-        Assert.Contains("Admin-Rolle behalten", ex.Message);
         await _roles.DidNotReceive().RemoveAssignmentAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
@@ -334,7 +343,7 @@ public class RoleServiceTests
     [MemberData(nameof(DeniedCases))]
     public async Task MutatingMethod_CallerLacksPermission_ThrowsAndDoesNotSave(string method, string requiredPermission)
     {
-        Grant(Permissions.All.Keys.Where(k => k != requiredPermission).ToArray());
+        Grant(Permissions.All.Where(k => k != requiredPermission).ToArray());
         var role = GivenRole("Crew");
         var user = GivenUser();
         _roles.IsAssignedAsync(user.Id, role.Id, Arg.Any<CancellationToken>()).Returns(method == "Unassign");

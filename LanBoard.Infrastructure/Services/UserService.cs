@@ -1,3 +1,4 @@
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Users;
 using LanBoard.Core.Entities;
@@ -8,6 +9,14 @@ public class UserService(IUserRepository users) : IUserService
 {
     public Task<IReadOnlyList<User>> GetAllWithIdentitiesAsync(CancellationToken ct = default)
         => users.GetAllWithIdentitiesAsync(ct);
+
+    public async Task SetPreferredCultureAsync(Guid userId, string culture, CancellationToken ct = default)
+    {
+        var user = await users.GetByIdAsync(userId, ct)
+            ?? throw new BusinessRuleException(ErrorCodes.UserNotFound);
+        user.PreferredCulture = culture;
+        await users.SaveChangesAsync(ct);
+    }
 
     public async Task<User> GetOrCreateAndSyncSteamProfileAsync(string steamId, string displayName, string? avatarUrl, CancellationToken ct = default)
     {

@@ -1,4 +1,5 @@
 using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 using LanBoard.Infrastructure.Services;
@@ -52,8 +53,9 @@ public class AdminServiceTests
     {
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(
             () => _sut.UpdatePartyAsync(Guid.NewGuid(), "Name", DateTime.Today, "Loc", Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.PartyNotFound, ex.Code);
     }
 
     [Fact]
@@ -80,7 +82,8 @@ public class AdminServiceTests
     {
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.DeletePartyAsync(Guid.NewGuid(), Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.DeletePartyAsync(Guid.NewGuid(), Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.PartyNotFound, ex.Code);
     }
 
     [Fact]
@@ -119,7 +122,8 @@ public class AdminServiceTests
     {
         _seats.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Seat?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RemoveSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.RemoveSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.SeatNotFound, ex.Code);
     }
 
     [Fact]
@@ -128,7 +132,8 @@ public class AdminServiceTests
         var seat = new Seat { Id = Guid.NewGuid(), Label = "A1", AssignedUserId = Guid.NewGuid() };
         _seats.GetByIdAsync(seat.Id, Arg.Any<CancellationToken>()).Returns(seat);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.RemoveSeatAsync(seat.Id, Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.RemoveSeatAsync(seat.Id, Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.SeatAssigned, ex.Code);
         _seats.DidNotReceive().Remove(Arg.Any<Seat>());
     }
 
@@ -182,7 +187,8 @@ public class AdminServiceTests
         _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns((LanParty?)null);
         _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SetActivePartyAsync(Guid.NewGuid(), Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.SetActivePartyAsync(Guid.NewGuid(), Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.PartyNotFound, ex.Code);
     }
 
     [Fact]

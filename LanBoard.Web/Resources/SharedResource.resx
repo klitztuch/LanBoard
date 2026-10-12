@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AccessDenied.Text" xml:space="preserve">
+    <value>You don't have permission for this page. Ask an admin if you need access.</value>
+  </data>
+  <data name="AccessDenied.Title" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="Admin.AuditLog.None" xml:space="preserve">
+    <value>No admin actions logged yet.</value>
+  </data>
+  <data name="Admin.AuditLog.Title" xml:space="preserve">
+    <value>Audit log</value>
+  </data>
+  <data name="Admin.Index.AuditLog" xml:space="preserve">
+    <value>Log of performed admin actions</value>
+  </data>
+  <data name="Admin.Index.Parties" xml:space="preserve">
+    <value>Create and edit parties, manage seats</value>
+  </data>
+  <data name="Admin.Index.Roles" xml:space="preserve">
+    <value>Create roles and set permissions</value>
+  </data>
+  <data name="Admin.Index.Tv" xml:space="preserve">
+    <value>Full-screen view for projector/TV, no login</value>
+  </data>
+  <data name="Admin.Index.Tv.Title" xml:space="preserve">
+    <value>TV mode</value>
+  </data>
+  <data name="Admin.Index.Users" xml:space="preserve">
+    <value>Assign roles to users and revoke them</value>
+  </data>
+  <data name="Admin.Parties.Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Admin.Parties.Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Admin.Parties.InviteCode" xml:space="preserve">
+    <value>Invite code</value>
+  </data>
+  <data name="Admin.Parties.Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="Admin.Parties.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Parties.New" xml:space="preserve">
+    <value>New party</value>
+  </data>
+  <data name="Admin.Parties.None" xml:space="preserve">
+    <value>No parties created yet.</value>
+  </data>
+  <data name="Admin.Parties.Seats" xml:space="preserve">
+    <value>Seats</value>
+  </data>
+  <data name="Admin.Parties.SetActive" xml:space="preserve">
+    <value>Set active</value>
+  </data>
+  <data name="Admin.Parties.Title" xml:space="preserve">
+    <value>LAN parties</value>
+  </data>
+  <data name="Admin.PartyEdit.Seats" xml:space="preserve">
+    <value>Seats</value>
+  </data>
+  <data name="Admin.PartyEdit.SeatsHelp" xml:space="preserve">
+    <value>Click an empty cell to add a seat · click a seat to remove it</value>
+  </data>
+  <data name="Admin.Roles.AllPermissions" xml:space="preserve">
+    <value>All permissions</value>
+  </data>
+  <data name="Admin.Roles.Edit" xml:space="preserve">
+    <value>Edit role</value>
+  </data>
+  <data name="Admin.Roles.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Roles.New" xml:space="preserve">
+    <value>New role</value>
+  </data>
+  <data name="Admin.Roles.Permissions" xml:space="preserve">
+    <value>Permissions</value>
+  </data>
+  <data name="Admin.Roles.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Admin.Roles.Title" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="Admin.Users.AddRole" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="Admin.Users.RemoveRole" xml:space="preserve">
+    <value>Remove role</value>
+  </data>
+  <data name="Admin.Users.Title" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Attendees.NoUsers" xml:space="preserve">
+    <value>No users found.</value>
+  </data>
+  <data name="Attendees.SteamProfile" xml:space="preserve">
+    <value>Steam profile</value>
+  </data>
+  <data name="Attendees.Title" xml:space="preserve">
+    <value>Attendees</value>
+  </data>
+  <data name="Audit.PartyActivated" xml:space="preserve">
+    <value>Party activated</value>
+  </data>
+  <data name="Audit.PartyCreated" xml:space="preserve">
+    <value>Party created</value>
+  </data>
+  <data name="Audit.PartyDeleted" xml:space="preserve">
+    <value>Party deleted</value>
+  </data>
+  <data name="Audit.PartyUpdated" xml:space="preserve">
+    <value>Party updated</value>
+  </data>
+  <data name="Audit.RoleAssigned" xml:space="preserve">
+    <value>Role assigned</value>
+  </data>
+  <data name="Audit.RoleCreated" xml:space="preserve">
+    <value>Role created</value>
+  </data>
+  <data name="Audit.RoleDeleted" xml:space="preserve">
+    <value>Role deleted</value>
+  </data>
+  <data name="Audit.RoleUnassigned" xml:space="preserve">
+    <value>Role removed</value>
+  </data>
+  <data name="Audit.RoleUpdated" xml:space="preserve">
+    <value>Role updated</value>
+  </data>
+  <data name="Common.BackToHome" xml:space="preserve">
+    <value>Back to home</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common.Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Common.Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Common.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Common.Loading" xml:space="preserve">
+    <value>Loading…</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Error.Generic" xml:space="preserve">
+    <value>Something went wrong. Please try again.</value>
+  </data>
+  <data name="Error.Match.InvalidWinner" xml:space="preserve">
+    <value>The winner must be one of the match's participants.</value>
+  </data>
+  <data name="Error.Match.NotFound" xml:space="preserve">
+    <value>Match not found.</value>
+  </data>
+  <data name="Error.Page.DevMode.Details" xml:space="preserve">
+    <value>Swapping to the Development environment will display more detailed information about the error that occurred.</value>
+  </data>
+  <data name="Error.Page.DevMode.HowTo" xml:space="preserve">
+    <value>It can result in displaying sensitive information from exceptions to end users. For local debugging, set the ASPNETCORE_ENVIRONMENT environment variable to Development and restart the app.</value>
+  </data>
+  <data name="Error.Page.DevMode.Title" xml:space="preserve">
+    <value>Development Mode</value>
+  </data>
+  <data name="Error.Page.DevMode.Warning" xml:space="preserve">
+    <value>The Development environment shouldn't be enabled for deployed applications.</value>
+  </data>
+  <data name="Error.Page.RequestId" xml:space="preserve">
+    <value>Request ID:</value>
+  </data>
+  <data name="Error.Page.Text" xml:space="preserve">
+    <value>An error occurred while processing your request.</value>
+  </data>
+  <data name="Error.Page.Title" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Error.Party.NotFound" xml:space="preserve">
+    <value>Party not found.</value>
+  </data>
+  <data name="Error.PermissionDenied" xml:space="preserve">
+    <value>You don't have permission to do that.</value>
+  </data>
+  <data name="Error.Role.LastAdmin" xml:space="preserve">
+    <value>At least one user must keep the Admin role.</value>
+  </data>
+  <data name="Error.Role.NameInvalid" xml:space="preserve">
+    <value>Name must be 1–{0} characters long.</value>
+  </data>
+  <data name="Error.Role.NameTaken" xml:space="preserve">
+    <value>A role with this name already exists.</value>
+  </data>
+  <data name="Error.Role.NotFound" xml:space="preserve">
+    <value>Role not found.</value>
+  </data>
+  <data name="Error.Role.SystemImmutable" xml:space="preserve">
+    <value>The Admin role can't be changed or deleted.</value>
+  </data>
+  <data name="Error.Role.UnknownPermission" xml:space="preserve">
+    <value>Unknown permission: {0}</value>
+  </data>
+  <data name="Error.Seat.Assigned" xml:space="preserve">
+    <value>The seat is assigned to a user and can't be removed.</value>
+  </data>
+  <data name="Error.Seat.NotAssignedToUser" xml:space="preserve">
+    <value>This seat isn't assigned to you.</value>
+  </data>
+  <data name="Error.Seat.NotFound" xml:space="preserve">
+    <value>Seat not found.</value>
+  </data>
+  <data name="Error.Seat.Taken" xml:space="preserve">
+    <value>This seat is already taken.</value>
+  </data>
+  <data name="Error.Tournament.AlreadyStarted" xml:space="preserve">
+    <value>The tournament has already started.</value>
+  </data>
+  <data name="Error.Tournament.NotFound" xml:space="preserve">
+    <value>Tournament not found.</value>
+  </data>
+  <data name="Error.Tournament.TooFewParticipants" xml:space="preserve">
+    <value>At least {0} participants are required to start a tournament.</value>
+  </data>
+  <data name="Error.User.NotFound" xml:space="preserve">
+    <value>User not found.</value>
+  </data>
+  <data name="Home.NoActiveParty" xml:space="preserve">
+    <value>No active LAN party found.</value>
+  </data>
+  <data name="Home.Tagline" xml:space="preserve">
+    <value>Your LAN party dashboard</value>
+  </data>
+  <data name="Nav.Admin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="Nav.Attendees" xml:space="preserve">
+    <value>Attendees</value>
+  </data>
+  <data name="Nav.Avatar" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Nav.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Nav.LoginWithSteam" xml:space="preserve">
+    <value>Login with Steam</value>
+  </data>
+  <data name="Nav.Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="Nav.Stats" xml:space="preserve">
+    <value>Stats</value>
+  </data>
+  <data name="Nav.ToggleMenu" xml:space="preserve">
+    <value>Toggle menu</value>
+  </data>
+  <data name="Nav.Tournaments" xml:space="preserve">
+    <value>Tournaments</value>
+  </data>
+  <data name="NotFound.Text" xml:space="preserve">
+    <value>Sorry, the content you are looking for does not exist.</value>
+  </data>
+  <data name="NotFound.Title" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="Permission.audit.view" xml:space="preserve">
+    <value>View audit log</value>
+  </data>
+  <data name="Permission.catering.manage" xml:space="preserve">
+    <value>Manage catering</value>
+  </data>
+  <data name="Permission.party.manage" xml:space="preserve">
+    <value>Manage LAN parties</value>
+  </data>
+  <data name="Permission.roles.manage" xml:space="preserve">
+    <value>Manage roles</value>
+  </data>
+  <data name="Permission.tournament.manage" xml:space="preserve">
+    <value>Manage tournaments</value>
+  </data>
+  <data name="Permission.users.manage" xml:space="preserve">
+    <value>Manage users &amp; role assignments</value>
+  </data>
+  <data name="Reconnect.Failed" xml:space="preserve">
+    <value>Failed to rejoin.</value>
+  </data>
+  <data name="Reconnect.Paused" xml:space="preserve">
+    <value>The session has been paused by the server.</value>
+  </data>
+  <data name="Reconnect.Rejoining" xml:space="preserve">
+    <value>Rejoining the server…</value>
+  </data>
+  <data name="Reconnect.Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Reconnect.ResumeFailed" xml:space="preserve">
+    <value>Failed to resume the session.</value>
+  </data>
+  <data name="Reconnect.Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Reconnect.RetryIn.After" xml:space="preserve">
+    <value>seconds.</value>
+  </data>
+  <data name="Reconnect.RetryIn.Before" xml:space="preserve">
+    <value>Rejoin failed… trying again in</value>
+  </data>
+  <data name="Reconnect.RetryOrReload" xml:space="preserve">
+    <value>Please retry or reload the page.</value>
+  </data>
+  <data name="Rsvp.Attending" xml:space="preserve">
+    <value>Attending</value>
+  </data>
+  <data name="Rsvp.No" xml:space="preserve">
+    <value>I'm not coming</value>
+  </data>
+  <data name="Rsvp.NotAttending" xml:space="preserve">
+    <value>Not attending</value>
+  </data>
+  <data name="Rsvp.Question" xml:space="preserve">
+    <value>Are you coming to the party?</value>
+  </data>
+  <data name="Rsvp.Yes" xml:space="preserve">
+    <value>I'm coming</value>
+  </data>
+  <data name="Rsvp.YouAreAttending" xml:space="preserve">
+    <value>You're attending.</value>
+  </data>
+  <data name="Rsvp.YouAreNotAttending" xml:space="preserve">
+    <value>You're not attending.</value>
+  </data>
+  <data name="Seats.Free" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="Seats.Loading" xml:space="preserve">
+    <value>Loading seats…</value>
+  </data>
+  <data name="Seats.None" xml:space="preserve">
+    <value>No seats set up.</value>
+  </data>
+  <data name="Seats.Release" xml:space="preserve">
+    <value>Release</value>
+  </data>
+  <data name="Stats.Duration.HoursMinutes" xml:space="preserve">
+    <value>{0}h {1}min</value>
+  </data>
+  <data name="Stats.Duration.Minutes" xml:space="preserve">
+    <value>{0}min</value>
+  </data>
+  <data name="Stats.NoData" xml:space="preserve">
+    <value>No data yet.</value>
+  </data>
+  <data name="Stats.PlayerCount" xml:space="preserve">
+    <value>{0} players</value>
+  </data>
+  <data name="Stats.Title" xml:space="preserve">
+    <value>Stats</value>
+  </data>
+  <data name="Stats.TopGames" xml:space="preserve">
+    <value>Most played games</value>
+  </data>
+  <data name="Stats.TopUsers" xml:space="preserve">
+    <value>Most active attendees</value>
+  </data>
+  <data name="Stats.TotalPlaytime" xml:space="preserve">
+    <value>Total playtime: {0}</value>
+  </data>
+  <data name="Tournament.Participants" xml:space="preserve">
+    <value>Participants ({0})</value>
+  </data>
+  <data name="Tournament.Round.Final" xml:space="preserve">
+    <value>Final</value>
+  </data>
+  <data name="Tournament.Round.Number" xml:space="preserve">
+    <value>Round {0}</value>
+  </data>
+  <data name="Tournament.Round.SemiFinal" xml:space="preserve">
+    <value>Semifinal</value>
+  </data>
+  <data name="Tournament.Start" xml:space="preserve">
+    <value>Start tournament</value>
+  </data>
+  <data name="Tournament.Title" xml:space="preserve">
+    <value>Tournament</value>
+  </data>
+  <data name="Tournament.Win" xml:space="preserve">
+    <value>Win</value>
+  </data>
+  <data name="Tournaments.NamePlaceholder" xml:space="preserve">
+    <value>Tournament name</value>
+  </data>
+  <data name="Tournaments.New" xml:space="preserve">
+    <value>New tournament</value>
+  </data>
+  <data name="Tournaments.NoneForParty" xml:space="preserve">
+    <value>No tournaments for {0} yet.</value>
+  </data>
+  <data name="Tournaments.Status.Registration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="Tournaments.Status.Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Tournaments.Title" xml:space="preserve">
+    <value>Tournaments</value>
+  </data>
+</root>

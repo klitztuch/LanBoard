@@ -43,13 +43,14 @@ public static class AuthExtensions
                     identity?.AddClaim(new Claim(LanBoardClaims.UserId, user.Id.ToString()));
                     if (user.AvatarUrl is not null)
                         identity?.AddClaim(new Claim("lanboard:avatarurl", user.AvatarUrl));
+                    ctx.HttpContext.ApplyPreferredCulture(user.PreferredCulture);
                 };
             });
 
         builder.Services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
         builder.Services.AddAuthorization(options =>
         {
-            foreach (var permission in Permissions.All.Keys)
+            foreach (var permission in Permissions.All)
                 options.AddPolicy(permission, p => p.RequireClaim(LanBoardClaims.Permission, permission));
             options.AddPolicy(Policies.AnyAdmin, p => p.RequireClaim(LanBoardClaims.Permission));
         });

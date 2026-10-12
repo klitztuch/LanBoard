@@ -12,23 +12,23 @@
         <span class="text-sm text-gray-300 flex-1">
             @(_isAttending switch
             {
-                true => "Du hast zugesagt.",
-                false => "Du hast abgesagt.",
-                null => "Kommst du zur Party?"
+                true => L["Rsvp.YouAreAttending"],
+                false => L["Rsvp.YouAreNotAttending"],
+                null => L["Rsvp.Question"]
             })
         </span>
-        <button class="@RsvpButtonClass(true)" @onclick="() => SetRsvpAsync(true)">Ich komme</button>
-        <button class="@RsvpButtonClass(false)" @onclick="() => SetRsvpAsync(false)">Ich komme nicht</button>
+        <button class="@RsvpButtonClass(true)" @onclick="() => SetRsvpAsync(true)">@L["Rsvp.Yes"]</button>
+        <button class="@RsvpButtonClass(false)" @onclick="() => SetRsvpAsync(false)">@L["Rsvp.No"]</button>
     </div>
 }
 
 @if (_seats is null)
 {
-    <p class="text-gray-400 text-sm">Lade Sitzplätze...</p>
+    <p class="text-gray-400 text-sm">@L["Seats.Loading"]</p>
 }
 else if (_seats.Count == 0)
 {
-    <p class="text-gray-400 text-sm">Keine Sitzplätze angelegt.</p>
+    <p class="text-gray-400 text-sm">@L["Seats.None"]</p>
 }
 else
 {
@@ -51,7 +51,7 @@ else
                             <div class="relative shrink-0">
                                 @if (assignedUser.AvatarUrl is not null)
                                 {
-                                    <img src="@assignedUser.AvatarUrl" alt="Avatar"
+                                    <img src="@assignedUser.AvatarUrl" alt="@L["Nav.Avatar"]"
                                          class="w-8 h-8 rounded-full"/>
                                 }
                                 else
@@ -79,7 +79,7 @@ else
                         {
                             <button class="text-xs text-gray-400 hover:text-red-400 transition-colors text-left"
                                     @onclick="() => ReleaseSeat(seat.Id)">
-                                Freigeben
+                                @L["Seats.Release"]
                             </button>
                         }
                     }
@@ -88,7 +88,7 @@ else
                         <button class="flex-1 flex items-center justify-center text-sm text-gray-500 hover:text-white transition-colors"
                                 @onclick="() => ClaimSeat(seat.Id)"
                                 disabled="@(_userId is null)">
-                            Frei
+                            @L["Seats.Free"]
                         </button>
                     }
                 </div>

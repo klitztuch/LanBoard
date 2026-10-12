@@ -5,5 +5,6 @@
   <Project Path="LanBoard.Infrastructure\LanBoard.Infrastructure.csproj" />
   <Project Path="LanBoard.Infrastructure.Tests/LanBoard.Infrastructure.Tests.csproj" />
   <Project Path="LanBoard.ServiceDefaults/LanBoard.ServiceDefaults.csproj" />
+  <Project Path="LanBoard.Web.Tests/LanBoard.Web.Tests.csproj" />
   <Project Path="LanBoard.Web/LanBoard.Web.csproj" />
 </Solution>
