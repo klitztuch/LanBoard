@@ -67,6 +67,12 @@
                                    class="text-blue-400 hover:text-blue-300 transition-colors">
                                     @L["Common.Edit"]
                                 </a>
+                                <AuthorizeView Policy="@Permissions.ProfileRead" Context="profileAuth">
+                                    <a href="/admin/profiles/@party.Id"
+                                       class="text-blue-400 hover:text-blue-300 transition-colors">
+                                        @L["Admin.PartyProfiles.Link"]
+                                    </a>
+                                </AuthorizeView>
                                 @if (_confirmDeleteId == party.Id)
                                 {
                                     <button class="text-red-400 hover:text-red-300 transition-colors"

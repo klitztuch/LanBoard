@@ -34,7 +34,7 @@ else
                         <label class="flex items-center gap-3 bg-gray-800 rounded-lg px-3 py-2 border border-gray-700 @(_canManage ? "cursor-pointer" : "")">
                             <input type="checkbox" checked="@isIn" disabled="@(!_canManage)"
                                    @onchange="e => ToggleParticipantAsync(user.Id, (bool)(e.Value ?? false))"/>
-                            <span class="text-sm text-white">@user.DisplayName</span>
+                            <UserLink UserId="user.Id" Name="@user.DisplayName" CssClass="text-sm text-white hover:underline"/>
                         </label>
                     }
                 </div>
@@ -64,7 +64,14 @@ else
                                     var participant2Id = match.Participant2Id ?? Guid.Empty;
                                 }
                                 <div class="flex items-center justify-between gap-2 @(match.WinnerId is not null && match.WinnerId == match.Participant1Id ? "text-green-400 font-medium" : "text-gray-300")">
-                                    <span class="text-sm truncate">@(match.Participant1?.User.DisplayName ?? "–")</span>
+                                    @if (match.Participant1 is { } p1)
+                                    {
+                                        <UserLink UserId="p1.UserId" Name="@p1.User.DisplayName" CssClass="text-sm truncate hover:underline"/>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm truncate">–</span>
+                                    }
                                     @if (canDecide)
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
@@ -74,7 +81,14 @@ else
                                     }
                                 </div>
                                 <div class="flex items-center justify-between gap-2 @(match.WinnerId is not null && match.WinnerId == match.Participant2Id ? "text-green-400 font-medium" : "text-gray-300")">
-                                    <span class="text-sm truncate">@(match.Participant2?.User.DisplayName ?? "–")</span>
+                                    @if (match.Participant2 is { } p2)
+                                    {
+                                        <UserLink UserId="p2.UserId" Name="@p2.User.DisplayName" CssClass="text-sm truncate hover:underline"/>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm truncate">–</span>
+                                    }
                                     @if (canDecide)
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"

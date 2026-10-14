@@ -43,6 +43,7 @@ if (app.Environment.IsDevelopment())
     app.MapDevAuthEndpoints();
 
 app.MapCultureEndpoint();
+app.MapAuthRefreshEndpoint();
 
 app.MapGet("/auth/login", (HttpContext ctx, string? returnUrl) =>
     ctx.ChallengeAsync("Steam", new AuthenticationProperties { RedirectUri = returnUrl ?? "/" }));

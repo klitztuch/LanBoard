@@ -10,6 +10,9 @@ public class UserService(IUserRepository users) : IUserService
     public Task<IReadOnlyList<User>> GetAllWithIdentitiesAsync(CancellationToken ct = default)
         => users.GetAllWithIdentitiesAsync(ct);
 
+    public Task<User?> GetByIdAsync(Guid userId, CancellationToken ct = default)
+        => users.GetWithIdentitiesAsync(userId, ct);
+
     public async Task SetPreferredCultureAsync(Guid userId, string culture, CancellationToken ct = default)
     {
         var user = await users.GetByIdAsync(userId, ct)
@@ -24,7 +27,7 @@ public class UserService(IUserRepository users) : IUserService
 
         if (user is not null)
         {
-            user.DisplayName = displayName;
+            user.SyncSteamName(displayName);
             user.AvatarUrl = avatarUrl;
             await users.SaveChangesAsync(ct);
             return user;
@@ -34,6 +37,7 @@ public class UserService(IUserRepository users) : IUserService
         {
             Id = Guid.NewGuid(),
             DisplayName = displayName,
+            SteamName = displayName,
             AvatarUrl = avatarUrl,
             CreatedAt = DateTime.UtcNow,
             Identities =

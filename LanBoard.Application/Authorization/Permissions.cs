@@ -8,6 +8,8 @@ public static class Permissions
     public const string UsersManage = "users.manage";
     public const string RolesManage = "roles.manage";
     public const string AuditView = "audit.view";
+    public const string ProfileRead = "profile.read";                 // Orga-visible profile values + party overview
+    public const string ProfileFieldsManage = "profilefields.manage"; // custom profile field definitions
 
     // Keys only, in display order; labels are localized in the Web layer (Permission.<key>).
     public static readonly IReadOnlyList<string> All =
@@ -18,5 +20,7 @@ public static class Permissions
         UsersManage,
         RolesManage,
         AuditView,
+        ProfileRead,
+        ProfileFieldsManage,
     ];
 }

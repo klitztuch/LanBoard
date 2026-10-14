@@ -1,6 +1,8 @@
 using LanBoard.Application.Admin;
 using LanBoard.Application.Authorization;
 using LanBoard.Application.Interfaces;
+using LanBoard.Application.Notifications;
+using LanBoard.Application.Profiles;
 using LanBoard.Application.Roles;
 using LanBoard.Application.Rsvps;
 using LanBoard.Application.Seats;
@@ -37,8 +39,13 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<ITournamentParticipantRepository, TournamentParticipantRepository>();
         builder.Services.AddScoped<ITournamentMatchRepository, TournamentMatchRepository>();
         builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+        builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        builder.Services.AddScoped<IProfileFieldRepository, ProfileFieldRepository>();
         builder.Services.AddScoped<IPermissionService, PermissionService>();
         builder.Services.AddScoped<IRoleService, RoleService>();
+        builder.Services.AddScoped<IProfileFieldService, ProfileFieldService>();
+        builder.Services.AddScoped<IProfileService, ProfileService>();
+        builder.Services.AddScoped<INotificationRecipientService, NotificationRecipientService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<ISeatService, SeatService>();
         builder.Services.AddScoped<IAdminService, AdminService>();

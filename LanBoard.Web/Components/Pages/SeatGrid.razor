@@ -75,7 +75,7 @@ else
                                     </span>
                                 }
                             </div>
-                            <span class="text-sm text-white truncate">@assignedUser.DisplayName</span>
+                            <UserLink UserId="assignedUserId" Name="@assignedUser.DisplayName" CssClass="text-sm text-white truncate hover:underline"/>
                         </div>
 
                         @if (assignedUserId == _userId)

@@ -80,18 +80,8 @@ public static class LocalizationExtensions
             }
         }
 
-        return Results.LocalRedirect(IsLocalUrl(returnUrl) ? returnUrl : "/");
+        return Results.LocalRedirect(LocalUrl.IsLocal(returnUrl) ? returnUrl : "/");
     }
-
-    // Same rules as IUrlHelper.IsLocalUrl: "/path" or "~/path", but not "//host" or "/\host".
-    private static bool IsLocalUrl([NotNullWhen(true)] string? url)
-        => !string.IsNullOrEmpty(url) && url switch
-        {
-            ['/'] => true,
-            ['/', not ('/' or '\\'), ..] => true,
-            ['~', '/', ..] when url.Length == 2 || url[2] is not ('/' or '\\') => true,
-            _ => false
-        };
 
     public static bool IsSupportedCulture(this IOptions<LanBoardLocalizationOptions> options, [NotNullWhen(true)] string? culture)
         => culture is not null && options.Value.SupportedCultures.Contains(culture, StringComparer.OrdinalIgnoreCase);

@@ -28,6 +28,7 @@ public static class DevAuthExtensions
                 {
                     Id = Guid.NewGuid(),
                     DisplayName = name,
+                    SteamName = name,
                     CreatedAt = DateTime.UtcNow,
                     Identities = [new UserIdentity { Id = Guid.NewGuid(), Provider = "Dev", ProviderUserId = name, CreatedAt = DateTime.UtcNow }]
                 };

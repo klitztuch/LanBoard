@@ -38,7 +38,7 @@
                     {
                         <div class="w-8 h-8 rounded-full bg-gray-700 shrink-0"></div>
                     }
-                    <span class="text-white font-medium min-w-32">@user.DisplayName</span>
+                    <UserLink UserId="user.UserId" Name="@user.DisplayName" CssClass="text-white font-medium min-w-32 hover:underline"/>
 
                     <div class="flex flex-wrap items-center gap-1 flex-1">
                         @foreach (var role in user.Roles)

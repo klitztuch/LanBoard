@@ -45,7 +45,7 @@ public class RoleServiceTests
 
     private User GivenUser(string name = "Bob")
     {
-        var user = new User { Id = Guid.NewGuid(), DisplayName = name };
+        var user = new User { Id = Guid.NewGuid(), DisplayName = name, SteamName = name };
         _users.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
         return user;
     }
@@ -196,7 +196,7 @@ public class RoleServiceTests
     public async Task GetUsersWithRolesAsync_MapsUsersWithTheirRoles()
     {
         var role = new Role { Id = Guid.NewGuid(), Name = "Crew", NormalizedName = "CREW" };
-        var user = new User { Id = Guid.NewGuid(), DisplayName = "Bob", AvatarUrl = "a.png" };
+        var user = new User { Id = Guid.NewGuid(), DisplayName = "Bob", SteamName = "Bob", AvatarUrl = "a.png" };
         user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id, Role = role });
         _roles.GetUsersWithRolesAsync(Arg.Any<CancellationToken>()).Returns([user]);
 

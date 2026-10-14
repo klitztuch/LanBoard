@@ -94,6 +94,74 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.ToTable("LanParties");
                 });
 
+            modelBuilder.Entity("LanBoard.Core.Entities.ProfileFieldDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<List<string>>("Choices")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("'{}'");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Labels")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("ProfileFieldDefinitions");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.ProfileFieldValue", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FieldId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("UserId", "FieldId");
+
+                    b.HasIndex("FieldId");
+
+                    b.ToTable("ProfileFieldValues");
+                });
+
             modelBuilder.Entity("LanBoard.Core.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -344,9 +412,18 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("Nickname")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("PreferredCulture")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
+
+                    b.Property<string>("SteamName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -383,6 +460,48 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("UserIdentities");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.UserProfile", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Clan")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.PrimitiveCollection<List<string>>("FavoriteGames")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("'{}'");
+
+                    b.PrimitiveCollection<List<string>>("NotificationOptIns")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("'{}'");
+
+                    b.Property<string>("RealName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RealNameVisibility")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserProfiles");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.UserRole", b =>
@@ -423,6 +542,23 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.ProfileFieldValue", b =>
+                {
+                    b.HasOne("LanBoard.Core.Entities.ProfileFieldDefinition", "Field")
+                        .WithMany()
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LanBoard.Core.Entities.UserProfile", null)
+                        .WithMany("FieldValues")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
@@ -554,6 +690,17 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LanBoard.Core.Entities.UserProfile", b =>
+                {
+                    b.HasOne("LanBoard.Core.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("LanBoard.Core.Entities.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LanBoard.Core.Entities.UserRole", b =>
                 {
                     b.HasOne("LanBoard.Core.Entities.Role", "Role")
@@ -603,6 +750,11 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Navigation("Sessions");
 
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.UserProfile", b =>
+                {
+                    b.Navigation("FieldValues");
                 });
 #pragma warning restore 612, 618
         }
