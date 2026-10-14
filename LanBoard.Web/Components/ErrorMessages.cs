@@ -12,8 +12,13 @@ public static class ErrorMessages
     {
         PermissionDeniedException => localizer["Error.PermissionDenied"],
         BusinessRuleException ex => ForCode(localizer, ex.Code, ex.Args),
+        ValidationException => localizer["Error.Validation"],
         _ => null
     };
+
+    /// <summary>Localized message for a single field error.</summary>
+    public static string For(IStringLocalizer localizer, ValidationError error)
+        => ForCode(localizer, error.Code, error.Args);
 
     private static string ForCode(IStringLocalizer localizer, string code, IReadOnlyList<object> args)
     {

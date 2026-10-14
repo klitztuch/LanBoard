@@ -16,6 +16,9 @@ public abstract class ServicePageBase : ComponentBase
 
     protected string? Error { get; set; }
 
+    /// <summary>Field errors of the last <see cref="ValidationException"/>; empty after a successful call.</summary>
+    protected IReadOnlyList<ValidationError> ValidationErrors { get; private set; } = [];
+
     protected async Task<Guid> CurrentUserIdAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -26,6 +29,7 @@ public abstract class ServicePageBase : ComponentBase
     protected async Task<bool> RunAsync(Func<Task> action)
     {
         Error = null;
+        ValidationErrors = [];
         try
         {
             await action();
@@ -38,6 +42,11 @@ public abstract class ServicePageBase : ComponentBase
         catch (BusinessRuleException ex)
         {
             Logger.LogInformation(ex, "Business rule violated: {ErrorCode}", ex.Code);
+            Error = ErrorMessages.For(Localizer, ex);
+        }
+        catch (ValidationException ex)
+        {
+            ValidationErrors = ex.Errors;
             Error = ErrorMessages.For(Localizer, ex);
         }
         return false;

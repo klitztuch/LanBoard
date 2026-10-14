@@ -42,7 +42,11 @@ public static class AuthExtensions
                     var identity = ctx.Principal?.Identity as ClaimsIdentity;
                     identity?.AddClaim(new Claim(LanBoardClaims.UserId, user.Id.ToString()));
                     if (user.AvatarUrl is not null)
-                        identity?.AddClaim(new Claim("lanboard:avatarurl", user.AvatarUrl));
+                        identity?.AddClaim(new Claim(LanBoardClaims.AvatarUrl, user.AvatarUrl));
+                    // Steam's name claim is the Steam name; the app shows the effective name (nickname wins).
+                    if (identity?.FindFirst(ClaimTypes.Name) is { } steamNameClaim)
+                        identity.RemoveClaim(steamNameClaim);
+                    identity?.AddClaim(new Claim(ClaimTypes.Name, user.DisplayName));
                     ctx.HttpContext.ApplyPreferredCulture(user.PreferredCulture);
                 };
             });
@@ -57,6 +61,43 @@ public static class AuthExtensions
         builder.Services.AddCascadingAuthenticationState();
 
         return builder;
+    }
+
+    public static IEndpointRouteBuilder MapAuthRefreshEndpoint(this IEndpointRouteBuilder app)
+    {
+        app.MapGet("/auth/refresh", RefreshAsync).RequireAuthorization();
+        return app;
+    }
+
+    /// <summary>Re-issues the auth cookie with the user's current name and avatar (e.g. after a nickname change), then redirects back.</summary>
+    public static async Task<IResult> RefreshAsync(string? returnUrl, HttpContext ctx, IUserService users)
+    {
+        var target = LocalUrl.IsLocal(returnUrl) ? returnUrl : "/";
+        if (ctx.User.GetUserId() is not { } userId)
+            return Results.LocalRedirect(target);
+
+        var user = await users.GetByIdAsync(userId, ctx.RequestAborted);
+        if (user is null)
+        {
+            // Cookie outlived its user (e.g. reset dev DB).
+            await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Results.LocalRedirect("/");
+        }
+
+        // ctx.User includes the per-request permission identity; only the cookie identity is re-issued.
+        var cookieIdentity = ctx.User.Identities.First(i => i.AuthenticationType != PermissionClaimsTransformation.AuthenticationType);
+        var claims = cookieIdentity.Claims
+            .Where(c => c.Type is not (ClaimTypes.Name or LanBoardClaims.AvatarUrl))
+            .Select(c => new Claim(c.Type, c.Value, c.ValueType, c.Issuer))
+            .Append(new Claim(ClaimTypes.Name, user.DisplayName));
+        if (user.AvatarUrl is not null)
+            claims = claims.Append(new Claim(LanBoardClaims.AvatarUrl, user.AvatarUrl));
+
+        var identity = new ClaimsIdentity(claims, cookieIdentity.AuthenticationType, ClaimTypes.Name, cookieIdentity.RoleClaimType);
+        var existing = await ctx.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), existing.Properties);
+
+        return Results.LocalRedirect(target);
     }
 }
 

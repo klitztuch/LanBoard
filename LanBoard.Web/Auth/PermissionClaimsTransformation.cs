@@ -10,7 +10,8 @@ namespace LanBoard.Web.Auth;
 /// </summary>
 public class PermissionClaimsTransformation(IPermissionService permissionService) : IClaimsTransformation
 {
-    private const string AuthenticationType = "lanboard:permissions";
+    /// <summary>Authentication type of the per-request permission identity; never part of the cookie.</summary>
+    public const string AuthenticationType = "lanboard:permissions";
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {

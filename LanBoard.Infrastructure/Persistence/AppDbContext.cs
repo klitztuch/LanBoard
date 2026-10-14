@@ -18,6 +18,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<TournamentMatch> TournamentMatches => Set<TournamentMatch>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<ProfileFieldDefinition> ProfileFieldDefinitions => Set<ProfileFieldDefinition>();
+    public DbSet<ProfileFieldValue> ProfileFieldValues => Set<ProfileFieldValue>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

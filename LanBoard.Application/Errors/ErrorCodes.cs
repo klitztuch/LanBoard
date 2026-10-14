@@ -19,6 +19,20 @@ public static class ErrorCodes
     public const string RoleUnknownPermission = "Role.UnknownPermission"; // args: key
     public const string RoleLastAdmin = "Role.LastAdmin";
     public const string UserNotFound = "User.NotFound";
+    public const string ProfileNicknameInvalid = "Profile.NicknameInvalid";             // args: maxLength
+    public const string ProfileNicknameTaken = "Profile.NicknameTaken";
+    public const string ProfileEmailInvalid = "Profile.EmailInvalid";
+    public const string ProfileValueTooLong = "Profile.ValueTooLong";                   // args: maxLength
+    public const string ProfileTooManyFavoriteGames = "Profile.TooManyFavoriteGames";   // args: max
+    public const string ProfileUnknownCategory = "Profile.UnknownCategory";             // args: key
+    public const string ProfileFieldRequired = "Profile.FieldRequired";
+    public const string ProfileFieldInvalidChoice = "Profile.FieldInvalidChoice";
+    public const string ProfileFieldNotFound = "ProfileField.NotFound";
+    public const string ProfileFieldKeyInvalid = "ProfileField.KeyInvalid";
+    public const string ProfileFieldKeyTaken = "ProfileField.KeyTaken";
+    public const string ProfileFieldLabelMissing = "ProfileField.LabelMissing";
+    public const string ProfileFieldChoicesInvalid = "ProfileField.ChoicesInvalid";
+    public const string NotificationUnknownCategory = "Notification.UnknownCategory";   // args: key
 
     public static IReadOnlyList<string> All { get; } = ConstantCatalog.Of(typeof(ErrorCodes));
 }

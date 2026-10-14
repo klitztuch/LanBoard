@@ -1,0 +1,261 @@
+@page "/settings"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inherits ServicePageBase
+@using LanBoard.Web.Extensions
+@using Microsoft.Extensions.Options
+@inject IProfileService ProfileService
+@inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
+@inject NavigationManager Nav
+
+<PageTitle>@L["Settings.Title"]</PageTitle>
+
+<div class="p-8 max-w-2xl">
+    <div class="flex items-center justify-between gap-3 mb-6">
+        <h1 class="text-2xl font-bold text-white">@L["Settings.Title"]</h1>
+        @if (_userId != Guid.Empty)
+        {
+            <a href="/users/@_userId" class="text-sm text-gray-400 hover:text-white transition-colors">@L["Settings.ViewProfile"] →</a>
+        }
+    </div>
+
+    <ErrorBanner Message="@Error"/>
+    @if (_saved)
+    {
+        <p class="mb-4 px-4 py-3 rounded-lg bg-green-950 border border-green-800 text-sm text-green-300">@L["Settings.Saved"]</p>
+    }
+
+    @if (_settings is null)
+    {
+        <p class="text-gray-400 text-sm">@L["Common.Loading"]</p>
+    }
+    else
+    {
+        @* novalidate: the service validates everything and returns localized per-field messages. *@
+        <form @onsubmit="SaveAsync" novalidate class="space-y-8">
+            <section class="space-y-4">
+                <h2 class="text-lg font-semibold text-white">@L["Settings.Section.Profile"]</h2>
+
+                <div>
+                    <label for="nickname" class="block text-sm text-gray-400 mb-1">@L["Settings.Nickname"]</label>
+                    <input id="nickname" @bind="_form.Nickname" maxlength="32" placeholder="@_settings.SteamName" class="@InputClass"/>
+                    <p class="mt-1 text-xs text-gray-500">@L["Settings.NicknameHelp", _settings.SteamName]</p>
+                    @FieldError(nameof(ProfileSettingsInput.Nickname))
+                </div>
+
+                <div class="grid sm:grid-cols-[1fr_auto] gap-3">
+                    <div>
+                        <label for="realname" class="block text-sm text-gray-400 mb-1">@L["Settings.RealName"]</label>
+                        <input id="realname" @bind="_form.RealName" maxlength="100" class="@InputClass"/>
+                        @FieldError(nameof(ProfileSettingsInput.RealName))
+                    </div>
+                    <div>
+                        <label for="realname-visibility" class="block text-sm text-gray-400 mb-1">@L["Settings.VisibleTo"]</label>
+                        <select id="realname-visibility" @bind="_form.RealNameVisibility" class="@InputClass">
+                            @foreach (var visibility in Enum.GetValues<FieldVisibility>())
+                            {
+                                <option value="@visibility">@L[$"Visibility.{visibility}"]</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="clan" class="block text-sm text-gray-400 mb-1">@L["Settings.Clan"]</label>
+                    <input id="clan" @bind="_form.Clan" maxlength="50" class="@InputClass"/>
+                    @FieldError(nameof(ProfileSettingsInput.Clan))
+                </div>
+
+                <div>
+                    <label for="favorite-games" class="block text-sm text-gray-400 mb-1">@L["Settings.FavoriteGames"]</label>
+                    <textarea id="favorite-games" @bind="_form.FavoriteGames" rows="4" class="@InputClass"></textarea>
+                    <p class="mt-1 text-xs text-gray-500">@L["Settings.FavoriteGamesHelp", MaxFavoriteGames]</p>
+                    @FieldError(nameof(ProfileSettingsInput.FavoriteGames))
+                </div>
+
+                @foreach (var field in _settings.Fields)
+                {
+                    var id = $"custom-{field.Id}";
+                    <div>
+                        <label for="@id" class="block text-sm text-gray-400 mb-1">
+                            @ProfileFieldLabels.For(field, LocalizationOptions.Value.DefaultCulture)
+                            @if (field.IsRequired)
+                            {
+                                <span class="text-red-400" title="@L["Settings.Required"]">*</span>
+                            }
+                        </label>
+                        @switch (field.Type)
+                        {
+                            case ProfileFieldType.SingleChoice:
+                                <select id="@id" @bind="_form.FieldValues[field.Id]" class="@InputClass">
+                                    <option value="">–</option>
+                                    @* A value removed from the choice list stays selectable until changed. *@
+                                    @foreach (var choice in ChoicesWithCurrent(field))
+                                    {
+                                        <option value="@choice">@choice</option>
+                                    }
+                                </select>
+                                break;
+                            case ProfileFieldType.YesNo:
+                                <select id="@id" @bind="_form.FieldValues[field.Id]" class="@InputClass">
+                                    <option value="">–</option>
+                                    <option value="yes">@L["Common.Yes"]</option>
+                                    <option value="no">@L["Common.No"]</option>
+                                </select>
+                                break;
+                            default:
+                                <input id="@id" @bind="_form.FieldValues[field.Id]" maxlength="200" class="@InputClass"/>
+                                break;
+                        }
+                        <p class="mt-1 text-xs text-gray-500">@L["Settings.VisibleToHint", L[$"Visibility.{field.Visibility}"]]</p>
+                        @FieldError(ProfileSettingsInput.CustomFieldName(field.Id))
+                    </div>
+                }
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-lg font-semibold text-white">@L["Settings.Section.Contact"]</h2>
+
+                <div>
+                    <label for="email" class="block text-sm text-gray-400 mb-1">@L["Settings.Email"]</label>
+                    <input id="email" type="email" @bind="_form.ContactEmail" maxlength="254" class="@InputClass"/>
+                    <p class="mt-1 text-xs text-gray-500">@L["Settings.EmailHelp"]</p>
+                    @FieldError(nameof(ProfileSettingsInput.ContactEmail))
+                </div>
+
+                <fieldset>
+                    <legend class="block text-sm text-gray-400 mb-2">@L["Settings.Notifications"]</legend>
+                    <div class="space-y-2">
+                        @foreach (var category in NotificationCategories.All)
+                        {
+                            <label class="flex items-center gap-3 text-sm text-white cursor-pointer">
+                                <input type="checkbox" class="@CheckboxClass" checked="@_form.NotificationOptIns.Contains(category)"
+                                       @onchange="e => ToggleOptIn(category, e.Value is true)"/>
+                                @L[$"NotificationCategory.{category}"]
+                            </label>
+                        }
+                    </div>
+                    @FieldError(nameof(ProfileSettingsInput.NotificationOptIns))
+                </fieldset>
+            </section>
+
+            <button type="submit" disabled="@_saving"
+                    class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
+                @L["Common.Save"]
+            </button>
+        </form>
+    }
+</div>
+
+@code {
+    private const int MaxFavoriteGames = 10;
+    private const string CheckboxClass = "w-4 h-4 shrink-0 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-2 focus:ring-blue-600";
+    private const string InputClass = "w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500";
+
+    private Guid _userId;
+    private ProfileSettings? _settings;
+    private SettingsForm _form = new();
+    private Dictionary<string, string> _fieldErrors = [];
+    private bool _saving;
+    private bool _saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userId = await CurrentUserIdAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _settings = await RunAsync(() => ProfileService.GetSettingsAsync(_userId));
+        if (_settings is not null)
+            _form = SettingsForm.From(_settings);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_settings is null || _saving)
+            return;
+
+        _saving = true;
+        _saved = false;
+        try
+        {
+            var previousNickname = _settings.Nickname;
+            var ok = await RunAsync(() => ProfileService.SaveSettingsAsync(_userId, _form.ToInput()));
+            _fieldErrors = ValidationErrors
+                .GroupBy(e => e.Field)
+                .ToDictionary(g => g.Key, g => ErrorMessages.For(L, g.First()));
+            if (!ok)
+                return;   // inputs keep the user's entries
+
+            await LoadAsync();
+            // The nav bar shows the name from the auth cookie; re-issue it after a nickname change.
+            if (_settings?.Nickname != previousNickname)
+            {
+                Nav.NavigateTo("/auth/refresh?returnUrl=%2Fsettings%3Fsaved%3D1", forceLoad: true);
+                return;
+            }
+            _saved = true;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    [SupplyParameterFromQuery(Name = "saved")] public int? SavedFlag { get; set; }
+
+    protected override void OnParametersSet() => _saved = SavedFlag == 1;
+
+    private void ToggleOptIn(string category, bool optedIn)
+    {
+        if (optedIn)
+            _form.NotificationOptIns.Add(category);
+        else
+            _form.NotificationOptIns.Remove(category);
+    }
+
+    private IEnumerable<string> ChoicesWithCurrent(ProfileFieldDefinition field)
+        => _settings?.FieldValues.GetValueOrDefault(field.Id) is { } current && !field.Choices.Contains(current)
+            ? field.Choices.Append(current)
+            : field.Choices;
+
+    private RenderFragment FieldError(string field) => _fieldErrors.TryGetValue(field, out var message)
+        ? @<p class="mt-1 text-xs text-red-400">@message</p>
+        : _ => { };
+
+    private sealed class SettingsForm
+    {
+        public string? Nickname { get; set; }
+        public string? RealName { get; set; }
+        public FieldVisibility RealNameVisibility { get; set; } = FieldVisibility.Orga;
+        public string? Clan { get; set; }
+        public string? FavoriteGames { get; set; }   // one per line
+        public string? ContactEmail { get; set; }
+        public HashSet<string> NotificationOptIns { get; set; } = [];
+        public Dictionary<Guid, string?> FieldValues { get; set; } = [];
+
+        public static SettingsForm From(ProfileSettings settings) => new()
+        {
+            Nickname = settings.Nickname,
+            RealName = settings.RealName,
+            RealNameVisibility = settings.RealNameVisibility,
+            Clan = settings.Clan,
+            FavoriteGames = string.Join('\n', settings.FavoriteGames),
+            ContactEmail = settings.ContactEmail,
+            NotificationOptIns = [.. settings.NotificationOptIns],
+            FieldValues = settings.Fields.ToDictionary(f => f.Id, f => settings.FieldValues.GetValueOrDefault(f.Id))
+        };
+
+        public ProfileSettingsInput ToInput() => new(
+            Nickname,
+            RealName,
+            RealNameVisibility,
+            Clan,
+            (FavoriteGames ?? "").Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+            ContactEmail,
+            NotificationOptIns,
+            FieldValues);
+    }
+}

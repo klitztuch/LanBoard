@@ -11,6 +11,9 @@ public static class AuditActions
     public const string RoleDeleted = "RoleDeleted";
     public const string RoleAssigned = "RoleAssigned";
     public const string RoleUnassigned = "RoleUnassigned";
+    public const string ProfileFieldCreated = "ProfileFieldCreated";
+    public const string ProfileFieldUpdated = "ProfileFieldUpdated";
+    public const string ProfileFieldDeleted = "ProfileFieldDeleted";
 
     public static IReadOnlyList<string> All { get; } = ConstantCatalog.Of(typeof(AuditActions));
 }

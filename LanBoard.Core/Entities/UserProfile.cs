@@ -1,0 +1,17 @@
+namespace LanBoard.Core.Entities;
+
+// Created lazily on first settings save; a missing row means defaults.
+public class UserProfile
+{
+    public Guid UserId { get; set; }
+    public string? RealName { get; set; }
+    public FieldVisibility RealNameVisibility { get; set; } = FieldVisibility.Orga;
+    public string? Clan { get; set; }
+    public List<string> FavoriteGames { get; set; } = [];
+    public string? ContactEmail { get; set; }
+    public List<string> NotificationOptIns { get; set; } = [];
+    public DateTime UpdatedAt { get; set; }
+
+    public User User { get; set; } = null!;
+    public ICollection<ProfileFieldValue> FieldValues { get; set; } = [];
+}

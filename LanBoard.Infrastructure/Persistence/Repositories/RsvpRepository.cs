@@ -15,6 +15,23 @@ public class RsvpRepository(AppDbContext db) : IRsvpRepository
     public async Task<IReadOnlyList<Rsvp>> GetByPartyAsync(Guid partyId, CancellationToken ct = default)
         => await db.Rsvps.Where(r => r.PartyId == partyId).ToListAsync(ct);
 
+    // The active party counts as running, so it's never "past" even if its date has passed.
+    public async Task<IReadOnlyList<LanParty>> GetAttendedPastPartiesAsync(Guid userId, DateTime before, CancellationToken ct = default)
+        => await db.Rsvps
+            .AsNoTracking()
+            .Where(r => r.UserId == userId && r.IsAttending && !r.Party.IsActive && r.Party.Date < before)
+            .Select(r => r.Party)
+            .OrderByDescending(p => p.Date)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<User>> GetAttendingUsersAsync(Guid partyId, CancellationToken ct = default)
+        => await db.Rsvps
+            .AsNoTracking()
+            .Where(r => r.PartyId == partyId && r.IsAttending)
+            .Select(r => r.User)
+            .OrderBy(u => u.DisplayName)
+            .ToListAsync(ct);
+
     public async Task AddAsync(Rsvp entity, CancellationToken ct = default)
         => await db.Rsvps.AddAsync(entity, ct);
 

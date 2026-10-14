@@ -1,0 +1,297 @@
+@page "/admin/profile-fields"
+@attribute [Authorize(Policy = Permissions.ProfileFieldsManage)]
+@rendermode InteractiveServer
+@inherits ServicePageBase
+@using LanBoard.Web.Extensions
+@using Microsoft.Extensions.Options
+@inject IProfileFieldService ProfileFieldService
+@inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
+
+<PageTitle>@L["Admin.ProfileFields.Title"] – @L["Nav.Admin"]</PageTitle>
+
+<div class="p-8 max-w-3xl">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <a href="/admin" class="text-gray-400 hover:text-white transition-colors text-sm">← @L["Nav.Admin"]</a>
+            <h1 class="text-2xl font-bold text-white">@L["Admin.ProfileFields.Title"]</h1>
+        </div>
+        @if (_editing is null)
+        {
+            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    @onclick="StartCreate">
+                @L["Admin.ProfileFields.New"]
+            </button>
+        }
+    </div>
+
+    <ErrorBanner Message="@Error"/>
+
+    @if (_editing is not null)
+    {
+        var isNew = _editing.FieldId is null;
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-6 space-y-4">
+            <h2 class="text-lg font-semibold text-white">@(isNew ? L["Admin.ProfileFields.New"] : L["Admin.ProfileFields.Edit"])</h2>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="field-key" class="block text-sm text-gray-400 mb-1">@L["Admin.ProfileFields.Key"]</label>
+                    @if (isNew)
+                    {
+                        <input id="field-key" @bind="_editing.Key" maxlength="50" placeholder="discord" class="@InputClass font-mono"/>
+                        <p class="mt-1 text-xs text-gray-500">@L["Admin.ProfileFields.KeyHelp"]</p>
+                    }
+                    else
+                    {
+                        <p class="px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-gray-300 font-mono text-sm">@_editing.Key</p>
+                    }
+                </div>
+                <div>
+                    <label for="field-type" class="block text-sm text-gray-400 mb-1">@L["Admin.ProfileFields.Type"]</label>
+                    @if (isNew)
+                    {
+                        <select id="field-type" @bind="_editing.Type" class="@InputClass">
+                            @foreach (var type in Enum.GetValues<ProfileFieldType>())
+                            {
+                                <option value="@type">@L[$"ProfileFieldType.{type}"]</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <p class="px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-gray-300 text-sm">@L[$"ProfileFieldType.{_editing.Type}"]</p>
+                    }
+                </div>
+            </div>
+            @if (!isNew)
+            {
+                <p class="text-xs text-gray-500">@L["Admin.ProfileFields.ImmutableHelp"]</p>
+            }
+
+            <div>
+                <p class="text-sm text-gray-400 mb-1">@L["Admin.ProfileFields.Labels"]</p>
+                <div class="space-y-2">
+                    @foreach (var culture in _cultures)
+                    {
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 text-xs text-gray-500 uppercase font-mono">@culture</span>
+                            <input @bind="_editing.Labels[culture]" maxlength="100" lang="@culture"
+                                   aria-label="@($"{L["Admin.ProfileFields.Labels"]} ({culture})")" class="@InputClass"/>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (_editing.Type == ProfileFieldType.SingleChoice)
+            {
+                <div>
+                    <label for="field-choices" class="block text-sm text-gray-400 mb-1">@L["Admin.ProfileFields.Choices"]</label>
+                    <textarea id="field-choices" @bind="_editing.Choices" rows="4" class="@InputClass"></textarea>
+                    <p class="mt-1 text-xs text-gray-500">@L["Admin.ProfileFields.ChoicesHelp"]</p>
+                </div>
+            }
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="field-visibility" class="block text-sm text-gray-400 mb-1">@L["Settings.VisibleTo"]</label>
+                    <select id="field-visibility" @bind="_editing.Visibility" class="@InputClass">
+                        @foreach (var visibility in Enum.GetValues<FieldVisibility>())
+                        {
+                            <option value="@visibility">@L[$"Visibility.{visibility}"]</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="field-sort" class="block text-sm text-gray-400 mb-1">@L["Admin.ProfileFields.SortOrder"]</label>
+                    <input id="field-sort" type="number" @bind="_editing.SortOrder" class="@InputClass"/>
+                </div>
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="@CheckboxClass" @bind="_editing.IsRequired"/>
+                <span class="text-sm text-white">@L["Admin.ProfileFields.Required"]</span>
+            </label>
+
+            <div class="flex gap-3">
+                <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        @onclick="SaveAsync">
+                    @(isNew ? L["Common.Create"] : L["Common.Save"])
+                </button>
+                <button class="px-5 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+                        @onclick="CancelEdit">
+                    @L["Common.Cancel"]
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_fields is null)
+    {
+        <p class="text-gray-400 text-sm">@L["Common.Loading"]</p>
+    }
+    else if (_fields.Count == 0)
+    {
+        <p class="text-gray-400 text-sm">@L["Admin.ProfileFields.Empty"]</p>
+    }
+    else
+    {
+        <div class="flex flex-col gap-2">
+            @foreach (var field in _fields)
+            {
+                <div class="flex items-start justify-between gap-4 bg-gray-800 rounded-xl px-4 py-3 border border-gray-700">
+                    <div class="min-w-0">
+                        <p class="text-white font-medium">
+                            @ProfileFieldLabels.For(field, LocalizationOptions.Value.DefaultCulture)
+                            <span class="ml-2 text-xs text-gray-500 font-mono">@field.Key</span>
+                        </p>
+                        <div class="flex flex-wrap gap-1 mt-2">
+                            <span class="@Badge">@L[$"ProfileFieldType.{field.Type}"]</span>
+                            <span class="@Badge">@L[$"Visibility.{field.Visibility}"]</span>
+                            @if (field.IsRequired)
+                            {
+                                <span class="@Badge">@L["Admin.ProfileFields.Required"]</span>
+                            }
+                            <span class="@Badge">#@field.SortOrder</span>
+                        </div>
+                        @if (field.Choices.Count > 0)
+                        {
+                            <p class="text-xs text-gray-400 mt-2 break-words">@string.Join(" · ", field.Choices)</p>
+                        }
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0 text-sm">
+                        <button class="text-blue-400 hover:text-blue-300 transition-colors"
+                                @onclick="() => StartEdit(field)">
+                            @L["Common.Edit"]
+                        </button>
+                        @if (_confirmDeleteId == field.Id)
+                        {
+                            <span class="text-xs text-red-300">@L["Admin.ProfileFields.DeleteWarning"]</span>
+                            <button class="text-red-400 hover:text-red-300 transition-colors"
+                                    @onclick="() => DeleteAsync(field.Id)">
+                                @L["Common.Confirm"]
+                            </button>
+                            <button class="text-gray-400 hover:text-gray-300 transition-colors"
+                                    @onclick="() => _confirmDeleteId = null">
+                                @L["Common.Cancel"]
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="text-gray-500 hover:text-red-400 transition-colors"
+                                    @onclick="() => _confirmDeleteId = field.Id">
+                                @L["Common.Delete"]
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    // Explicit text color: Flowbite draws the checked state in currentColor, which would inherit the surrounding text color.
+    private const string CheckboxClass = "w-4 h-4 shrink-0 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-2 focus:ring-blue-600";
+    private const string InputClass = "w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500";
+    private const string Badge = "px-2 py-0.5 bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-full";
+
+    private IReadOnlyList<ProfileFieldDefinition>? _fields;
+    private FieldForm? _editing;
+    private Guid? _confirmDeleteId;
+
+    // Label inputs are offered for the supported cultures only, so stored label keys stay within them.
+    private IReadOnlyList<string> _cultures = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cultures = LocalizationOptions.Value.SupportedCultures.DefaultIfEmpty(LocalizationOptions.Value.DefaultCulture).ToList();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _fields = await ProfileFieldService.GetAllAsync();
+    }
+
+    private void StartCreate()
+    {
+        Error = null;
+        _editing = FieldForm.New(_cultures, (_fields?.Select(f => f.SortOrder).DefaultIfEmpty(0).Max() ?? 0) + 1);
+    }
+
+    private void StartEdit(ProfileFieldDefinition field)
+    {
+        Error = null;
+        _confirmDeleteId = null;
+        _editing = FieldForm.From(field, _cultures);
+    }
+
+    private void CancelEdit()
+    {
+        Error = null;
+        _editing = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editing is null) return;
+        var form = _editing;
+        var userId = await CurrentUserIdAsync();
+
+        var saved = await RunAsync(() => form.FieldId is { } fieldId
+            ? ProfileFieldService.UpdateAsync(fieldId, form.ToInput(), userId)
+            : ProfileFieldService.CreateAsync(form.ToInput(), form.Key, userId));
+        if (saved)
+            _editing = null;
+        // Reload also on failure: ProfileField.NotFound means someone else deleted the field meanwhile.
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid fieldId)
+    {
+        _confirmDeleteId = null;
+        var userId = await CurrentUserIdAsync();
+        await RunAsync(() => ProfileFieldService.DeleteAsync(fieldId, userId));
+        await LoadAsync();
+    }
+
+    private sealed class FieldForm
+    {
+        public Guid? FieldId { get; init; }
+        public string Key { get; set; } = "";
+        public ProfileFieldType Type { get; set; } = ProfileFieldType.Text;
+        public Dictionary<string, string> Labels { get; init; } = [];
+        public string? Choices { get; set; }   // one per line
+        public bool IsRequired { get; set; }
+        public FieldVisibility Visibility { get; set; } = FieldVisibility.Public;
+        public int SortOrder { get; set; }
+
+        public static FieldForm New(IEnumerable<string> cultures, int sortOrder) => new()
+        {
+            Labels = cultures.ToDictionary(c => c, _ => ""),
+            SortOrder = sortOrder
+        };
+
+        public static FieldForm From(ProfileFieldDefinition field, IEnumerable<string> cultures) => new()
+        {
+            FieldId = field.Id,
+            Key = field.Key,
+            Type = field.Type,
+            Labels = cultures.ToDictionary(c => c, c => field.Labels.GetValueOrDefault(c) ?? ""),
+            Choices = string.Join('\n', field.Choices),
+            IsRequired = field.IsRequired,
+            Visibility = field.Visibility,
+            SortOrder = field.SortOrder
+        };
+
+        // Choices only apply to SingleChoice; stale textarea content of another type is dropped.
+        public ProfileFieldInput ToInput() => new(
+            Labels,
+            Type,
+            Type == ProfileFieldType.SingleChoice
+                ? (Choices ?? "").Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                : [],
+            IsRequired,
+            Visibility,
+            SortOrder);
+    }
+}

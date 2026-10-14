@@ -33,7 +33,7 @@
                     <span class="text-xs text-gray-500 font-mono shrink-0 w-40">@entry.CreatedAt.ToLocalTime().ToString("g")</span>
                     <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 shrink-0">@ActionLabel(entry.Action)</span>
                     <span class="text-sm text-white flex-1">@entry.Details</span>
-                    <span class="text-xs text-gray-400 shrink-0">@entry.User.DisplayName</span>
+                    <UserLink UserId="entry.UserId" Name="@entry.User.DisplayName" CssClass="text-xs text-gray-400 shrink-0 hover:underline"/>
                 </div>
             }
         </div>

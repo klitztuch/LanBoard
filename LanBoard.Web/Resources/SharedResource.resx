@@ -30,6 +30,12 @@
   <data name="Admin.Index.Parties" xml:space="preserve">
     <value>Create and edit parties, manage seats</value>
   </data>
+  <data name="Admin.Index.PartyProfiles" xml:space="preserve">
+    <value>Attendees' profile data per LAN party</value>
+  </data>
+  <data name="Admin.Index.ProfileFields" xml:space="preserve">
+    <value>Define custom profile fields</value>
+  </data>
   <data name="Admin.Index.Roles" xml:space="preserve">
     <value>Create roles and set permissions</value>
   </data>
@@ -77,6 +83,66 @@
   </data>
   <data name="Admin.PartyEdit.SeatsHelp" xml:space="preserve">
     <value>Click an empty cell to add a seat · click a seat to remove it</value>
+  </data>
+  <data name="Admin.PartyProfiles.Count" xml:space="preserve">
+    <value>{0} attendees</value>
+  </data>
+  <data name="Admin.PartyProfiles.Link" xml:space="preserve">
+    <value>Profiles</value>
+  </data>
+  <data name="Admin.PartyProfiles.NoAttendees" xml:space="preserve">
+    <value>No attendees for this LAN party yet.</value>
+  </data>
+  <data name="Admin.PartyProfiles.Party" xml:space="preserve">
+    <value>LAN party</value>
+  </data>
+  <data name="Admin.PartyProfiles.Title" xml:space="preserve">
+    <value>Attendee profiles</value>
+  </data>
+  <data name="Admin.PartyProfiles.User" xml:space="preserve">
+    <value>Attendee</value>
+  </data>
+  <data name="Admin.ProfileFields.Choices" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Admin.ProfileFields.ChoicesHelp" xml:space="preserve">
+    <value>One option per line. Removing an option keeps existing values until users change them.</value>
+  </data>
+  <data name="Admin.ProfileFields.DeleteWarning" xml:space="preserve">
+    <value>Also deletes all values users entered.</value>
+  </data>
+  <data name="Admin.ProfileFields.Edit" xml:space="preserve">
+    <value>Edit field</value>
+  </data>
+  <data name="Admin.ProfileFields.Empty" xml:space="preserve">
+    <value>No custom profile fields yet.</value>
+  </data>
+  <data name="Admin.ProfileFields.ImmutableHelp" xml:space="preserve">
+    <value>Key and type can't be changed. To change them, delete the field and create a new one.</value>
+  </data>
+  <data name="Admin.ProfileFields.Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="Admin.ProfileFields.KeyHelp" xml:space="preserve">
+    <value>Lowercase letters, digits and hyphens. Can't be changed later.</value>
+  </data>
+  <data name="Admin.ProfileFields.Labels" xml:space="preserve">
+    <value>Label per language</value>
+  </data>
+  <data name="Admin.ProfileFields.New" xml:space="preserve">
+    <value>New field</value>
+  </data>
+  <data name="Admin.ProfileFields.Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Admin.ProfileFields.SortOrder" xml:space="preserve">
+    <value>Sort order</value>
+  </data>
+  <data name="Admin.ProfileFields.Title" xml:space="preserve">
+    <value>Profile fields</value>
+  </data>
+  <data name="Admin.ProfileFields.Type" xml:space="preserve">
+    <value>Type</value>
   </data>
   <data name="Admin.Roles.AllPermissions" xml:space="preserve">
     <value>All permissions</value>
@@ -129,6 +195,15 @@
   <data name="Audit.PartyUpdated" xml:space="preserve">
     <value>Party updated</value>
   </data>
+  <data name="Audit.ProfileFieldCreated" xml:space="preserve">
+    <value>Profile field created</value>
+  </data>
+  <data name="Audit.ProfileFieldDeleted" xml:space="preserve">
+    <value>Profile field deleted</value>
+  </data>
+  <data name="Audit.ProfileFieldUpdated" xml:space="preserve">
+    <value>Profile field updated</value>
+  </data>
   <data name="Audit.RoleAssigned" xml:space="preserve">
     <value>Role assigned</value>
   </data>
@@ -168,8 +243,14 @@
   <data name="Common.Loading" xml:space="preserve">
     <value>Loading…</value>
   </data>
+  <data name="Common.No" xml:space="preserve">
+    <value>No</value>
+  </data>
   <data name="Common.Save" xml:space="preserve">
     <value>Save</value>
+  </data>
+  <data name="Common.Yes" xml:space="preserve">
+    <value>Yes</value>
   </data>
   <data name="Error.Generic" xml:space="preserve">
     <value>Something went wrong. Please try again.</value>
@@ -179,6 +260,9 @@
   </data>
   <data name="Error.Match.NotFound" xml:space="preserve">
     <value>Match not found.</value>
+  </data>
+  <data name="Error.Notification.UnknownCategory" xml:space="preserve">
+    <value>Unknown notification category: {0}</value>
   </data>
   <data name="Error.Page.DevMode.Details" xml:space="preserve">
     <value>Swapping to the Development environment will display more detailed information about the error that occurred.</value>
@@ -206,6 +290,45 @@
   </data>
   <data name="Error.PermissionDenied" xml:space="preserve">
     <value>You don't have permission to do that.</value>
+  </data>
+  <data name="Error.Profile.EmailInvalid" xml:space="preserve">
+    <value>Please enter a valid e-mail address.</value>
+  </data>
+  <data name="Error.Profile.FieldInvalidChoice" xml:space="preserve">
+    <value>Please choose a valid option.</value>
+  </data>
+  <data name="Error.Profile.FieldRequired" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="Error.Profile.NicknameInvalid" xml:space="preserve">
+    <value>Nickname must be 1–{0} characters long.</value>
+  </data>
+  <data name="Error.Profile.NicknameTaken" xml:space="preserve">
+    <value>This name is already used by another user.</value>
+  </data>
+  <data name="Error.Profile.TooManyFavoriteGames" xml:space="preserve">
+    <value>At most {0} favorite games are allowed.</value>
+  </data>
+  <data name="Error.Profile.UnknownCategory" xml:space="preserve">
+    <value>Unknown notification category: {0}</value>
+  </data>
+  <data name="Error.Profile.ValueTooLong" xml:space="preserve">
+    <value>Must be at most {0} characters long.</value>
+  </data>
+  <data name="Error.ProfileField.ChoicesInvalid" xml:space="preserve">
+    <value>Choices are invalid: single choice needs 1–50 distinct, non-empty options (max. 50 characters each); other types take none.</value>
+  </data>
+  <data name="Error.ProfileField.KeyInvalid" xml:space="preserve">
+    <value>Key must start with a lowercase letter or digit and contain only a–z, 0–9 and hyphens (max. 50).</value>
+  </data>
+  <data name="Error.ProfileField.KeyTaken" xml:space="preserve">
+    <value>A profile field with this key already exists.</value>
+  </data>
+  <data name="Error.ProfileField.LabelMissing" xml:space="preserve">
+    <value>At least one label (max. 100 characters) is required.</value>
+  </data>
+  <data name="Error.ProfileField.NotFound" xml:space="preserve">
+    <value>Profile field not found.</value>
   </data>
   <data name="Error.Role.LastAdmin" xml:space="preserve">
     <value>At least one user must keep the Admin role.</value>
@@ -249,6 +372,9 @@
   <data name="Error.User.NotFound" xml:space="preserve">
     <value>User not found.</value>
   </data>
+  <data name="Error.Validation" xml:space="preserve">
+    <value>Please correct the marked fields.</value>
+  </data>
   <data name="Home.NoActiveParty" xml:space="preserve">
     <value>No active LAN party found.</value>
   </data>
@@ -273,6 +399,9 @@
   <data name="Nav.Logout" xml:space="preserve">
     <value>Logout</value>
   </data>
+  <data name="Nav.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
   <data name="Nav.Stats" xml:space="preserve">
     <value>Stats</value>
   </data>
@@ -288,6 +417,12 @@
   <data name="NotFound.Title" xml:space="preserve">
     <value>Not found</value>
   </data>
+  <data name="NotificationCategory.party.announcements" xml:space="preserve">
+    <value>Party announcements</value>
+  </data>
+  <data name="NotificationCategory.tournament.updates" xml:space="preserve">
+    <value>Tournament updates</value>
+  </data>
   <data name="Permission.audit.view" xml:space="preserve">
     <value>View audit log</value>
   </data>
@@ -297,6 +432,12 @@
   <data name="Permission.party.manage" xml:space="preserve">
     <value>Manage LAN parties</value>
   </data>
+  <data name="Permission.profile.read" xml:space="preserve">
+    <value>View orga-only profile data</value>
+  </data>
+  <data name="Permission.profilefields.manage" xml:space="preserve">
+    <value>Manage custom profile fields</value>
+  </data>
   <data name="Permission.roles.manage" xml:space="preserve">
     <value>Manage roles</value>
   </data>
@@ -305,6 +446,48 @@
   </data>
   <data name="Permission.users.manage" xml:space="preserve">
     <value>Manage users &amp; role assignments</value>
+  </data>
+  <data name="Profile.Clan" xml:space="preserve">
+    <value>Clan</value>
+  </data>
+  <data name="Profile.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Profile.Edit" xml:space="preserve">
+    <value>Edit profile</value>
+  </data>
+  <data name="Profile.FavoriteGames" xml:space="preserve">
+    <value>Favorite games</value>
+  </data>
+  <data name="Profile.NoPastParties" xml:space="preserve">
+    <value>No past LAN parties yet.</value>
+  </data>
+  <data name="Profile.NoPlayedGames" xml:space="preserve">
+    <value>No games recorded yet.</value>
+  </data>
+  <data name="Profile.NotFound" xml:space="preserve">
+    <value>User not found.</value>
+  </data>
+  <data name="Profile.PartyCount" xml:space="preserve">
+    <value>{0} LAN parties</value>
+  </data>
+  <data name="Profile.PastParties" xml:space="preserve">
+    <value>Past LAN parties</value>
+  </data>
+  <data name="Profile.PlayedGames" xml:space="preserve">
+    <value>Played at LAN parties</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="ProfileFieldType.SingleChoice" xml:space="preserve">
+    <value>Single choice</value>
+  </data>
+  <data name="ProfileFieldType.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ProfileFieldType.YesNo" xml:space="preserve">
+    <value>Yes/No</value>
   </data>
   <data name="Reconnect.Failed" xml:space="preserve">
     <value>Failed to rejoin.</value>
@@ -365,6 +548,57 @@
   </data>
   <data name="Seats.Release" xml:space="preserve">
     <value>Release</value>
+  </data>
+  <data name="Settings.Clan" xml:space="preserve">
+    <value>Clan</value>
+  </data>
+  <data name="Settings.Email" xml:space="preserve">
+    <value>Contact e-mail</value>
+  </data>
+  <data name="Settings.EmailHelp" xml:space="preserve">
+    <value>Optional. Only used for mailings you opt into below; never shown to other users.</value>
+  </data>
+  <data name="Settings.FavoriteGames" xml:space="preserve">
+    <value>Favorite games</value>
+  </data>
+  <data name="Settings.FavoriteGamesHelp" xml:space="preserve">
+    <value>One game per line, at most {0}.</value>
+  </data>
+  <data name="Settings.Nickname" xml:space="preserve">
+    <value>Nickname</value>
+  </data>
+  <data name="Settings.NicknameHelp" xml:space="preserve">
+    <value>Shown instead of your Steam name ({0}). Leave empty to use the Steam name.</value>
+  </data>
+  <data name="Settings.Notifications" xml:space="preserve">
+    <value>E-mail notifications</value>
+  </data>
+  <data name="Settings.RealName" xml:space="preserve">
+    <value>Real name</value>
+  </data>
+  <data name="Settings.Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Settings.Saved" xml:space="preserve">
+    <value>Settings saved.</value>
+  </data>
+  <data name="Settings.Section.Contact" xml:space="preserve">
+    <value>Contact &amp; notifications</value>
+  </data>
+  <data name="Settings.Section.Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings.ViewProfile" xml:space="preserve">
+    <value>View my profile</value>
+  </data>
+  <data name="Settings.VisibleTo" xml:space="preserve">
+    <value>Visible to</value>
+  </data>
+  <data name="Settings.VisibleToHint" xml:space="preserve">
+    <value>Visible to: {0}</value>
   </data>
   <data name="Stats.Duration.HoursMinutes" xml:space="preserve">
     <value>{0}h {1}min</value>
@@ -428,5 +662,14 @@
   </data>
   <data name="Tournaments.Title" xml:space="preserve">
     <value>Tournaments</value>
+  </data>
+  <data name="Visibility.Orga" xml:space="preserve">
+    <value>Orga</value>
+  </data>
+  <data name="Visibility.Private" xml:space="preserve">
+    <value>Only me (and admins)</value>
+  </data>
+  <data name="Visibility.Public" xml:space="preserve">
+    <value>Everyone</value>
   </data>
 </root>

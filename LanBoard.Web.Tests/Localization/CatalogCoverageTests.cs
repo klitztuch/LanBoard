@@ -1,6 +1,8 @@
 using LanBoard.Application.Admin;
 using LanBoard.Application.Authorization;
 using LanBoard.Application.Errors;
+using LanBoard.Application.Notifications;
+using LanBoard.Core.Entities;
 
 namespace LanBoard.Web.Tests.Localization;
 
@@ -17,6 +19,18 @@ public class CatalogCoverageTests
     [Fact]
     public void EveryAuditAction_HasDisplayName()
         => AssertAllPresent(AuditActions.All.Select(a => $"Audit.{a}"));
+
+    [Fact]
+    public void EveryNotificationCategory_HasDisplayName()
+        => AssertAllPresent(NotificationCategories.All.Select(c => $"NotificationCategory.{c}"));
+
+    [Fact]
+    public void EveryFieldVisibility_HasDisplayName()
+        => AssertAllPresent(Enum.GetNames<FieldVisibility>().Select(v => $"Visibility.{v}"));
+
+    [Fact]
+    public void EveryProfileFieldType_HasDisplayName()
+        => AssertAllPresent(Enum.GetNames<ProfileFieldType>().Select(t => $"ProfileFieldType.{t}"));
 
     private static void AssertAllPresent(IEnumerable<string> keys)
     {

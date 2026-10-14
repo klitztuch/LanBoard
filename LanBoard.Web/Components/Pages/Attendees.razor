@@ -47,7 +47,7 @@
                         }
                     </div>
 
-                    <span class="flex-1 text-white font-medium truncate min-w-0">@user.DisplayName</span>
+                    <UserLink UserId="user.Id" Name="@user.DisplayName" CssClass="flex-1 text-white font-medium truncate min-w-0 hover:underline"/>
 
                     @if (_rsvpByUser.TryGetValue(user.Id, out var rsvp))
                     {

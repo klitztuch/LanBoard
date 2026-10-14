@@ -8,11 +8,13 @@
             <AuthorizeView>
                 <Authorized>
                     <div class="flex items-center gap-2">
-                        @if (context.User.FindFirst("lanboard:avatarurl")?.Value is { } avatarUrl)
-                        {
-                            <img src="@avatarUrl" alt="@L["Nav.Avatar"]" class="w-8 h-8 rounded-full shrink-0"/>
-                        }
-                        <span class="hidden sm:block text-sm text-white truncate max-w-32">@context.User.Identity?.Name</span>
+                        <a href="/settings" class="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity" title="@L["Nav.Settings"]">
+                            @if (context.User.FindFirst(LanBoardClaims.AvatarUrl)?.Value is { } avatarUrl)
+                            {
+                                <img src="@avatarUrl" alt="@L["Nav.Avatar"]" class="w-8 h-8 rounded-full shrink-0"/>
+                            }
+                            <span class="hidden sm:block text-sm text-white truncate max-w-32">@context.User.Identity?.Name</span>
+                        </a>
                         <a href="/auth/logout" class="text-xs text-gray-400 hover:text-white transition-colors shrink-0">@L["Nav.Logout"]</a>
                     </div>
                 </Authorized>
