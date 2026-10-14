@@ -1,6 +1,7 @@
 @rendermode InteractiveServer
 @implements IDisposable
 @inject ILanBoardNotifier Notifier
+@inject INotificationPublisher Publisher
 @inject AuthenticationStateProvider Auth
 
 @code {
@@ -9,10 +10,11 @@
     protected override async Task OnInitializedAsync()
     {
         var state = await Auth.GetAuthenticationStateAsync();
-        var claim = state.User.FindFirst("lanboard:userid");
-        if (claim is null || !Guid.TryParse(claim.Value, out var id)) return;
+        if (state.User.GetUserId() is not { } id) return;
         _userId = id;
-        Notifier.SetUserOnline(id);
+        // The name claim is the effective display name (re-issued on nickname changes), so no DB read here.
+        if (Notifier.SetUserOnline(id))
+            Publisher.Publish(new NotificationMessage(NotificationCategories.AttendeeOnline, id, [state.User.Identity?.Name ?? "?"]));
     }
 
     public void Dispose()

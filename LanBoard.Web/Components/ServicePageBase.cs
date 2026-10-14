@@ -12,7 +12,7 @@ public abstract class ServicePageBase : ComponentBase
 {
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedResource> Localizer { get; set; } = null!;
-    [Inject] private ILogger<ServicePageBase> Logger { get; set; } = null!;
+    [Inject] protected ILogger<ServicePageBase> Logger { get; set; } = null!;
 
     protected string? Error { get; set; }
 

@@ -17,6 +17,10 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.Property(p => p.FavoriteGames).HasColumnType("text[]").HasDefaultValueSql("'{}'");
         builder.Property(p => p.ContactEmail).HasMaxLength(254);
         builder.Property(p => p.NotificationOptIns).HasColumnType("text[]").HasDefaultValueSql("'{}'");
+        builder.Property(p => p.InAppOptOuts).HasColumnType("text[]").HasDefaultValueSql("'{}'");
+        // No model default: false is the CLR default, so EF would replace an explicit false with it.
+        // The entity initializer (= true) provides the default; the migration backfills existing rows with true.
+        builder.Property(p => p.NotificationSoundEnabled);
         builder.Property(p => p.UpdatedAt).IsRequired();
 
         builder.HasOne(p => p.User)

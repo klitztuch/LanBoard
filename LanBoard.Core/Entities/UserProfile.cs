@@ -10,6 +10,9 @@ public class UserProfile
     public List<string> FavoriteGames { get; set; } = [];
     public string? ContactEmail { get; set; }
     public List<string> NotificationOptIns { get; set; } = [];
+    // In-app notifications default to on, so only deviations are stored.
+    public List<string> InAppOptOuts { get; set; } = [];
+    public bool NotificationSoundEnabled { get; set; } = true;
     public DateTime UpdatedAt { get; set; }
 
     public User User { get; set; } = null!;
