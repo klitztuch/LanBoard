@@ -1,17 +1,78 @@
 @page "/admin"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = Policies.AnyAdmin)]
 
-<PageTitle>Admin – LanBoard</PageTitle>
+<PageTitle>@L["Nav.Admin"] – LanBoard</PageTitle>
 
 <div class="p-8">
-    <h1 class="text-2xl font-bold text-white mb-6">Admin</h1>
+    <h1 class="text-2xl font-bold text-white mb-6">@L["Nav.Admin"]</h1>
 
-    <a href="/admin/party"
-       class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors max-w-md">
-        <div>
-            <p class="text-white font-medium">LAN-Parties</p>
-            <p class="text-sm text-gray-400">Parties anlegen, bearbeiten und Sitzplätze verwalten</p>
-        </div>
-        <span class="text-gray-500">→</span>
-    </a>
+    <div class="flex flex-col gap-3 max-w-md">
+        <AuthorizeView Policy="@Permissions.PartyManage">
+            <a href="/admin/party"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.Parties.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.Parties"]</p>
+                </div>
+                <span class="text-gray-500">→</span>
+            </a>
+        </AuthorizeView>
+        <AuthorizeView Policy="@Permissions.RolesManage">
+            <a href="/admin/roles"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.Roles.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.Roles"]</p>
+                </div>
+                <span class="text-gray-500">→</span>
+            </a>
+        </AuthorizeView>
+        <AuthorizeView Policy="@Permissions.UsersManage">
+            <a href="/admin/users"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.Users.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.Users"]</p>
+                </div>
+                <span class="text-gray-500">→</span>
+            </a>
+        </AuthorizeView>
+        <AuthorizeView Policy="@Permissions.ProfileRead">
+            <a href="/admin/profiles"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.PartyProfiles.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.PartyProfiles"]</p>
+                </div>
+                <span class="text-gray-500">→</span>
+            </a>
+        </AuthorizeView>
+        <AuthorizeView Policy="@Permissions.ProfileFieldsManage">
+            <a href="/admin/profile-fields"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.ProfileFields.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.ProfileFields"]</p>
+                </div>
+                <span class="text-gray-500">→</span>
+            </a>
+        </AuthorizeView>
+        <AuthorizeView Policy="@Permissions.AuditView">
+            <a href="/admin/audit-log"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.AuditLog.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.AuditLog"]</p>
+                </div>
+            </a>
+        </AuthorizeView>
+        <a href="/tv" target="_blank"
+           class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+            <div>
+                <p class="text-white font-medium">@L["Admin.Index.Tv.Title"]</p>
+                <p class="text-sm text-gray-400">@L["Admin.Index.Tv"]</p>
+            </div>
+            <span class="text-gray-500">→</span>
+        </a>
+    </div>
 </div>

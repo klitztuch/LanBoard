@@ -33,6 +33,18 @@ public class SessionRepository(AppDbContext db, IOptions<SessionTrackingConfigur
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Session>> GetByPartyAsync(Guid partyId, CancellationToken ct = default)
+        => await db.Sessions
+            .Where(s => s.PartyId == partyId)
+            .Include(s => s.User)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<Session>> GetByUserAsync(Guid userId, CancellationToken ct = default)
+        => await db.Sessions
+            .AsNoTracking()
+            .Where(s => s.UserId == userId)
+            .ToListAsync(ct);
+
     public async Task AddAsync(Session entity, CancellationToken ct = default)
         => await db.Sessions.AddAsync(entity, ct);
 
