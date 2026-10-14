@@ -22,6 +22,18 @@ public class UserRepository(AppDbContext db) : IUserRepository
             .OrderBy(u => u.DisplayName)
             .ToListAsync(ct);
 
+    public async Task<User?> GetWithIdentitiesAsync(Guid id, CancellationToken ct = default)
+        => await db.Users
+            .AsNoTracking()
+            .Include(u => u.Identities)
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+    public async Task<bool> DisplayNameTakenAsync(string name, Guid exceptUserId, CancellationToken ct = default)
+    {
+        var lowered = name.ToLower();
+        return await db.Users.AnyAsync(u => u.Id != exceptUserId && u.DisplayName.ToLower() == lowered, ct);
+    }
+
     public async Task AddAsync(User entity, CancellationToken ct = default)
         => await db.Users.AddAsync(entity, ct);
 

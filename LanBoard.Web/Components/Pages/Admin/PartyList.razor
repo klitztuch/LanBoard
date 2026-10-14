@@ -1,28 +1,29 @@
 @page "/admin/party"
-@attribute [Authorize(Policy = "Admin")]
+@attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @inject IAdminService AdminService
-@inject AuthenticationStateProvider Auth
-@inject NavigationManager Nav
 
-<PageTitle>Parties – Admin</PageTitle>
+<PageTitle>@L["Admin.Parties.Title"] – @L["Nav.Admin"]</PageTitle>
 
 <div class="p-8">
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-white">LAN-Parties</h1>
+        <h1 class="text-2xl font-bold text-white">@L["Admin.Parties.Title"]</h1>
         <a href="/admin/party/new"
            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-            Neue Party
+            @L["Admin.Parties.New"]
         </a>
     </div>
 
+    <ErrorBanner Message="@Error" />
+
     @if (_parties is null)
     {
-        <p class="text-gray-400">Laden...</p>
+        <p class="text-gray-400">@L["Common.Loading"]</p>
     }
     else if (_parties.Count == 0)
     {
-        <p class="text-gray-400">Noch keine Parties angelegt.</p>
+        <p class="text-gray-400">@L["Admin.Parties.None"]</p>
     }
     else
     {
@@ -30,12 +31,12 @@
             <table class="w-full text-sm text-left">
                 <thead class="text-xs text-gray-400 uppercase border-b border-gray-800">
                     <tr>
-                        <th class="py-3 pr-6">Name</th>
-                        <th class="py-3 pr-6">Datum</th>
-                        <th class="py-3 pr-6">Ort</th>
-                        <th class="py-3 pr-6">InviteCode</th>
-                        <th class="py-3 pr-6">Seats</th>
-                        <th class="py-3 pr-6">Aktiv</th>
+                        <th class="py-3 pr-6">@L["Admin.Parties.Name"]</th>
+                        <th class="py-3 pr-6">@L["Admin.Parties.Date"]</th>
+                        <th class="py-3 pr-6">@L["Admin.Parties.Location"]</th>
+                        <th class="py-3 pr-6">@L["Admin.Parties.InviteCode"]</th>
+                        <th class="py-3 pr-6">@L["Admin.Parties.Seats"]</th>
+                        <th class="py-3 pr-6">@L["Admin.Parties.Active"]</th>
                         <th class="py-3"></th>
                     </tr>
                 </thead>
@@ -44,44 +45,50 @@
                     {
                         <tr class="border-b border-gray-800 text-gray-300">
                             <td class="py-3 pr-6 text-white font-medium">@party.Name</td>
-                            <td class="py-3 pr-6">@party.Date.ToString("dd.MM.yyyy")</td>
+                            <td class="py-3 pr-6">@party.Date.ToString("d")</td>
                             <td class="py-3 pr-6">@party.Location</td>
                             <td class="py-3 pr-6 font-mono text-xs">@party.InviteCode</td>
                             <td class="py-3 pr-6">@party.Seats.Count</td>
                             <td class="py-3 pr-6">
                                 @if (party.IsActive)
                                 {
-                                    <span class="px-2 py-0.5 bg-green-900 text-green-300 text-xs rounded-full border border-green-700">Aktiv</span>
+                                    <span class="px-2 py-0.5 bg-green-900 text-green-300 text-xs rounded-full border border-green-700">@L["Admin.Parties.Active"]</span>
                                 }
                                 else
                                 {
                                     <button class="text-gray-500 hover:text-white transition-colors text-xs"
                                             @onclick="() => SetActive(party.Id)">
-                                        Aktiv setzen
+                                        @L["Admin.Parties.SetActive"]
                                     </button>
                                 }
                             </td>
                             <td class="py-3 flex items-center gap-3">
                                 <a href="/admin/party/@party.Id"
                                    class="text-blue-400 hover:text-blue-300 transition-colors">
-                                    Bearbeiten
+                                    @L["Common.Edit"]
                                 </a>
+                                <AuthorizeView Policy="@Permissions.ProfileRead" Context="profileAuth">
+                                    <a href="/admin/profiles/@party.Id"
+                                       class="text-blue-400 hover:text-blue-300 transition-colors">
+                                        @L["Admin.PartyProfiles.Link"]
+                                    </a>
+                                </AuthorizeView>
                                 @if (_confirmDeleteId == party.Id)
                                 {
                                     <button class="text-red-400 hover:text-red-300 transition-colors"
                                             @onclick="() => DeleteParty(party.Id)">
-                                        Bestätigen
+                                        @L["Common.Confirm"]
                                     </button>
                                     <button class="text-gray-400 hover:text-gray-300 transition-colors"
                                             @onclick="() => _confirmDeleteId = null">
-                                        Abbrechen
+                                        @L["Common.Cancel"]
                                     </button>
                                 }
                                 else
                                 {
                                     <button class="text-gray-500 hover:text-red-400 transition-colors"
                                             @onclick="() => _confirmDeleteId = party.Id">
-                                        Löschen
+                                        @L["Common.Delete"]
                                     </button>
                                 }
                             </td>
@@ -103,23 +110,17 @@
         _parties = result.ToList();
     }
 
-    private async Task<Guid> CurrentUserIdAsync()
-    {
-        var state = await Auth.GetAuthenticationStateAsync();
-        var claim = state.User.FindFirst("lanboard:userid")?.Value;
-        return Guid.TryParse(claim, out var userId) ? userId : Guid.Empty;
-    }
-
     private async Task DeleteParty(Guid id)
     {
-        await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync());
-        _parties?.RemoveAll(p => p.Id == id);
         _confirmDeleteId = null;
+        if (await RunAsync(async () => await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync())))
+            _parties?.RemoveAll(p => p.Id == id);
     }
 
     private async Task SetActive(Guid id)
     {
-        await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync());
+        if (!await RunAsync(async () => await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync())))
+            return;
         var result = await AdminService.GetAllPartiesAsync();
         _parties = result.ToList();
     }

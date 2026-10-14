@@ -27,7 +27,7 @@ public class SessionServiceTests
 
     private static User CreateSeatedUser(string? steamId = "76561198000000001")
     {
-        var user = new User { Id = Guid.NewGuid(), DisplayName = "Player", CreatedAt = DateTime.UtcNow };
+        var user = new User { Id = Guid.NewGuid(), DisplayName = "Player", SteamName = "Player", CreatedAt = DateTime.UtcNow };
         if (steamId is not null)
         {
             user.Identities.Add(new UserIdentity
