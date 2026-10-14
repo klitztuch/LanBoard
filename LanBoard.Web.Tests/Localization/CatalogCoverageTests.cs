@@ -25,6 +25,10 @@ public class CatalogCoverageTests
         => AssertAllPresent(NotificationCategories.All.Select(c => $"NotificationCategory.{c}"));
 
     [Fact]
+    public void EveryInAppNotificationCategory_HasToastText()
+        => AssertAllPresent(NotificationCategories.Supporting(NotificationChannels.InApp).Select(c => $"Notification.{c}"));
+
+    [Fact]
     public void EveryFieldVisibility_HasDisplayName()
         => AssertAllPresent(Enum.GetNames<FieldVisibility>().Select(v => $"Visibility.{v}"));
 

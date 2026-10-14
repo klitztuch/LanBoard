@@ -423,6 +423,12 @@
   <data name="NotificationCategory.tournament.updates" xml:space="preserve">
     <value>Tournament updates</value>
   </data>
+  <data name="NotificationCategory.attendee.online" xml:space="preserve">
+    <value>Attendee comes online</value>
+  </data>
+  <data name="Notification.attendee.online" xml:space="preserve">
+    <value>{0} is online</value>
+  </data>
   <data name="Permission.audit.view" xml:space="preserve">
     <value>View audit log</value>
   </data>
@@ -571,7 +577,16 @@
     <value>Shown instead of your Steam name ({0}). Leave empty to use the Steam name.</value>
   </data>
   <data name="Settings.Notifications" xml:space="preserve">
-    <value>E-mail notifications</value>
+    <value>Notifications</value>
+  </data>
+  <data name="Settings.Notifications.InApp" xml:space="preserve">
+    <value>In-app</value>
+  </data>
+  <data name="Settings.Notifications.Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Settings.Notifications.Sound" xml:space="preserve">
+    <value>Play sound for notifications</value>
   </data>
   <data name="Settings.RealName" xml:space="preserve">
     <value>Real name</value>
