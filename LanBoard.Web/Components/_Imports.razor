@@ -5,16 +5,27 @@
 @using Microsoft.AspNetCore.Components.Web
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using Microsoft.AspNetCore.Components.Web.Virtualization
+@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @using LanBoard.Web
 @using LanBoard.Web.Components
 @using LanBoard.Web.Components.Layout
 @using LanBoard.Web.Services
+@using LanBoard.Web.Auth
 @using LanBoard.Application.Admin
+@using LanBoard.Application.Authorization
 @using LanBoard.Application.Notifications
+@using LanBoard.Application.Parties
+@using LanBoard.Application.Profiles
+@using LanBoard.Application.Roles
+@using LanBoard.Application.Rsvps
 @using LanBoard.Application.Seats
 @using LanBoard.Application.Sessions
+@using LanBoard.Application.Tournaments
+@using LanBoard.Application.Stats
 @using LanBoard.Application.Users
 @using LanBoard.Core.Entities
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@inject IStringLocalizer<SharedResource> L

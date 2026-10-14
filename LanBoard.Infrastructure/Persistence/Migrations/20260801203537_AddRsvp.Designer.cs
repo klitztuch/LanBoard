@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LanBoard.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260801202947_AddLanPartyInfoBoard")]
-    partial class AddLanPartyInfoBoard
+    [Migration("20260801203537_AddRsvp")]
+    partial class AddRsvp
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,10 +36,6 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InfoBoard")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
 
                     b.Property<string>("InviteCode")
                         .HasMaxLength(20)
@@ -70,6 +66,34 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .HasFilter("\"IsActive\" = true");
 
                     b.ToTable("LanParties");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAttending")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PartyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartyId");
+
+                    b.HasIndex("UserId", "PartyId")
+                        .IsUnique();
+
+                    b.ToTable("Rsvps");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>
@@ -210,6 +234,25 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.Rsvp", b =>
+                {
+                    b.HasOne("LanBoard.Core.Entities.LanParty", "Party")
+                        .WithMany()
+                        .HasForeignKey("PartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LanBoard.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Party");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Seat", b =>

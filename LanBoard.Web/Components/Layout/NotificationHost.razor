@@ -1,0 +1,166 @@
+@rendermode InteractiveServer
+@using LanBoard.Web.Notifications
+@inherits OwningComponentBase<INotificationRecipientService>
+@inject InAppNotificationHub Hub
+@inject AuthenticationStateProvider Auth
+@inject IJSRuntime JS
+@inject TimeProvider Time
+@inject ILogger<NotificationHost> Logger
+
+@if (_toasts.Items.Count > 0)
+{
+    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-72" role="status" aria-live="polite">
+        @foreach (var toast in _toasts.Items)
+        {
+            <button type="button" @key="toast.Id" @onclick="() => _toasts.Remove(toast.Id)"
+                    class="text-left bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm text-white shadow-lg hover:bg-gray-700 transition-colors">
+                @toast.Text
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private static readonly TimeSpan ToastLifetime = TimeSpan.FromSeconds(5);
+
+    private readonly ToastStack _toasts = new(capacity: 5);
+    private readonly CancellationTokenSource _cts = new();
+    private BeepThrottle? _beep;
+    private Guid _userId;
+    private CultureInfo _culture = CultureInfo.CurrentUICulture;
+    private InAppNotificationSettings _settings = InAppNotificationSettings.Default;
+    private bool _subscribed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The prerendered instance is thrown away right after; only the interactive one listens.
+        if (!RendererInfo.IsInteractive) return;
+
+        var state = await Auth.GetAuthenticationStateAsync();
+        if (state.User.GetUserId() is not { } userId) return;
+
+        _userId = userId;
+        _culture = CultureInfo.CurrentUICulture;
+        _beep = new BeepThrottle(Time, TimeSpan.FromSeconds(1));
+        await LoadSettingsAsync();
+
+        Hub.Published += OnPublished;
+        Hub.PreferencesChanged += OnPreferencesChanged;
+        _subscribed = true;
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        try
+        {
+            // No cancellation token: cancelling an Npgsql read mid-flight can poison the pooled connection.
+            _settings = await Service.GetInAppSettingsAsync(_userId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Loading notification settings failed for {UserId}; using defaults", _userId);
+            _settings = InAppNotificationSettings.Default;
+        }
+    }
+
+    // Runs on the publisher's thread, which may carry another user's culture.
+    private void OnPublished(NotificationMessage message)
+    {
+        if (!InAppNotificationFilter.ShouldShow(message, _userId, _settings)) return;
+        Dispatch(async () =>
+        {
+            var toast = _toasts.Add(Format(message));
+            StateHasChanged();
+            _ = RemoveAfterDelayAsync(toast.Id);
+            if (_settings.SoundEnabled && _beep?.TryBeep() == true)
+                await BeepAsync();
+        });
+    }
+
+    private void OnPreferencesChanged(Guid userId)
+    {
+        if (userId != _userId) return;
+        Dispatch(LoadSettingsAsync);
+    }
+
+    private string Format(NotificationMessage message)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = _culture;
+        try
+        {
+            return L[$"Notification.{message.Category}", [.. message.Args]];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    private async Task RemoveAfterDelayAsync(Guid toastId)
+    {
+        try
+        {
+            await Task.Delay(ToastLifetime, Time, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        await DispatchAsync(() =>
+        {
+            if (_toasts.Remove(toastId))
+                StateHasChanged();
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task BeepAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("lanBoardNotify.beep");
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or JSException or TaskCanceledException)
+        {
+            Logger.LogDebug(ex, "Notification sound failed");
+        }
+    }
+
+    private void Dispatch(Func<Task> work)
+    {
+        if (_cts.IsCancellationRequested) return;
+        _ = DispatchAsync(work);
+    }
+
+    private async Task DispatchAsync(Func<Task> work)
+    {
+        try
+        {
+            await InvokeAsync(work);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Circuit torn down while the event was in flight.
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Notification handling failed for {UserId}", _userId);
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            if (_subscribed)
+            {
+                Hub.Published -= OnPublished;
+                Hub.PreferencesChanged -= OnPreferencesChanged;
+            }
+            _cts.Cancel();
+            _cts.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+}

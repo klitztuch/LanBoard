@@ -11,6 +11,7 @@ public class SeatRepository(AppDbContext db) : ISeatRepository
 
     public async Task<IReadOnlyList<Seat>> GetByPartyAsync(Guid partyId, CancellationToken ct = default)
         => await db.Seats
+            .AsNoTracking()
             .Where(s => s.PartyId == partyId)
             .Include(s => s.AssignedUser)
             .OrderBy(s => s.Label)
