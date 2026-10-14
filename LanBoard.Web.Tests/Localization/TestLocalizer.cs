@@ -16,6 +16,10 @@ internal static class TestLocalizer
         return new StringLocalizer<SharedResource>(factory);
     }
 
+    /// <summary>Sets both current cultures for the rest of the calling test (they flow with the async context).</summary>
+    public static void UseCulture(string culture)
+        => CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(culture);
+
     /// <summary>Runs <paramref name="action"/> with both current cultures set to <paramref name="culture"/>.</summary>
     public static T InCulture<T>(string culture, Func<T> action)
     {
