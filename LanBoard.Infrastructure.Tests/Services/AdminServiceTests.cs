@@ -1,3 +1,4 @@
+using LanBoard.Application.Admin;
 using LanBoard.Application.Authorization;
 using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
@@ -75,6 +76,53 @@ public class AdminServiceTests
         await _auditLog.Received(1).AddAsync(
             Arg.Is<AdminAuditLogEntry>(e => e.UserId == performedByUserId && e.Action == "PartyUpdated"),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateInfoBoardAsync_PartyNotFound_Throws()
+    {
+        _parties.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((LanParty?)null);
+
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(
+            () => _sut.UpdateInfoBoardAsync(Guid.NewGuid(), "WLAN: lan2026", Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.PartyNotFound, ex.Code);
+    }
+
+    [Fact]
+    public async Task UpdateInfoBoardAsync_SetsFieldSavesAndLogs()
+    {
+        var performedByUserId = Guid.NewGuid();
+        var party = new LanParty { Id = Guid.NewGuid(), Name = "Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        _parties.GetByIdAsync(party.Id, Arg.Any<CancellationToken>()).Returns(party);
+
+        await _sut.UpdateInfoBoardAsync(party.Id, "  WLAN: lan2026\n", performedByUserId);
+
+        Assert.Equal("WLAN: lan2026", party.InfoBoard);
+        await _parties.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _auditLog.Received(1).AddAsync(
+            Arg.Is<AdminAuditLogEntry>(e => e.UserId == performedByUserId && e.Action == AuditActions.PartyInfoBoardUpdated),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateInfoBoardAsync_Whitespace_ClearsField()
+    {
+        var party = new LanParty { Id = Guid.NewGuid(), Name = "Party", Location = "Loc", CreatedByUserId = Guid.NewGuid(), InfoBoard = "old" };
+        _parties.GetByIdAsync(party.Id, Arg.Any<CancellationToken>()).Returns(party);
+
+        await _sut.UpdateInfoBoardAsync(party.Id, "   ", Guid.NewGuid());
+
+        Assert.Null(party.InfoBoard);
+    }
+
+    [Fact]
+    public async Task UpdateInfoBoardAsync_TooLong_ThrowsWithoutSaving()
+    {
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(
+            () => _sut.UpdateInfoBoardAsync(Guid.NewGuid(), new string('x', 4001), Guid.NewGuid()));
+
+        Assert.Equal(ErrorCodes.PartyInfoBoardTooLong, ex.Code);
+        await _parties.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -202,7 +250,7 @@ public class AdminServiceTests
         Assert.Same(entry, Assert.Single(result));
     }
 
-    public static TheoryData<string> PartyManageMethods => ["CreateParty", "UpdateParty", "DeleteParty", "SetActiveParty", "AddSeat", "RemoveSeat"];
+    public static TheoryData<string> PartyManageMethods => ["CreateParty", "UpdateParty", "UpdateInfoBoard", "DeleteParty", "SetActiveParty", "AddSeat", "RemoveSeat"];
 
     [Theory]
     [MemberData(nameof(PartyManageMethods))]
@@ -216,6 +264,7 @@ public class AdminServiceTests
         {
             "CreateParty" => () => _sut.CreatePartyAsync("LAN", DateTime.Today, "Loc", deniedUserId),
             "UpdateParty" => () => _sut.UpdatePartyAsync(Guid.NewGuid(), "LAN", DateTime.Today, "Loc", deniedUserId),
+            "UpdateInfoBoard" => () => _sut.UpdateInfoBoardAsync(Guid.NewGuid(), "Info", deniedUserId),
             "DeleteParty" => () => _sut.DeletePartyAsync(Guid.NewGuid(), deniedUserId),
             "SetActiveParty" => () => _sut.SetActivePartyAsync(Guid.NewGuid(), deniedUserId),
             "AddSeat" => () => _sut.AddSeatAsync(Guid.NewGuid(), 1, 1, deniedUserId),

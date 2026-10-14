@@ -78,6 +78,15 @@
   <data name="Admin.Parties.Title" xml:space="preserve">
     <value>LAN-Parties</value>
   </data>
+  <data name="Admin.PartyEdit.InfoBoard" xml:space="preserve">
+    <value>Info-Board</value>
+  </data>
+  <data name="Admin.PartyEdit.InfoBoardHelp" xml:space="preserve">
+    <value>Wird auf der öffentlichen Info-Seite der Party angezeigt (z.B. WLAN, Regeln, Zeitplan).</value>
+  </data>
+  <data name="Admin.PartyEdit.SaveInfoBoard" xml:space="preserve">
+    <value>Info-Board speichern</value>
+  </data>
   <data name="Admin.PartyEdit.Seats" xml:space="preserve">
     <value>Sitzplätze</value>
   </data>
@@ -192,6 +201,9 @@
   <data name="Audit.PartyDeleted" xml:space="preserve">
     <value>Party gelöscht</value>
   </data>
+  <data name="Audit.PartyInfoBoardUpdated" xml:space="preserve">
+    <value>Party-Info-Board bearbeitet</value>
+  </data>
   <data name="Audit.PartyUpdated" xml:space="preserve">
     <value>Party bearbeitet</value>
   </data>
@@ -284,6 +296,9 @@
   </data>
   <data name="Error.Page.Title" xml:space="preserve">
     <value>Fehler</value>
+  </data>
+  <data name="Error.Party.InfoBoardTooLong" xml:space="preserve">
+    <value>Das Info-Board darf höchstens {0} Zeichen enthalten.</value>
   </data>
   <data name="Error.Party.NotFound" xml:space="preserve">
     <value>Party nicht gefunden.</value>
@@ -381,6 +396,12 @@
   <data name="Home.Tagline" xml:space="preserve">
     <value>Dein LAN-Party-Dashboard</value>
   </data>
+  <data name="Info.Empty" xml:space="preserve">
+    <value>Für {0} wurden noch keine Infos hinterlegt.</value>
+  </data>
+  <data name="Info.Title" xml:space="preserve">
+    <value>Info</value>
+  </data>
   <data name="Nav.Admin" xml:space="preserve">
     <value>Admin</value>
   </data>
@@ -392,6 +413,9 @@
   </data>
   <data name="Nav.Home" xml:space="preserve">
     <value>Start</value>
+  </data>
+  <data name="Nav.Info" xml:space="preserve">
+    <value>Info</value>
   </data>
   <data name="Nav.LoginWithSteam" xml:space="preserve">
     <value>Mit Steam anmelden</value>

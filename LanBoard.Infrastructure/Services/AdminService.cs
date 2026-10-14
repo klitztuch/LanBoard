@@ -12,6 +12,8 @@ public class AdminService(
     IAdminAuditLogRepository auditLog,
     IPermissionService permissions) : IAdminService
 {
+    private const int MaxInfoBoardLength = 4000;
+
     public Task<IReadOnlyList<LanParty>> GetAllPartiesAsync(CancellationToken ct = default)
         => parties.GetAllAsync(ct);
 
@@ -56,6 +58,21 @@ public class AdminService(
         parties.Remove(party);
         await parties.SaveChangesAsync(ct);
         await LogAsync(performedByUserId, AuditActions.PartyDeleted, $"Party \"{party.Name}\" deleted", ct);
+    }
+
+    public async Task UpdateInfoBoardAsync(Guid id, string? infoBoard, Guid performedByUserId, CancellationToken ct = default)
+    {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
+        infoBoard = string.IsNullOrWhiteSpace(infoBoard) ? null : infoBoard.Trim();
+        if (infoBoard is { Length: > MaxInfoBoardLength })
+            throw new BusinessRuleException(ErrorCodes.PartyInfoBoardTooLong, MaxInfoBoardLength);
+
+        var party = await parties.GetByIdAsync(id, ct)
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
+        party.InfoBoard = infoBoard;
+        await parties.SaveChangesAsync(ct);
+        await LogAsync(performedByUserId, AuditActions.PartyInfoBoardUpdated, $"Info board of party \"{party.Name}\" updated", ct);
     }
 
     public Task<LanParty?> GetPartyWithSeatsAsync(Guid id, CancellationToken ct = default)

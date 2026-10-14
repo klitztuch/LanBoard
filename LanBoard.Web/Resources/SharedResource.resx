@@ -78,6 +78,15 @@
   <data name="Admin.Parties.Title" xml:space="preserve">
     <value>LAN parties</value>
   </data>
+  <data name="Admin.PartyEdit.InfoBoard" xml:space="preserve">
+    <value>Info board</value>
+  </data>
+  <data name="Admin.PartyEdit.InfoBoardHelp" xml:space="preserve">
+    <value>Shown on the party's public info page (e.g. WiFi, rules, schedule).</value>
+  </data>
+  <data name="Admin.PartyEdit.SaveInfoBoard" xml:space="preserve">
+    <value>Save info board</value>
+  </data>
   <data name="Admin.PartyEdit.Seats" xml:space="preserve">
     <value>Seats</value>
   </data>
@@ -192,6 +201,9 @@
   <data name="Audit.PartyDeleted" xml:space="preserve">
     <value>Party deleted</value>
   </data>
+  <data name="Audit.PartyInfoBoardUpdated" xml:space="preserve">
+    <value>Party info board updated</value>
+  </data>
   <data name="Audit.PartyUpdated" xml:space="preserve">
     <value>Party updated</value>
   </data>
@@ -284,6 +296,9 @@
   </data>
   <data name="Error.Page.Title" xml:space="preserve">
     <value>Error</value>
+  </data>
+  <data name="Error.Party.InfoBoardTooLong" xml:space="preserve">
+    <value>The info board may contain at most {0} characters.</value>
   </data>
   <data name="Error.Party.NotFound" xml:space="preserve">
     <value>Party not found.</value>
@@ -381,6 +396,12 @@
   <data name="Home.Tagline" xml:space="preserve">
     <value>Your LAN party dashboard</value>
   </data>
+  <data name="Info.Empty" xml:space="preserve">
+    <value>No info has been added for {0} yet.</value>
+  </data>
+  <data name="Info.Title" xml:space="preserve">
+    <value>Info</value>
+  </data>
   <data name="Nav.Admin" xml:space="preserve">
     <value>Admin</value>
   </data>
@@ -392,6 +413,9 @@
   </data>
   <data name="Nav.Home" xml:space="preserve">
     <value>Home</value>
+  </data>
+  <data name="Nav.Info" xml:space="preserve">
+    <value>Info</value>
   </data>
   <data name="Nav.LoginWithSteam" xml:space="preserve">
     <value>Login with Steam</value>

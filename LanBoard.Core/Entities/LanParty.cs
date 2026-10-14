@@ -8,6 +8,7 @@ public class LanParty
     public required string Location { get; set; }
     public string? InviteCode { get; set; }
     public bool IsActive { get; set; }
+    public string? InfoBoard { get; set; }
     public Guid CreatedByUserId { get; set; }
 
     public User CreatedByUser { get; set; } = null!;

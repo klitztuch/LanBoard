@@ -7,6 +7,7 @@ public interface IAdminService
     Task<IReadOnlyList<LanParty>> GetAllPartiesAsync(CancellationToken ct = default);
     Task<LanParty> CreatePartyAsync(string name, DateTime date, string location, Guid createdByUserId, CancellationToken ct = default);
     Task UpdatePartyAsync(Guid id, string name, DateTime date, string location, Guid performedByUserId, CancellationToken ct = default);
+    Task UpdateInfoBoardAsync(Guid id, string? infoBoard, Guid performedByUserId, CancellationToken ct = default);
     Task DeletePartyAsync(Guid id, Guid performedByUserId, CancellationToken ct = default);
     Task<LanParty?> GetPartyWithSeatsAsync(Guid id, CancellationToken ct = default);
     Task SetActivePartyAsync(Guid partyId, Guid performedByUserId, CancellationToken ct = default);

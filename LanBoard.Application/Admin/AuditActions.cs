@@ -6,6 +6,7 @@ public static class AuditActions
     public const string PartyUpdated = "PartyUpdated";
     public const string PartyDeleted = "PartyDeleted";
     public const string PartyActivated = "PartyActivated";
+    public const string PartyInfoBoardUpdated = "PartyInfoBoardUpdated";
     public const string RoleCreated = "RoleCreated";
     public const string RoleUpdated = "RoleUpdated";
     public const string RoleDeleted = "RoleDeleted";

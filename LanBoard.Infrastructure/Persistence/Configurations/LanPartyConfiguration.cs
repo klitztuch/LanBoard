@@ -12,6 +12,7 @@ public class LanPartyConfiguration : IEntityTypeConfiguration<LanParty>
         builder.Property(p => p.Name).HasMaxLength(200).IsRequired();
         builder.Property(p => p.Location).HasMaxLength(200).IsRequired();
         builder.Property(p => p.InviteCode).HasMaxLength(20);
+        builder.Property(p => p.InfoBoard).HasMaxLength(4000);
         builder.Property(p => p.Date).IsRequired();
 
         builder.HasIndex(p => p.InviteCode).IsUnique();

@@ -3,6 +3,7 @@ namespace LanBoard.Application.Errors;
 public static class ErrorCodes
 {
     public const string PartyNotFound = "Party.NotFound";
+    public const string PartyInfoBoardTooLong = "Party.InfoBoardTooLong";             // args: maxLength
     public const string SeatNotFound = "Seat.NotFound";
     public const string SeatTaken = "Seat.Taken";
     public const string SeatNotAssignedToUser = "Seat.NotAssignedToUser";

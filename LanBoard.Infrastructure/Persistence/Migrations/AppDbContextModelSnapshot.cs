@@ -63,6 +63,10 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("InfoBoard")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<string>("InviteCode")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");

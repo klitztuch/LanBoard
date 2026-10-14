@@ -73,6 +73,13 @@
                                 @L["Nav.Parties"]
                             </NavLink>
                         </li>
+                        <li>
+                            <NavLink href="/info"
+                                     class="flex px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                                     ActiveClass="bg-gray-800 text-white">
+                                @L["Nav.Info"]
+                            </NavLink>
+                        </li>
                     </Authorized>
                 </AuthorizeView>
                 <AuthorizeView Policy="@Policies.AnyAdmin">
