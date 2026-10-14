@@ -426,6 +426,12 @@
   <data name="NotificationCategory.tournament.updates" xml:space="preserve">
     <value>Turnier-Updates</value>
   </data>
+  <data name="NotificationCategory.attendee.online" xml:space="preserve">
+    <value>Teilnehmer kommt online</value>
+  </data>
+  <data name="Notification.attendee.online" xml:space="preserve">
+    <value>{0} ist online</value>
+  </data>
   <data name="Parties.Active" xml:space="preserve">
     <value>Aktiv</value>
   </data>
@@ -589,7 +595,16 @@
     <value>Wird statt deines Steam-Namens ({0}) angezeigt. Leer lassen, um den Steam-Namen zu verwenden.</value>
   </data>
   <data name="Settings.Notifications" xml:space="preserve">
-    <value>E-Mail-Benachrichtigungen</value>
+    <value>Benachrichtigungen</value>
+  </data>
+  <data name="Settings.Notifications.InApp" xml:space="preserve">
+    <value>In der App</value>
+  </data>
+  <data name="Settings.Notifications.Email" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="Settings.Notifications.Sound" xml:space="preserve">
+    <value>Ton bei Benachrichtigungen</value>
   </data>
   <data name="Settings.RealName" xml:space="preserve">
     <value>Echter Name</value>

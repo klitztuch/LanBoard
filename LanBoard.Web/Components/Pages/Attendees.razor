@@ -1,6 +1,7 @@
 @page "/attendees"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @implements IDisposable
 @inject IUserService UserService
 @inject ISeatService SeatService
@@ -149,6 +150,18 @@
             {
                 await LoadAsync();
                 StateHasChanged();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Blazor Server prerenders this page in a short-lived DI scope before the real
+                // interactive circuit takes over; the prerendered instance's OnChange
+                // subscription can still fire in the brief window before its own Dispose()
+                // runs, hitting an already-disposed AppDbContext. Harmless — that instance is
+                // being disposed anyway.
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Reloading attendees after a live update failed");
             }
             finally
             {
