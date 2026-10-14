@@ -399,6 +399,9 @@
   <data name="Nav.Logout" xml:space="preserve">
     <value>Abmelden</value>
   </data>
+  <data name="Nav.Parties" xml:space="preserve">
+    <value>Partys</value>
+  </data>
   <data name="Nav.Settings" xml:space="preserve">
     <value>Einstellungen</value>
   </data>
@@ -428,6 +431,21 @@
   </data>
   <data name="Notification.attendee.online" xml:space="preserve">
     <value>{0} ist online</value>
+  </data>
+  <data name="Parties.Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Parties.Attendees" xml:space="preserve">
+    <value>Teilnehmer</value>
+  </data>
+  <data name="Parties.Empty" xml:space="preserve">
+    <value>Noch keine Partys angelegt.</value>
+  </data>
+  <data name="Parties.SeatPlan" xml:space="preserve">
+    <value>Sitzplan</value>
+  </data>
+  <data name="Parties.Title" xml:space="preserve">
+    <value>Partys</value>
   </data>
   <data name="Permission.audit.view" xml:space="preserve">
     <value>Audit-Log einsehen</value>
