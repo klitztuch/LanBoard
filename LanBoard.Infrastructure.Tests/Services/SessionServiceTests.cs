@@ -27,7 +27,7 @@ public class SessionServiceTests
 
     private static User CreateSeatedUser(string? steamId = "76561198000000001")
     {
-        var user = new User { Id = Guid.NewGuid(), DisplayName = "Player", CreatedAt = DateTime.UtcNow };
+        var user = new User { Id = Guid.NewGuid(), DisplayName = "Player", SteamName = "Player", CreatedAt = DateTime.UtcNow };
         if (steamId is not null)
         {
             user.Identities.Add(new UserIdentity
@@ -153,6 +153,19 @@ public class SessionServiceTests
         await _sessions.DidNotReceive().AddAsync(Arg.Any<Session>(), Arg.Any<CancellationToken>());
         await _sessions.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         _notifier.DidNotReceive().NotifyChanged();
+    }
+
+    [Fact]
+    public async Task GetActiveSessionsByPartyAsync_UsesNoTrackingDisplayQuery_GroupedByUser()
+    {
+        var userId = Guid.NewGuid();
+        var session = new Session { Id = Guid.NewGuid(), UserId = userId, PartyId = PartyId, JoinedAt = DateTime.UtcNow, LastSeen = DateTime.UtcNow };
+        _sessions.GetActiveByPartyForDisplayAsync(PartyId, Arg.Any<CancellationToken>()).Returns([session]);
+
+        var result = await _sut.GetActiveSessionsByPartyAsync(PartyId);
+
+        Assert.Same(session, result[userId]);
+        await _sessions.DidNotReceive().GetActiveByPartyAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

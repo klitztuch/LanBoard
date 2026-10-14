@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AccessDenied.Text" xml:space="preserve">
+    <value>Dir fehlt die Berechtigung für diese Seite. Wende dich an einen Admin, wenn du Zugriff brauchst.</value>
+  </data>
+  <data name="AccessDenied.Title" xml:space="preserve">
+    <value>Keine Berechtigung</value>
+  </data>
+  <data name="Admin.AuditLog.None" xml:space="preserve">
+    <value>Noch keine Admin-Aktionen protokolliert.</value>
+  </data>
+  <data name="Admin.AuditLog.Title" xml:space="preserve">
+    <value>Audit-Log</value>
+  </data>
+  <data name="Admin.Index.AuditLog" xml:space="preserve">
+    <value>Protokoll durchgeführter Admin-Aktionen</value>
+  </data>
+  <data name="Admin.Index.Parties" xml:space="preserve">
+    <value>Parties anlegen, bearbeiten und Sitzplätze verwalten</value>
+  </data>
+  <data name="Admin.Index.PartyProfiles" xml:space="preserve">
+    <value>Profildaten der Teilnehmer pro LAN-Party</value>
+  </data>
+  <data name="Admin.Index.ProfileFields" xml:space="preserve">
+    <value>Eigene Profilfelder definieren</value>
+  </data>
+  <data name="Admin.Index.Roles" xml:space="preserve">
+    <value>Rollen anlegen und Berechtigungen festlegen</value>
+  </data>
+  <data name="Admin.Index.Tv" xml:space="preserve">
+    <value>Vollbild-Ansicht für Beamer/TV, ohne Login</value>
+  </data>
+  <data name="Admin.Index.Tv.Title" xml:space="preserve">
+    <value>TV-Modus</value>
+  </data>
+  <data name="Admin.Index.Users" xml:space="preserve">
+    <value>Rollen an Benutzer vergeben und entziehen</value>
+  </data>
+  <data name="Admin.Parties.Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Admin.Parties.Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Admin.Parties.InviteCode" xml:space="preserve">
+    <value>Einladungscode</value>
+  </data>
+  <data name="Admin.Parties.Location" xml:space="preserve">
+    <value>Ort</value>
+  </data>
+  <data name="Admin.Parties.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Parties.New" xml:space="preserve">
+    <value>Neue Party</value>
+  </data>
+  <data name="Admin.Parties.None" xml:space="preserve">
+    <value>Noch keine Parties angelegt.</value>
+  </data>
+  <data name="Admin.Parties.Seats" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="Admin.Parties.SetActive" xml:space="preserve">
+    <value>Aktiv setzen</value>
+  </data>
+  <data name="Admin.Parties.Title" xml:space="preserve">
+    <value>LAN-Parties</value>
+  </data>
+  <data name="Admin.PartyEdit.InfoBoard" xml:space="preserve">
+    <value>Info-Board</value>
+  </data>
+  <data name="Admin.PartyEdit.InfoBoardHelp" xml:space="preserve">
+    <value>Wird auf der öffentlichen Info-Seite der Party angezeigt (z.B. WLAN, Regeln, Zeitplan).</value>
+  </data>
+  <data name="Admin.PartyEdit.SaveInfoBoard" xml:space="preserve">
+    <value>Info-Board speichern</value>
+  </data>
+  <data name="Admin.PartyEdit.Seats" xml:space="preserve">
+    <value>Sitzplätze</value>
+  </data>
+  <data name="Admin.PartyEdit.SeatsHelp" xml:space="preserve">
+    <value>Klick auf eine leere Zelle = Platz hinzufügen · Klick auf einen Platz = Platz entfernen</value>
+  </data>
+  <data name="Admin.PartyProfiles.Count" xml:space="preserve">
+    <value>{0} Teilnehmer</value>
+  </data>
+  <data name="Admin.PartyProfiles.Link" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Admin.PartyProfiles.NoAttendees" xml:space="preserve">
+    <value>Für diese LAN-Party hat noch niemand zugesagt.</value>
+  </data>
+  <data name="Admin.PartyProfiles.Party" xml:space="preserve">
+    <value>LAN-Party</value>
+  </data>
+  <data name="Admin.PartyProfiles.Title" xml:space="preserve">
+    <value>Teilnehmerprofile</value>
+  </data>
+  <data name="Admin.PartyProfiles.User" xml:space="preserve">
+    <value>Teilnehmer</value>
+  </data>
+  <data name="Admin.ProfileFields.Choices" xml:space="preserve">
+    <value>Auswahloptionen</value>
+  </data>
+  <data name="Admin.ProfileFields.ChoicesHelp" xml:space="preserve">
+    <value>Eine Option pro Zeile. Beim Entfernen einer Option bleiben bestehende Werte erhalten, bis Benutzer sie ändern.</value>
+  </data>
+  <data name="Admin.ProfileFields.DeleteWarning" xml:space="preserve">
+    <value>Löscht auch alle eingetragenen Werte.</value>
+  </data>
+  <data name="Admin.ProfileFields.Edit" xml:space="preserve">
+    <value>Feld bearbeiten</value>
+  </data>
+  <data name="Admin.ProfileFields.Empty" xml:space="preserve">
+    <value>Noch keine eigenen Profilfelder.</value>
+  </data>
+  <data name="Admin.ProfileFields.ImmutableHelp" xml:space="preserve">
+    <value>Schlüssel und Typ sind nicht änderbar. Dazu das Feld löschen und neu anlegen.</value>
+  </data>
+  <data name="Admin.ProfileFields.Key" xml:space="preserve">
+    <value>Schlüssel</value>
+  </data>
+  <data name="Admin.ProfileFields.KeyHelp" xml:space="preserve">
+    <value>Kleinbuchstaben, Ziffern und Bindestriche. Kann später nicht geändert werden.</value>
+  </data>
+  <data name="Admin.ProfileFields.Labels" xml:space="preserve">
+    <value>Bezeichnung pro Sprache</value>
+  </data>
+  <data name="Admin.ProfileFields.New" xml:space="preserve">
+    <value>Neues Feld</value>
+  </data>
+  <data name="Admin.ProfileFields.Required" xml:space="preserve">
+    <value>Pflichtfeld</value>
+  </data>
+  <data name="Admin.ProfileFields.SortOrder" xml:space="preserve">
+    <value>Reihenfolge</value>
+  </data>
+  <data name="Admin.ProfileFields.Title" xml:space="preserve">
+    <value>Profilfelder</value>
+  </data>
+  <data name="Admin.ProfileFields.Type" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="Admin.Roles.AllPermissions" xml:space="preserve">
+    <value>Alle Berechtigungen</value>
+  </data>
+  <data name="Admin.Roles.Edit" xml:space="preserve">
+    <value>Rolle bearbeiten</value>
+  </data>
+  <data name="Admin.Roles.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Admin.Roles.New" xml:space="preserve">
+    <value>Neue Rolle</value>
+  </data>
+  <data name="Admin.Roles.Permissions" xml:space="preserve">
+    <value>Berechtigungen</value>
+  </data>
+  <data name="Admin.Roles.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Admin.Roles.Title" xml:space="preserve">
+    <value>Rollen</value>
+  </data>
+  <data name="Admin.Users.AddRole" xml:space="preserve">
+    <value>Rolle</value>
+  </data>
+  <data name="Admin.Users.RemoveRole" xml:space="preserve">
+    <value>Rolle entfernen</value>
+  </data>
+  <data name="Admin.Users.Title" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Attendees.NoUsers" xml:space="preserve">
+    <value>Keine Benutzer gefunden.</value>
+  </data>
+  <data name="Attendees.SteamProfile" xml:space="preserve">
+    <value>Steam-Profil</value>
+  </data>
+  <data name="Attendees.Title" xml:space="preserve">
+    <value>Teilnehmer</value>
+  </data>
+  <data name="Audit.PartyActivated" xml:space="preserve">
+    <value>Party aktiviert</value>
+  </data>
+  <data name="Audit.PartyCreated" xml:space="preserve">
+    <value>Party erstellt</value>
+  </data>
+  <data name="Audit.PartyDeleted" xml:space="preserve">
+    <value>Party gelöscht</value>
+  </data>
+  <data name="Audit.PartyInfoBoardUpdated" xml:space="preserve">
+    <value>Party-Info-Board bearbeitet</value>
+  </data>
+  <data name="Audit.PartyUpdated" xml:space="preserve">
+    <value>Party bearbeitet</value>
+  </data>
+  <data name="Audit.ProfileFieldCreated" xml:space="preserve">
+    <value>Profilfeld erstellt</value>
+  </data>
+  <data name="Audit.ProfileFieldDeleted" xml:space="preserve">
+    <value>Profilfeld gelöscht</value>
+  </data>
+  <data name="Audit.ProfileFieldUpdated" xml:space="preserve">
+    <value>Profilfeld bearbeitet</value>
+  </data>
+  <data name="Audit.RoleAssigned" xml:space="preserve">
+    <value>Rolle vergeben</value>
+  </data>
+  <data name="Audit.RoleCreated" xml:space="preserve">
+    <value>Rolle erstellt</value>
+  </data>
+  <data name="Audit.RoleDeleted" xml:space="preserve">
+    <value>Rolle gelöscht</value>
+  </data>
+  <data name="Audit.RoleUnassigned" xml:space="preserve">
+    <value>Rolle entzogen</value>
+  </data>
+  <data name="Audit.RoleUpdated" xml:space="preserve">
+    <value>Rolle bearbeitet</value>
+  </data>
+  <data name="Common.BackToHome" xml:space="preserve">
+    <value>Zur Startseite</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Common.Confirm" xml:space="preserve">
+    <value>Bestätigen</value>
+  </data>
+  <data name="Common.Create" xml:space="preserve">
+    <value>Erstellen</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Common.Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Common.Language" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="Common.Loading" xml:space="preserve">
+    <value>Lädt…</value>
+  </data>
+  <data name="Common.No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="Common.Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="Error.Generic" xml:space="preserve">
+    <value>Etwas ist schiefgelaufen. Bitte versuche es erneut.</value>
+  </data>
+  <data name="Error.Match.InvalidWinner" xml:space="preserve">
+    <value>Der Gewinner muss ein Teilnehmer des Matches sein.</value>
+  </data>
+  <data name="Error.Match.NotFound" xml:space="preserve">
+    <value>Match nicht gefunden.</value>
+  </data>
+  <data name="Error.Notification.UnknownCategory" xml:space="preserve">
+    <value>Unbekannte Benachrichtigungskategorie: {0}</value>
+  </data>
+  <data name="Error.Page.DevMode.Details" xml:space="preserve">
+    <value>In der Development-Umgebung werden detailliertere Informationen zum aufgetretenen Fehler angezeigt.</value>
+  </data>
+  <data name="Error.Page.DevMode.HowTo" xml:space="preserve">
+    <value>Sie kann sensible Informationen aus Exceptions für Endbenutzer sichtbar machen. Für lokales Debugging die Umgebungsvariable ASPNETCORE_ENVIRONMENT auf Development setzen und die App neu starten.</value>
+  </data>
+  <data name="Error.Page.DevMode.Title" xml:space="preserve">
+    <value>Entwicklungsmodus</value>
+  </data>
+  <data name="Error.Page.DevMode.Warning" xml:space="preserve">
+    <value>Die Development-Umgebung sollte in produktiven Installationen nicht aktiviert sein.</value>
+  </data>
+  <data name="Error.Page.RequestId" xml:space="preserve">
+    <value>Request-ID:</value>
+  </data>
+  <data name="Error.Page.Text" xml:space="preserve">
+    <value>Bei der Verarbeitung deiner Anfrage ist ein Fehler aufgetreten.</value>
+  </data>
+  <data name="Error.Page.Title" xml:space="preserve">
+    <value>Fehler</value>
+  </data>
+  <data name="Error.Party.InfoBoardTooLong" xml:space="preserve">
+    <value>Das Info-Board darf höchstens {0} Zeichen enthalten.</value>
+  </data>
+  <data name="Error.Party.NotFound" xml:space="preserve">
+    <value>Party nicht gefunden.</value>
+  </data>
+  <data name="Error.PermissionDenied" xml:space="preserve">
+    <value>Keine Berechtigung.</value>
+  </data>
+  <data name="Error.Profile.EmailInvalid" xml:space="preserve">
+    <value>Bitte eine gültige E-Mail-Adresse eingeben.</value>
+  </data>
+  <data name="Error.Profile.FieldInvalidChoice" xml:space="preserve">
+    <value>Bitte eine gültige Option wählen.</value>
+  </data>
+  <data name="Error.Profile.FieldRequired" xml:space="preserve">
+    <value>Dieses Feld ist erforderlich.</value>
+  </data>
+  <data name="Error.Profile.NicknameInvalid" xml:space="preserve">
+    <value>Nickname muss 1–{0} Zeichen lang sein.</value>
+  </data>
+  <data name="Error.Profile.NicknameTaken" xml:space="preserve">
+    <value>Dieser Name wird bereits von einem anderen Benutzer verwendet.</value>
+  </data>
+  <data name="Error.Profile.TooManyFavoriteGames" xml:space="preserve">
+    <value>Höchstens {0} Lieblingsspiele erlaubt.</value>
+  </data>
+  <data name="Error.Profile.UnknownCategory" xml:space="preserve">
+    <value>Unbekannte Benachrichtigungskategorie: {0}</value>
+  </data>
+  <data name="Error.Profile.ValueTooLong" xml:space="preserve">
+    <value>Darf höchstens {0} Zeichen lang sein.</value>
+  </data>
+  <data name="Error.ProfileField.ChoicesInvalid" xml:space="preserve">
+    <value>Auswahloptionen ungültig: Einfachauswahl braucht 1–50 eindeutige, nicht leere Optionen (je max. 50 Zeichen); andere Typen haben keine.</value>
+  </data>
+  <data name="Error.ProfileField.KeyInvalid" xml:space="preserve">
+    <value>Schlüssel muss mit einem Kleinbuchstaben oder einer Ziffer beginnen und darf nur a–z, 0–9 und Bindestriche enthalten (max. 50).</value>
+  </data>
+  <data name="Error.ProfileField.KeyTaken" xml:space="preserve">
+    <value>Ein Profilfeld mit diesem Schlüssel existiert bereits.</value>
+  </data>
+  <data name="Error.ProfileField.LabelMissing" xml:space="preserve">
+    <value>Mindestens eine Bezeichnung (max. 100 Zeichen) ist erforderlich.</value>
+  </data>
+  <data name="Error.ProfileField.NotFound" xml:space="preserve">
+    <value>Profilfeld nicht gefunden.</value>
+  </data>
+  <data name="Error.Role.LastAdmin" xml:space="preserve">
+    <value>Mindestens ein Benutzer muss die Admin-Rolle behalten.</value>
+  </data>
+  <data name="Error.Role.NameInvalid" xml:space="preserve">
+    <value>Name muss 1–{0} Zeichen lang sein.</value>
+  </data>
+  <data name="Error.Role.NameTaken" xml:space="preserve">
+    <value>Eine Rolle mit diesem Namen existiert bereits.</value>
+  </data>
+  <data name="Error.Role.NotFound" xml:space="preserve">
+    <value>Rolle nicht gefunden.</value>
+  </data>
+  <data name="Error.Role.SystemImmutable" xml:space="preserve">
+    <value>Die Admin-Rolle kann nicht geändert oder gelöscht werden.</value>
+  </data>
+  <data name="Error.Role.UnknownPermission" xml:space="preserve">
+    <value>Unbekannte Berechtigung: {0}</value>
+  </data>
+  <data name="Error.Seat.Assigned" xml:space="preserve">
+    <value>Der Platz ist einem Benutzer zugewiesen und kann nicht entfernt werden.</value>
+  </data>
+  <data name="Error.Seat.NotAssignedToUser" xml:space="preserve">
+    <value>Dieser Platz ist dir nicht zugewiesen.</value>
+  </data>
+  <data name="Error.Seat.NotFound" xml:space="preserve">
+    <value>Platz nicht gefunden.</value>
+  </data>
+  <data name="Error.Seat.Taken" xml:space="preserve">
+    <value>Dieser Platz ist bereits belegt.</value>
+  </data>
+  <data name="Error.Tournament.AlreadyStarted" xml:space="preserve">
+    <value>Das Turnier hat bereits begonnen.</value>
+  </data>
+  <data name="Error.Tournament.NotFound" xml:space="preserve">
+    <value>Turnier nicht gefunden.</value>
+  </data>
+  <data name="Error.Tournament.TooFewParticipants" xml:space="preserve">
+    <value>Zum Starten eines Turniers sind mindestens {0} Teilnehmer nötig.</value>
+  </data>
+  <data name="Error.User.NotFound" xml:space="preserve">
+    <value>Benutzer nicht gefunden.</value>
+  </data>
+  <data name="Error.Validation" xml:space="preserve">
+    <value>Bitte die markierten Felder korrigieren.</value>
+  </data>
+  <data name="Home.NoActiveParty" xml:space="preserve">
+    <value>Keine aktive LAN-Party gefunden.</value>
+  </data>
+  <data name="Home.Tagline" xml:space="preserve">
+    <value>Dein LAN-Party-Dashboard</value>
+  </data>
+  <data name="Info.Empty" xml:space="preserve">
+    <value>Für {0} wurden noch keine Infos hinterlegt.</value>
+  </data>
+  <data name="Info.Title" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Nav.Admin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="Nav.Attendees" xml:space="preserve">
+    <value>Teilnehmer</value>
+  </data>
+  <data name="Nav.Avatar" xml:space="preserve">
+    <value>Avatar</value>
+  </data>
+  <data name="Nav.Home" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Nav.Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Nav.LoginWithSteam" xml:space="preserve">
+    <value>Mit Steam anmelden</value>
+  </data>
+  <data name="Nav.Logout" xml:space="preserve">
+    <value>Abmelden</value>
+  </data>
+  <data name="Nav.Parties" xml:space="preserve">
+    <value>Partys</value>
+  </data>
+  <data name="Nav.Settings" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Nav.Stats" xml:space="preserve">
+    <value>Statistik</value>
+  </data>
+  <data name="Nav.ToggleMenu" xml:space="preserve">
+    <value>Menü umschalten</value>
+  </data>
+  <data name="Nav.Tournaments" xml:space="preserve">
+    <value>Turniere</value>
+  </data>
+  <data name="NotFound.Text" xml:space="preserve">
+    <value>Die gesuchte Seite existiert leider nicht.</value>
+  </data>
+  <data name="NotFound.Title" xml:space="preserve">
+    <value>Nicht gefunden</value>
+  </data>
+  <data name="NotificationCategory.party.announcements" xml:space="preserve">
+    <value>Party-Ankündigungen</value>
+  </data>
+  <data name="NotificationCategory.tournament.updates" xml:space="preserve">
+    <value>Turnier-Updates</value>
+  </data>
+  <data name="NotificationCategory.attendee.online" xml:space="preserve">
+    <value>Teilnehmer kommt online</value>
+  </data>
+  <data name="Notification.attendee.online" xml:space="preserve">
+    <value>{0} ist online</value>
+  </data>
+  <data name="Parties.Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Parties.Attendees" xml:space="preserve">
+    <value>Teilnehmer</value>
+  </data>
+  <data name="Parties.Empty" xml:space="preserve">
+    <value>Noch keine Partys angelegt.</value>
+  </data>
+  <data name="Parties.SeatPlan" xml:space="preserve">
+    <value>Sitzplan</value>
+  </data>
+  <data name="Parties.Title" xml:space="preserve">
+    <value>Partys</value>
+  </data>
+  <data name="Permission.audit.view" xml:space="preserve">
+    <value>Audit-Log einsehen</value>
+  </data>
+  <data name="Permission.catering.manage" xml:space="preserve">
+    <value>Catering verwalten</value>
+  </data>
+  <data name="Permission.party.manage" xml:space="preserve">
+    <value>LAN-Parties verwalten</value>
+  </data>
+  <data name="Permission.profile.read" xml:space="preserve">
+    <value>Orga-Profildaten einsehen</value>
+  </data>
+  <data name="Permission.profilefields.manage" xml:space="preserve">
+    <value>Eigene Profilfelder verwalten</value>
+  </data>
+  <data name="Permission.roles.manage" xml:space="preserve">
+    <value>Rollen verwalten</value>
+  </data>
+  <data name="Permission.tournament.manage" xml:space="preserve">
+    <value>Turniere verwalten</value>
+  </data>
+  <data name="Permission.users.manage" xml:space="preserve">
+    <value>Benutzer &amp; Rollenzuweisung verwalten</value>
+  </data>
+  <data name="Profile.Clan" xml:space="preserve">
+    <value>Clan</value>
+  </data>
+  <data name="Profile.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Profile.Edit" xml:space="preserve">
+    <value>Profil bearbeiten</value>
+  </data>
+  <data name="Profile.FavoriteGames" xml:space="preserve">
+    <value>Lieblingsspiele</value>
+  </data>
+  <data name="Profile.NoPastParties" xml:space="preserve">
+    <value>Noch keine vergangenen LAN-Partys.</value>
+  </data>
+  <data name="Profile.NoPlayedGames" xml:space="preserve">
+    <value>Noch keine Spiele erfasst.</value>
+  </data>
+  <data name="Profile.NotFound" xml:space="preserve">
+    <value>Benutzer nicht gefunden.</value>
+  </data>
+  <data name="Profile.PartyCount" xml:space="preserve">
+    <value>{0} LAN-Partys</value>
+  </data>
+  <data name="Profile.PastParties" xml:space="preserve">
+    <value>Vergangene LAN-Partys</value>
+  </data>
+  <data name="Profile.PlayedGames" xml:space="preserve">
+    <value>Auf LAN-Partys gespielt</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Profil</value>
+  </data>
+  <data name="ProfileFieldType.SingleChoice" xml:space="preserve">
+    <value>Einfachauswahl</value>
+  </data>
+  <data name="ProfileFieldType.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ProfileFieldType.YesNo" xml:space="preserve">
+    <value>Ja/Nein</value>
+  </data>
+  <data name="Reconnect.Failed" xml:space="preserve">
+    <value>Wiederverbinden fehlgeschlagen.</value>
+  </data>
+  <data name="Reconnect.Paused" xml:space="preserve">
+    <value>Die Sitzung wurde vom Server pausiert.</value>
+  </data>
+  <data name="Reconnect.Rejoining" xml:space="preserve">
+    <value>Verbindung zum Server wird wiederhergestellt…</value>
+  </data>
+  <data name="Reconnect.Resume" xml:space="preserve">
+    <value>Fortsetzen</value>
+  </data>
+  <data name="Reconnect.ResumeFailed" xml:space="preserve">
+    <value>Die Sitzung konnte nicht fortgesetzt werden.</value>
+  </data>
+  <data name="Reconnect.Retry" xml:space="preserve">
+    <value>Erneut versuchen</value>
+  </data>
+  <data name="Reconnect.RetryIn.After" xml:space="preserve">
+    <value>Sekunden.</value>
+  </data>
+  <data name="Reconnect.RetryIn.Before" xml:space="preserve">
+    <value>Wiederverbinden fehlgeschlagen… neuer Versuch in</value>
+  </data>
+  <data name="Reconnect.RetryOrReload" xml:space="preserve">
+    <value>Bitte erneut versuchen oder die Seite neu laden.</value>
+  </data>
+  <data name="Rsvp.Attending" xml:space="preserve">
+    <value>Zugesagt</value>
+  </data>
+  <data name="Rsvp.No" xml:space="preserve">
+    <value>Ich komme nicht</value>
+  </data>
+  <data name="Rsvp.NotAttending" xml:space="preserve">
+    <value>Abgesagt</value>
+  </data>
+  <data name="Rsvp.Question" xml:space="preserve">
+    <value>Kommst du zur Party?</value>
+  </data>
+  <data name="Rsvp.Yes" xml:space="preserve">
+    <value>Ich komme</value>
+  </data>
+  <data name="Rsvp.YouAreAttending" xml:space="preserve">
+    <value>Du hast zugesagt.</value>
+  </data>
+  <data name="Rsvp.YouAreNotAttending" xml:space="preserve">
+    <value>Du hast abgesagt.</value>
+  </data>
+  <data name="Seats.Free" xml:space="preserve">
+    <value>Frei</value>
+  </data>
+  <data name="Seats.Loading" xml:space="preserve">
+    <value>Lade Sitzplätze…</value>
+  </data>
+  <data name="Seats.None" xml:space="preserve">
+    <value>Keine Sitzplätze angelegt.</value>
+  </data>
+  <data name="Seats.Release" xml:space="preserve">
+    <value>Freigeben</value>
+  </data>
+  <data name="Settings.Clan" xml:space="preserve">
+    <value>Clan</value>
+  </data>
+  <data name="Settings.Email" xml:space="preserve">
+    <value>Kontakt-E-Mail</value>
+  </data>
+  <data name="Settings.EmailHelp" xml:space="preserve">
+    <value>Optional. Wird nur für die unten gewählten Mailings verwendet und nie anderen Benutzern angezeigt.</value>
+  </data>
+  <data name="Settings.FavoriteGames" xml:space="preserve">
+    <value>Lieblingsspiele</value>
+  </data>
+  <data name="Settings.FavoriteGamesHelp" xml:space="preserve">
+    <value>Ein Spiel pro Zeile, höchstens {0}.</value>
+  </data>
+  <data name="Settings.Nickname" xml:space="preserve">
+    <value>Nickname</value>
+  </data>
+  <data name="Settings.NicknameHelp" xml:space="preserve">
+    <value>Wird statt deines Steam-Namens ({0}) angezeigt. Leer lassen, um den Steam-Namen zu verwenden.</value>
+  </data>
+  <data name="Settings.Notifications" xml:space="preserve">
+    <value>Benachrichtigungen</value>
+  </data>
+  <data name="Settings.Notifications.InApp" xml:space="preserve">
+    <value>In der App</value>
+  </data>
+  <data name="Settings.Notifications.Email" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="Settings.Notifications.Sound" xml:space="preserve">
+    <value>Ton bei Benachrichtigungen</value>
+  </data>
+  <data name="Settings.RealName" xml:space="preserve">
+    <value>Echter Name</value>
+  </data>
+  <data name="Settings.Required" xml:space="preserve">
+    <value>Pflichtfeld</value>
+  </data>
+  <data name="Settings.Saved" xml:space="preserve">
+    <value>Einstellungen gespeichert.</value>
+  </data>
+  <data name="Settings.Section.Contact" xml:space="preserve">
+    <value>Kontakt &amp; Benachrichtigungen</value>
+  </data>
+  <data name="Settings.Section.Profile" xml:space="preserve">
+    <value>Profil</value>
+  </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Settings.ViewProfile" xml:space="preserve">
+    <value>Mein Profil ansehen</value>
+  </data>
+  <data name="Settings.VisibleTo" xml:space="preserve">
+    <value>Sichtbar für</value>
+  </data>
+  <data name="Settings.VisibleToHint" xml:space="preserve">
+    <value>Sichtbar für: {0}</value>
+  </data>
+  <data name="Stats.Duration.HoursMinutes" xml:space="preserve">
+    <value>{0} Std. {1} Min.</value>
+  </data>
+  <data name="Stats.Duration.Minutes" xml:space="preserve">
+    <value>{0} Min.</value>
+  </data>
+  <data name="Stats.NoData" xml:space="preserve">
+    <value>Noch keine Daten.</value>
+  </data>
+  <data name="Stats.PlayerCount" xml:space="preserve">
+    <value>{0} Spieler</value>
+  </data>
+  <data name="Stats.Title" xml:space="preserve">
+    <value>Statistik</value>
+  </data>
+  <data name="Stats.TopGames" xml:space="preserve">
+    <value>Meistgespielte Spiele</value>
+  </data>
+  <data name="Stats.TopUsers" xml:space="preserve">
+    <value>Aktivste Teilnehmer</value>
+  </data>
+  <data name="Stats.TotalPlaytime" xml:space="preserve">
+    <value>Gesamt-Spielzeit: {0}</value>
+  </data>
+  <data name="Tournament.Participants" xml:space="preserve">
+    <value>Teilnehmer ({0})</value>
+  </data>
+  <data name="Tournament.Round.Final" xml:space="preserve">
+    <value>Finale</value>
+  </data>
+  <data name="Tournament.Round.Number" xml:space="preserve">
+    <value>Runde {0}</value>
+  </data>
+  <data name="Tournament.Round.SemiFinal" xml:space="preserve">
+    <value>Halbfinale</value>
+  </data>
+  <data name="Tournament.Start" xml:space="preserve">
+    <value>Turnier starten</value>
+  </data>
+  <data name="Tournament.Title" xml:space="preserve">
+    <value>Turnier</value>
+  </data>
+  <data name="Tournament.Win" xml:space="preserve">
+    <value>Sieg</value>
+  </data>
+  <data name="Tournaments.NamePlaceholder" xml:space="preserve">
+    <value>Turniername</value>
+  </data>
+  <data name="Tournaments.New" xml:space="preserve">
+    <value>Neues Turnier</value>
+  </data>
+  <data name="Tournaments.NoneForParty" xml:space="preserve">
+    <value>Noch keine Turniere für {0}.</value>
+  </data>
+  <data name="Tournaments.Status.Registration" xml:space="preserve">
+    <value>Anmeldung</value>
+  </data>
+  <data name="Tournaments.Status.Running" xml:space="preserve">
+    <value>Läuft</value>
+  </data>
+  <data name="Tournaments.Title" xml:space="preserve">
+    <value>Turniere</value>
+  </data>
+  <data name="Visibility.Orga" xml:space="preserve">
+    <value>Orga</value>
+  </data>
+  <data name="Visibility.Private" xml:space="preserve">
+    <value>Nur ich (und Admins)</value>
+  </data>
+  <data name="Visibility.Public" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+</root>

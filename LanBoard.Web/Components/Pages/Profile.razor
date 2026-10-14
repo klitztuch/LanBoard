@@ -1,0 +1,154 @@
+@page "/users/{Id:guid}"
+@attribute [Authorize]
+@inherits ServicePageBase
+@using LanBoard.Web.Extensions
+@using Microsoft.Extensions.Options
+@inject IProfileService ProfileService
+@inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
+
+<PageTitle>@(_profile?.DisplayName ?? L["Profile.Title"])</PageTitle>
+
+<div class="p-8 max-w-4xl">
+    @if (_notFound)
+    {
+        <h1 class="text-2xl font-bold text-white mb-2">@L["Profile.Title"]</h1>
+        <p class="text-gray-400 text-sm">@L["Profile.NotFound"]</p>
+    }
+    else if (_profile is null)
+    {
+        <ErrorBanner Message="@Error"/>
+        <p class="text-gray-400 text-sm">@L["Common.Loading"]</p>
+    }
+    else
+    {
+        <div class="flex items-center gap-5 mb-8">
+            @if (_profile.AvatarUrl is not null)
+            {
+                <img src="@_profile.AvatarUrl" alt="@L["Nav.Avatar"]" class="w-20 h-20 rounded-full shrink-0"/>
+            }
+            else
+            {
+                <div class="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center text-2xl text-white font-medium shrink-0">
+                    @_profile.DisplayName[..1]
+                </div>
+            }
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-white truncate">@_profile.DisplayName</h1>
+                    @if (_profile.SteamProfileUrl is not null)
+                    {
+                        <a href="@_profile.SteamProfileUrl" target="_blank" rel="noopener noreferrer"
+                           class="shrink-0 text-gray-400 hover:text-white transition-colors"
+                           title="@L["Attendees.SteamProfile"]">
+                            <img src="/steam-logo.svg" alt="Steam" class="w-5 h-5"/>
+                        </a>
+                    }
+                </div>
+                @if (_profile.RealName is not null)
+                {
+                    <p class="text-gray-300 text-sm mt-1">@_profile.RealName</p>
+                }
+                @if (_profile.Clan is not null)
+                {
+                    <p class="text-gray-400 text-sm mt-1">@L["Profile.Clan"]: @_profile.Clan</p>
+                }
+            </div>
+            @if (_profile.IsOwnProfile)
+            {
+                <a href="/settings"
+                   class="shrink-0 px-4 py-2 text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
+                    @L["Profile.Edit"]
+                </a>
+            }
+        </div>
+
+        @if (_profile.FavoriteGames.Count > 0)
+        {
+            <section class="mb-8">
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Profile.FavoriteGames"]</h2>
+                <div class="flex flex-wrap gap-2">
+                    @foreach (var game in _profile.FavoriteGames)
+                    {
+                        <span class="px-3 py-1 rounded-full bg-gray-800 border border-gray-700 text-sm text-gray-200">@game</span>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (_profile.CustomFields.Count > 0)
+        {
+            <section class="mb-8">
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Profile.Details"]</h2>
+                <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 bg-gray-800 rounded-xl px-4 py-3 border border-gray-700">
+                    @foreach (var field in _profile.CustomFields)
+                    {
+                        <dt class="text-sm text-gray-400">@ProfileFieldLabels.For(field, LocalizationOptions.Value.DefaultCulture)</dt>
+                        <dd class="text-sm text-white break-words">@ProfileFieldLabels.FormatValue(L, field.Type, field.Value)</dd>
+                    }
+                </dl>
+            </section>
+        }
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <section>
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Profile.PastParties"]</h2>
+                @if (_profile.PastParties.Count == 0)
+                {
+                    <p class="text-gray-500 text-sm">@L["Profile.NoPastParties"]</p>
+                }
+                else
+                {
+                    <div class="flex flex-col gap-2">
+                        @foreach (var party in _profile.PastParties)
+                        {
+                            <div class="bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
+                                <p class="text-white font-medium">@party.Name</p>
+                                <p class="text-xs text-gray-400">@party.Date.ToString("d") · @party.Location</p>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section>
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Profile.PlayedGames"]</h2>
+                @if (_profile.PlayedGames.Count == 0)
+                {
+                    <p class="text-gray-500 text-sm">@L["Profile.NoPlayedGames"]</p>
+                }
+                else
+                {
+                    <div class="flex flex-col gap-2">
+                        @foreach (var game in _profile.PlayedGames)
+                        {
+                            <div class="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3 border border-gray-700">
+                                <div>
+                                    <p class="text-white font-medium">@game.GameName</p>
+                                    <p class="text-xs text-gray-400">@L["Profile.PartyCount", game.PartyCount]</p>
+                                </div>
+                                <span class="text-sm text-gray-300 font-mono">@DurationFormat.Format(L, game.TotalPlaytime)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private ProfileView? _profile;
+    private bool _notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _profile = null;
+        _notFound = false;
+        var viewerId = await CurrentUserIdAsync();
+        _profile = await RunAsync(() => ProfileService.GetProfileAsync(Id, viewerId));
+        // The only business rule GetProfileAsync can violate is an unknown user id.
+        _notFound = _profile is null && Error is not null;
+    }
+}

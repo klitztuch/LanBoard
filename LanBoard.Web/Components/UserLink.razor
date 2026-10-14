@@ -1,0 +1,8 @@
+@* Links a user name to their profile page. Not for kiosk views (Tv) where nothing is clickable. *@
+<a href="/users/@UserId" class="@CssClass">@Name</a>
+
+@code {
+    [Parameter, EditorRequired] public Guid UserId { get; set; }
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter] public string CssClass { get; set; } = "hover:underline";
+}

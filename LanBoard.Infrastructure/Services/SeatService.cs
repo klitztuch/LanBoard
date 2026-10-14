@@ -1,3 +1,4 @@
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Notifications;
 using LanBoard.Application.Seats;
@@ -23,10 +24,10 @@ public class SeatService(ILanPartyRepository parties, ISeatRepository seats, ILa
     public async Task<Seat> ClaimSeatAsync(Guid seatId, Guid userId, CancellationToken ct = default)
     {
         var seat = await seats.GetByIdAsync(seatId, ct)
-            ?? throw new InvalidOperationException("Seat not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.SeatNotFound);
 
         if (seat.AssignedUserId is not null && seat.AssignedUserId != userId)
-            throw new InvalidOperationException("Seat is already taken.");
+            throw new BusinessRuleException(ErrorCodes.SeatTaken);
 
         var current = await seats.GetByUserAsync(seat.PartyId, userId, ct);
         if (current is not null && current.Id != seatId)
@@ -41,10 +42,10 @@ public class SeatService(ILanPartyRepository parties, ISeatRepository seats, ILa
     public async Task ReleaseSeatAsync(Guid seatId, Guid userId, CancellationToken ct = default)
     {
         var seat = await seats.GetByIdAsync(seatId, ct)
-            ?? throw new InvalidOperationException("Seat not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.SeatNotFound);
 
         if (seat.AssignedUserId != userId)
-            throw new InvalidOperationException("Seat is not assigned to this user.");
+            throw new BusinessRuleException(ErrorCodes.SeatNotAssignedToUser);
 
         seat.AssignedUserId = null;
         await seats.SaveChangesAsync(ct);

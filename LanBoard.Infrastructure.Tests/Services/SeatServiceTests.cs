@@ -1,3 +1,4 @@
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Application.Notifications;
 using LanBoard.Core.Entities;
@@ -66,7 +67,8 @@ public class SeatServiceTests
     {
         _seats.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Seat?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.ClaimSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.ClaimSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.SeatNotFound, ex.Code);
         _notifier.DidNotReceive().NotifyChanged();
     }
 
@@ -76,7 +78,8 @@ public class SeatServiceTests
         var seat = CreateSeat(assignedUserId: Guid.NewGuid());
         _seats.GetByIdAsync(seat.Id, Arg.Any<CancellationToken>()).Returns(seat);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.ClaimSeatAsync(seat.Id, Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.ClaimSeatAsync(seat.Id, Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.SeatTaken, ex.Code);
         await _seats.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         _notifier.DidNotReceive().NotifyChanged();
     }
@@ -116,7 +119,8 @@ public class SeatServiceTests
     {
         _seats.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Seat?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.ReleaseSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.ReleaseSeatAsync(Guid.NewGuid(), Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.SeatNotFound, ex.Code);
     }
 
     [Fact]
@@ -125,7 +129,8 @@ public class SeatServiceTests
         var seat = CreateSeat(assignedUserId: Guid.NewGuid());
         _seats.GetByIdAsync(seat.Id, Arg.Any<CancellationToken>()).Returns(seat);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.ReleaseSeatAsync(seat.Id, Guid.NewGuid()));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.ReleaseSeatAsync(seat.Id, Guid.NewGuid()));
+        Assert.Equal(ErrorCodes.SeatNotAssignedToUser, ex.Code);
         _notifier.DidNotReceive().NotifyChanged();
     }
 

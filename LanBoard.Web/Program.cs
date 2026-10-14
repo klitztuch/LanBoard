@@ -6,14 +6,20 @@ using LanBoard.Web.Extensions;
 using LanBoard.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddInfrastructure();
 builder.AddAuth();
+builder.AddLanBoardLocalization();
 
+builder.Services.TryAddSingleton(TimeProvider.System);
+builder.Services.Configure<NotificationOptions>(builder.Configuration.GetSection(NotificationOptions.SectionName));
 builder.Services.AddSingleton<ILanBoardNotifier, LanBoardNotifier>();
+builder.Services.AddSingleton<InAppNotificationHub>();
+builder.Services.AddSingleton<INotificationPublisher>(sp => sp.GetRequiredService<InAppNotificationHub>());
 builder.Services.AddHostedService<SessionPollingService>();
 
 builder.Services.AddRazorComponents()
@@ -32,6 +38,7 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseLanBoardLocalization();
 app.UseAuthorization();
 app.UseAntiforgery();
 
@@ -39,6 +46,9 @@ app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
     app.MapDevAuthEndpoints();
+
+app.MapCultureEndpoint();
+app.MapAuthRefreshEndpoint();
 
 app.MapGet("/auth/login", (HttpContext ctx, string? returnUrl) =>
     ctx.ChallengeAsync("Steam", new AuthenticationProperties { RedirectUri = returnUrl ?? "/" }));
