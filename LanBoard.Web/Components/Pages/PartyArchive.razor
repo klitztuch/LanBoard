@@ -1,19 +1,19 @@
 @page "/parties"
 @attribute [Authorize]
-@inject IAdminService AdminService
+@inject IPartyService PartyService
 
-<PageTitle>Partys</PageTitle>
+<PageTitle>@L["Parties.Title"]</PageTitle>
 
 <div class="p-8">
-    <h1 class="text-2xl font-bold text-white mb-6">Partys</h1>
+    <h1 class="text-2xl font-bold text-white mb-6">@L["Parties.Title"]</h1>
 
     @if (_parties is null)
     {
-        <p class="text-gray-400 text-sm">Lade...</p>
+        <p class="text-gray-400 text-sm">@L["Common.Loading"]</p>
     }
     else if (_parties.Count == 0)
     {
-        <p class="text-gray-400 text-sm">Noch keine Partys angelegt.</p>
+        <p class="text-gray-400 text-sm">@L["Parties.Empty"]</p>
     }
     else
     {
@@ -26,18 +26,18 @@
                             <span class="text-white font-medium truncate">@party.Name</span>
                             @if (party.IsActive)
                             {
-                                <span class="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300 shrink-0">Aktiv</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300 shrink-0">@L["Parties.Active"]</span>
                             }
                         </div>
-                        <p class="text-sm text-gray-400 truncate">@party.Location · @party.Date.ToString("dd.MM.yyyy")</p>
+                        <p class="text-sm text-gray-400 truncate">@party.Location · @party.Date.ToString("d")</p>
                     </div>
                     <a href="@($"/?partyId={party.Id}")"
                        class="text-sm text-gray-300 hover:text-white transition-colors shrink-0">
-                        Sitzplan
+                        @L["Parties.SeatPlan"]
                     </a>
                     <a href="@($"/attendees?partyId={party.Id}")"
                        class="text-sm text-gray-300 hover:text-white transition-colors shrink-0">
-                        Teilnehmer
+                        @L["Parties.Attendees"]
                     </a>
                 </div>
             }
@@ -46,10 +46,10 @@
 </div>
 
 @code {
-    private IReadOnlyList<LanParty>? _parties;
+    private IReadOnlyList<PartySummary>? _parties;
 
     protected override async Task OnInitializedAsync()
     {
-        _parties = await AdminService.GetAllPartiesAsync();
+        _parties = await PartyService.GetAllAsync();
     }
 }
