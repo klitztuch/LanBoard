@@ -7,7 +7,7 @@ public interface IProfileService
     /// <summary>Profile of <paramref name="userId"/> as seen by <paramref name="viewerUserId"/>; values filtered by visibility. Never contains the e-mail.</summary>
     Task<ProfileView> GetProfileAsync(Guid userId, Guid viewerUserId, CancellationToken ct = default);
 
-    /// <summary>The caller's own editable data, including e-mail and notification opt-ins.</summary>
+    /// <summary>The caller's own editable data, including e-mail and notification preferences.</summary>
     Task<ProfileSettings> GetSettingsAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>Validates everything first and throws a ValidationException with all field errors; saves atomically.</summary>
@@ -43,6 +43,8 @@ public sealed record ProfileSettings(
     IReadOnlyList<string> FavoriteGames,
     string? ContactEmail,
     IReadOnlySet<string> NotificationOptIns,
+    IReadOnlySet<string> InAppOptOuts,
+    bool NotificationSoundEnabled,
     IReadOnlyList<ProfileFieldDefinition> Fields,       // all definitions, by SortOrder
     IReadOnlyDictionary<Guid, string> FieldValues);
 
@@ -55,6 +57,8 @@ public sealed record ProfileSettingsInput(
     IReadOnlyList<string> FavoriteGames,
     string? ContactEmail,
     IReadOnlySet<string> NotificationOptIns,
+    IReadOnlySet<string> InAppOptOuts,
+    bool NotificationSoundEnabled,
     IReadOnlyDictionary<Guid, string?> FieldValues)
 {
     /// <summary>ValidationError.Field for a custom field value.</summary>

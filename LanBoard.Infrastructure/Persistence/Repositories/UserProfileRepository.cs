@@ -37,6 +37,16 @@ public class UserProfileRepository(AppDbContext db) : IUserProfileRepository
             .Select(p => new NotificationRecipient(p.UserId, p.User.DisplayName, p.ContactEmail!, p.User.PreferredCulture))
             .ToListAsync(ct);
 
+    public async Task<InAppNotificationSettings?> GetInAppSettingsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var row = await db.UserProfiles
+            .AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .Select(p => new { p.InAppOptOuts, p.NotificationSoundEnabled })
+            .FirstOrDefaultAsync(ct);
+        return row is null ? null : new InAppNotificationSettings(row.InAppOptOuts.ToHashSet(), row.NotificationSoundEnabled);
+    }
+
     public async Task AddAsync(UserProfile profile, CancellationToken ct = default)
         => await db.UserProfiles.AddAsync(profile, ct);
 
