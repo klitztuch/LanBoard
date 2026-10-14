@@ -6,6 +6,7 @@ using LanBoard.Web.Extensions;
 using LanBoard.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,11 @@ builder.AddInfrastructure();
 builder.AddAuth();
 builder.AddLanBoardLocalization();
 
+builder.Services.TryAddSingleton(TimeProvider.System);
+builder.Services.Configure<NotificationOptions>(builder.Configuration.GetSection(NotificationOptions.SectionName));
 builder.Services.AddSingleton<ILanBoardNotifier, LanBoardNotifier>();
+builder.Services.AddSingleton<InAppNotificationHub>();
+builder.Services.AddSingleton<INotificationPublisher>(sp => sp.GetRequiredService<InAppNotificationHub>());
 builder.Services.AddHostedService<SessionPollingService>();
 
 builder.Services.AddRazorComponents()

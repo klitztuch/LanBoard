@@ -9,9 +9,12 @@ public class NotificationRecipientService(IUserProfileRepository profiles) : INo
 {
     public Task<IReadOnlyList<NotificationRecipient>> GetEmailRecipientsAsync(string category, CancellationToken ct = default)
     {
-        if (!NotificationCategories.All.Contains(category))
+        if (!NotificationCategories.Supporting(NotificationChannels.Email).Contains(category))
             throw new BusinessRuleException(ErrorCodes.NotificationUnknownCategory, category);
 
         return profiles.GetEmailRecipientsAsync(category, ct);
     }
+
+    public async Task<InAppNotificationSettings> GetInAppSettingsAsync(Guid userId, CancellationToken ct = default)
+        => await profiles.GetInAppSettingsAsync(userId, ct) ?? InAppNotificationSettings.Default;
 }

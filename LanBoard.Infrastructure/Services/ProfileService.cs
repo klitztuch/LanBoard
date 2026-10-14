@@ -84,6 +84,8 @@ public class ProfileService(
             profile.FavoriteGames,
             profile.ContactEmail,
             profile.NotificationOptIns.ToHashSet(),
+            profile.InAppOptOuts.ToHashSet(),
+            profile.NotificationSoundEnabled,
             definitions,
             profile.FieldValues.ToDictionary(v => v.FieldId, v => v.Value));
     }
@@ -126,8 +128,13 @@ public class ProfileService(
         if (email is not null && !IsValidEmail(email))
             errors.Add(new(nameof(input.ContactEmail), ErrorCodes.ProfileEmailInvalid));
 
-        if (input.NotificationOptIns.FirstOrDefault(c => !NotificationCategories.All.Contains(c)) is { } unknownCategory)
-            errors.Add(new(nameof(input.NotificationOptIns), ErrorCodes.ProfileUnknownCategory, unknownCategory));
+        var emailCategories = NotificationCategories.Supporting(NotificationChannels.Email);
+        if (input.NotificationOptIns.FirstOrDefault(c => !emailCategories.Contains(c)) is { } unknownEmailCategory)
+            errors.Add(new(nameof(input.NotificationOptIns), ErrorCodes.ProfileUnknownCategory, unknownEmailCategory));
+
+        var inAppCategories = NotificationCategories.Supporting(NotificationChannels.InApp);
+        if (input.InAppOptOuts.FirstOrDefault(c => !inAppCategories.Contains(c)) is { } unknownInAppCategory)
+            errors.Add(new(nameof(input.InAppOptOuts), ErrorCodes.ProfileUnknownCategory, unknownInAppCategory));
 
         // Resulting custom values: stored values, overlaid with the submitted ones (null = delete).
         var resultingValues = (profile?.FieldValues ?? [])
@@ -163,6 +170,8 @@ public class ProfileService(
         profile.FavoriteGames = favoriteGames;
         profile.ContactEmail = email;
         profile.NotificationOptIns = input.NotificationOptIns.Distinct().Order().ToList();
+        profile.InAppOptOuts = input.InAppOptOuts.Distinct().Order().ToList();
+        profile.NotificationSoundEnabled = input.NotificationSoundEnabled;
         profile.UpdatedAt = DateTime.UtcNow;
         ApplyCustomValues(profile, input.FieldValues);
 
