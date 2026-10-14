@@ -1,45 +1,49 @@
 @page "/tournaments/{Id:guid}"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@inherits ServicePageBase
 @inject ITournamentService TournamentService
 @inject IUserService UserService
 @inject AuthenticationStateProvider Auth
+@inject IAuthorizationService AuthorizationService
 
-<PageTitle>@(_tournament?.Name ?? "Turnier")</PageTitle>
+<PageTitle>@(_tournament?.Name ?? L["Tournament.Title"])</PageTitle>
 
 @if (_tournament is null)
 {
-    <p class="p-8 text-gray-400 text-sm">Lade...</p>
+    <p class="p-8 text-gray-400 text-sm">@L["Common.Loading"]</p>
 }
 else
 {
     <div class="p-8">
         <div class="flex items-center gap-3 mb-6">
-            <a href="/tournaments" class="text-gray-400 hover:text-white transition-colors text-sm">← Turniere</a>
+            <a href="/tournaments" class="text-gray-400 hover:text-white transition-colors text-sm">← @L["Tournaments.Title"]</a>
             <h1 class="text-2xl font-bold text-white">@_tournament.Name</h1>
         </div>
+
+        <ErrorBanner Message="@Error" />
 
         @if (!_tournament.IsStarted)
         {
             <div class="max-w-md">
-                <h2 class="text-lg font-semibold text-white mb-3">Teilnehmer (@_tournament.Participants.Count)</h2>
+                <h2 class="text-lg font-semibold text-white mb-3">@L["Tournament.Participants", _tournament.Participants.Count]</h2>
                 <div class="flex flex-col gap-2 mb-4">
                     @foreach (var user in _allUsers ?? [])
                     {
                         var isIn = _tournament.Participants.Any(p => p.UserId == user.Id);
-                        <label class="flex items-center gap-3 bg-gray-800 rounded-lg px-3 py-2 border border-gray-700 @(_isAdmin ? "cursor-pointer" : "")">
-                            <input type="checkbox" checked="@isIn" disabled="@(!_isAdmin)"
+                        <label class="flex items-center gap-3 bg-gray-800 rounded-lg px-3 py-2 border border-gray-700 @(_canManage ? "cursor-pointer" : "")">
+                            <input type="checkbox" checked="@isIn" disabled="@(!_canManage)"
                                    @onchange="e => ToggleParticipantAsync(user.Id, (bool)(e.Value ?? false))"/>
-                            <span class="text-sm text-white">@user.DisplayName</span>
+                            <UserLink UserId="user.Id" Name="@user.DisplayName" CssClass="text-sm text-white hover:underline"/>
                         </label>
                     }
                 </div>
-                @if (_isAdmin)
+                @if (_canManage)
                 {
                     <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
                             disabled="@(_tournament.Participants.Count < 2)"
                             @onclick="StartAsync">
-                        Turnier starten
+                        @L["Tournament.Start"]
                     </button>
                 }
             </div>
@@ -55,27 +59,41 @@ else
                         {
                             <div class="bg-gray-800 rounded-xl border border-gray-700 p-3 flex flex-col gap-1">
                                 @{
-                                    var canDecide = _isAdmin && match.WinnerId is null && match.Participant1Id is not null && match.Participant2Id is not null;
+                                    var canDecide = _canManage && match.WinnerId is null && match.Participant1Id is not null && match.Participant2Id is not null;
                                     var participant1Id = match.Participant1Id ?? Guid.Empty;
                                     var participant2Id = match.Participant2Id ?? Guid.Empty;
                                 }
                                 <div class="flex items-center justify-between gap-2 @(match.WinnerId is not null && match.WinnerId == match.Participant1Id ? "text-green-400 font-medium" : "text-gray-300")">
-                                    <span class="text-sm truncate">@(match.Participant1?.User.DisplayName ?? "–")</span>
+                                    @if (match.Participant1 is { } p1)
+                                    {
+                                        <UserLink UserId="p1.UserId" Name="@p1.User.DisplayName" CssClass="text-sm truncate hover:underline"/>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm truncate">–</span>
+                                    }
                                     @if (canDecide)
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
                                                 @onclick="() => SetWinnerAsync(match.Id, participant1Id)">
-                                            Sieg
+                                            @L["Tournament.Win"]
                                         </button>
                                     }
                                 </div>
                                 <div class="flex items-center justify-between gap-2 @(match.WinnerId is not null && match.WinnerId == match.Participant2Id ? "text-green-400 font-medium" : "text-gray-300")">
-                                    <span class="text-sm truncate">@(match.Participant2?.User.DisplayName ?? "–")</span>
+                                    @if (match.Participant2 is { } p2)
+                                    {
+                                        <UserLink UserId="p2.UserId" Name="@p2.User.DisplayName" CssClass="text-sm truncate hover:underline"/>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm truncate">–</span>
+                                    }
                                     @if (canDecide)
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
                                                 @onclick="() => SetWinnerAsync(match.Id, participant2Id)">
-                                            Sieg
+                                            @L["Tournament.Win"]
                                         </button>
                                     }
                                 </div>
@@ -93,13 +111,13 @@ else
 
     private Tournament? _tournament;
     private IReadOnlyList<User>? _allUsers;
-    private bool _isAdmin;
+    private bool _canManage;
     private List<IGrouping<int, TournamentMatch>> _roundsOrdered = [];
 
     protected override async Task OnInitializedAsync()
     {
         var state = await Auth.GetAuthenticationStateAsync();
-        _isAdmin = state.User.HasClaim("lanboard:isadmin", "true");
+        _canManage = (await AuthorizationService.AuthorizeAsync(state.User, Permissions.TournamentManage)).Succeeded;
         _allUsers = await UserService.GetAllWithIdentitiesAsync();
         await LoadAsync();
     }
@@ -115,29 +133,29 @@ else
 
     private async Task ToggleParticipantAsync(Guid userId, bool add)
     {
-        if (add)
-            await TournamentService.AddParticipantAsync(Id, userId);
-        else
-            await TournamentService.RemoveParticipantAsync(Id, userId);
+        var performedByUserId = await CurrentUserIdAsync();
+        await RunAsync(() => add
+            ? TournamentService.AddParticipantAsync(Id, userId, performedByUserId)
+            : TournamentService.RemoveParticipantAsync(Id, userId, performedByUserId));
         await LoadAsync();
     }
 
     private async Task StartAsync()
     {
-        await TournamentService.StartAsync(Id);
+        await RunAsync(async () => await TournamentService.StartAsync(Id, await CurrentUserIdAsync()));
         await LoadAsync();
     }
 
     private async Task SetWinnerAsync(Guid matchId, Guid winnerParticipantId)
     {
-        await TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId);
+        await RunAsync(async () => await TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId, await CurrentUserIdAsync()));
         await LoadAsync();
     }
 
-    private static string RoundLabel(int round, int totalRounds)
+    private string RoundLabel(int round, int totalRounds)
     {
-        if (round == totalRounds) return "Finale";
-        if (round == totalRounds - 1) return "Halbfinale";
-        return $"Runde {round}";
+        if (round == totalRounds) return L["Tournament.Round.Final"];
+        if (round == totalRounds - 1) return L["Tournament.Round.SemiFinal"];
+        return L["Tournament.Round.Number", round];
     }
 }

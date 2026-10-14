@@ -1,16 +1,24 @@
 using LanBoard.Application.Admin;
+using LanBoard.Application.Authorization;
+using LanBoard.Application.Errors;
 using LanBoard.Application.Interfaces;
 using LanBoard.Core.Entities;
 
 namespace LanBoard.Infrastructure.Services;
 
-public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IAdminAuditLogRepository auditLog) : IAdminService
+public class AdminService(
+    ILanPartyRepository parties,
+    ISeatRepository seats,
+    IAdminAuditLogRepository auditLog,
+    IPermissionService permissions) : IAdminService
 {
     public Task<IReadOnlyList<LanParty>> GetAllPartiesAsync(CancellationToken ct = default)
         => parties.GetAllAsync(ct);
 
     public async Task<LanParty> CreatePartyAsync(string name, DateTime date, string location, Guid createdByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(createdByUserId, Permissions.PartyManage, ct);
+
         var party = new LanParty
         {
             Id = Guid.NewGuid(),
@@ -22,28 +30,32 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
         };
         await parties.AddAsync(party, ct);
         await parties.SaveChangesAsync(ct);
-        await LogAsync(createdByUserId, "PartyCreated", $"Party \"{name}\" erstellt", ct);
+        await LogAsync(createdByUserId, AuditActions.PartyCreated, $"Party \"{name}\" created", ct);
         return party;
     }
 
     public async Task UpdatePartyAsync(Guid id, string name, DateTime date, string location, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var party = await parties.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Party not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
         party.Name = name;
         party.Date = AsUtc(date);
         party.Location = location;
         await parties.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "PartyUpdated", $"Party \"{name}\" bearbeitet", ct);
+        await LogAsync(performedByUserId, AuditActions.PartyUpdated, $"Party \"{name}\" updated", ct);
     }
 
     public async Task DeletePartyAsync(Guid id, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var party = await parties.GetByIdAsync(id, ct)
-            ?? throw new InvalidOperationException("Party not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
         parties.Remove(party);
         await parties.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "PartyDeleted", $"Party \"{party.Name}\" gelöscht", ct);
+        await LogAsync(performedByUserId, AuditActions.PartyDeleted, $"Party \"{party.Name}\" deleted", ct);
     }
 
     public Task<LanParty?> GetPartyWithSeatsAsync(Guid id, CancellationToken ct = default)
@@ -51,6 +63,8 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
 
     public async Task SetActivePartyAsync(Guid partyId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         // Deactivate and activate in separate SaveChanges calls: the partial unique
         // index on IsActive can't be deferred (Postgres doesn't support deferrable
         // constraints with a WHERE clause), and EF doesn't guarantee statement order
@@ -65,14 +79,16 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
         }
 
         var target = await parties.GetByIdAsync(partyId, ct)
-            ?? throw new InvalidOperationException("Party not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
         target.IsActive = true;
         await parties.SaveChangesAsync(ct);
-        await LogAsync(performedByUserId, "PartyActivated", $"Party \"{target.Name}\" aktiviert", ct);
+        await LogAsync(performedByUserId, AuditActions.PartyActivated, $"Party \"{target.Name}\" activated", ct);
     }
 
-    public async Task<Seat> AddSeatAsync(Guid partyId, int x, int y, CancellationToken ct = default)
+    public async Task<Seat> AddSeatAsync(Guid partyId, int x, int y, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var seat = new Seat
         {
             Id = Guid.NewGuid(),
@@ -86,18 +102,23 @@ public class AdminService(ILanPartyRepository parties, ISeatRepository seats, IA
         return seat;
     }
 
-    public async Task RemoveSeatAsync(Guid seatId, CancellationToken ct = default)
+    public async Task RemoveSeatAsync(Guid seatId, Guid performedByUserId, CancellationToken ct = default)
     {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
         var seat = await seats.GetByIdAsync(seatId, ct)
-            ?? throw new InvalidOperationException("Seat not found.");
+            ?? throw new BusinessRuleException(ErrorCodes.SeatNotFound);
         if (seat.AssignedUserId is not null)
-            throw new InvalidOperationException("Seat is currently assigned to a user.");
+            throw new BusinessRuleException(ErrorCodes.SeatAssigned);
         seats.Remove(seat);
         await seats.SaveChangesAsync(ct);
     }
 
-    public Task<IReadOnlyList<AdminAuditLogEntry>> GetRecentAuditLogAsync(int count = 50, CancellationToken ct = default)
-        => auditLog.GetRecentAsync(count, ct);
+    public async Task<IReadOnlyList<AdminAuditLogEntry>> GetRecentAuditLogAsync(Guid performedByUserId, int count = 50, CancellationToken ct = default)
+    {
+        await permissions.EnsureAsync(performedByUserId, Permissions.AuditView, ct);
+        return await auditLog.GetRecentAsync(count, ct);
+    }
 
     private async Task LogAsync(Guid userId, string action, string details, CancellationToken ct)
     {

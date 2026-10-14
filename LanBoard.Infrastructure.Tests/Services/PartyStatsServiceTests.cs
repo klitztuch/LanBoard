@@ -33,7 +33,7 @@ public class PartyStatsServiceTests
         };
     }
 
-    private static User CreateUser(string name) => new() { Id = Guid.NewGuid(), DisplayName = name };
+    private static User CreateUser(string name) => new() { Id = Guid.NewGuid(), DisplayName = name, SteamName = name };
 
     [Fact]
     public async Task GetStatsAsync_NoSessions_ReturnsEmptyStats()
