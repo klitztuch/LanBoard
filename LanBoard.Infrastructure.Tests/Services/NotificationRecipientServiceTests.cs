@@ -35,4 +35,37 @@ public class NotificationRecipientServiceTests
         Assert.Equal(ErrorCodes.NotificationUnknownCategory, ex.Code);
         await _profiles.DidNotReceive().GetEmailRecipientsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task GetEmailRecipientsAsync_InAppOnlyCategory_Throws()
+    {
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.GetEmailRecipientsAsync(NotificationCategories.AttendeeOnline));
+
+        Assert.Equal(ErrorCodes.NotificationUnknownCategory, ex.Code);
+    }
+
+    [Fact]
+    public async Task GetInAppSettingsAsync_WithoutProfileRow_ReturnsDefault()
+    {
+        _profiles.GetInAppSettingsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((InAppNotificationSettings?)null);
+
+        var settings = await _sut.GetInAppSettingsAsync(Guid.NewGuid());
+
+        Assert.Same(InAppNotificationSettings.Default, settings);
+        Assert.True(settings.SoundEnabled);
+        Assert.True(settings.IsEnabled(NotificationCategories.AttendeeOnline));
+    }
+
+    [Fact]
+    public async Task GetInAppSettingsAsync_WithProfileRow_ReturnsStoredValues()
+    {
+        var userId = Guid.NewGuid();
+        var stored = new InAppNotificationSettings(new HashSet<string> { NotificationCategories.AttendeeOnline }, false);
+        _profiles.GetInAppSettingsAsync(userId, Arg.Any<CancellationToken>()).Returns(stored);
+
+        var settings = await _sut.GetInAppSettingsAsync(userId);
+
+        Assert.False(settings.SoundEnabled);
+        Assert.False(settings.IsEnabled(NotificationCategories.AttendeeOnline));
+    }
 }

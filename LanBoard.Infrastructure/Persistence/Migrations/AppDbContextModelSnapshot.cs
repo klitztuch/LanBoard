@@ -481,11 +481,20 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .HasColumnType("text[]")
                         .HasDefaultValueSql("'{}'");
 
+                    b.PrimitiveCollection<List<string>>("InAppOptOuts")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasDefaultValueSql("'{}'");
+
                     b.PrimitiveCollection<List<string>>("NotificationOptIns")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text[]")
                         .HasDefaultValueSql("'{}'");
+
+                    b.Property<bool>("NotificationSoundEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("RealName")
                         .HasMaxLength(100)

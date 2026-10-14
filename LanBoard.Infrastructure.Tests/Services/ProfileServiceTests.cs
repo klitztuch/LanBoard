@@ -86,9 +86,11 @@ public class ProfileServiceTests
         IReadOnlyList<string>? favoriteGames = null,
         string? email = null,
         IReadOnlySet<string>? optIns = null,
-        Dictionary<Guid, string?>? values = null)
+        Dictionary<Guid, string?>? values = null,
+        IReadOnlySet<string>? inAppOptOuts = null,
+        bool soundEnabled = true)
         => new(nickname, realName, realNameVisibility, clan, favoriteGames ?? [], email,
-            optIns ?? new HashSet<string>(), values ?? []);
+            optIns ?? new HashSet<string>(), inAppOptOuts ?? new HashSet<string>(), soundEnabled, values ?? []);
 
     private async Task<ValidationException> AssertInvalidAsync(Guid userId, ProfileSettingsInput input)
     {
@@ -274,6 +276,24 @@ public class ProfileServiceTests
         Assert.Equal(FieldVisibility.Orga, settings.RealNameVisibility);
         Assert.Empty(settings.NotificationOptIns);
         Assert.Null(settings.ContactEmail);
+        Assert.Empty(settings.InAppOptOuts);
+        Assert.True(settings.NotificationSoundEnabled);
+    }
+
+    [Fact]
+    public async Task GetSettingsAsync_ReturnsInAppPreferences()
+    {
+        var user = GivenUser();
+        GivenProfile(user, p =>
+        {
+            p.InAppOptOuts = [NotificationCategories.AttendeeOnline];
+            p.NotificationSoundEnabled = false;
+        });
+
+        var settings = await _sut.GetSettingsAsync(user.Id);
+
+        Assert.Equal([NotificationCategories.AttendeeOnline], settings.InAppOptOuts);
+        Assert.False(settings.NotificationSoundEnabled);
     }
 
     // --- SaveSettingsAsync: happy paths ---
@@ -499,6 +519,46 @@ public class ProfileServiceTests
 
         AssertSingleError(ex, "NotificationOptIns", ErrorCodes.ProfileUnknownCategory);
         Assert.Equal(["spam.everything"], ex.Errors[0].Args);
+    }
+
+    [Fact]
+    public async Task SaveSettingsAsync_InAppOnlyCategoryAsEmailOptIn_Rejected()
+    {
+        var user = GivenUser();
+
+        var ex = await AssertInvalidAsync(user.Id, Input(optIns: new HashSet<string> { NotificationCategories.AttendeeOnline }));
+
+        AssertSingleError(ex, "NotificationOptIns", ErrorCodes.ProfileUnknownCategory);
+    }
+
+    [Fact]
+    public async Task SaveSettingsAsync_UnknownInAppCategory_Rejected()
+    {
+        var user = GivenUser();
+
+        var ex = await AssertInvalidAsync(user.Id, Input(inAppOptOuts: new HashSet<string> { NotificationCategories.PartyAnnouncements }));
+
+        AssertSingleError(ex, "InAppOptOuts", ErrorCodes.ProfileUnknownCategory);
+        Assert.Equal([NotificationCategories.PartyAnnouncements], ex.Errors[0].Args);
+    }
+
+    [Fact]
+    public async Task SaveSettingsAsync_InAppPreferences_Saved()
+    {
+        var user = GivenUser();
+        var profile = GivenProfile(user);
+
+        await _sut.SaveSettingsAsync(user.Id, Input(
+            inAppOptOuts: new HashSet<string> { NotificationCategories.AttendeeOnline },
+            soundEnabled: false));
+
+        Assert.Equal([NotificationCategories.AttendeeOnline], profile.InAppOptOuts);
+        Assert.False(profile.NotificationSoundEnabled);
+
+        await _sut.SaveSettingsAsync(user.Id, Input());
+
+        Assert.Empty(profile.InAppOptOuts);
+        Assert.True(profile.NotificationSoundEnabled);
     }
 
     [Fact]

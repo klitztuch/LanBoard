@@ -7,6 +7,7 @@
 @inject IProfileService ProfileService
 @inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
 @inject NavigationManager Nav
+@inject InAppNotificationHub NotificationHub
 
 <PageTitle>@L["Settings.Title"]</PageTitle>
 
@@ -122,21 +123,50 @@
                     <p class="mt-1 text-xs text-gray-500">@L["Settings.EmailHelp"]</p>
                     @FieldError(nameof(ProfileSettingsInput.ContactEmail))
                 </div>
+            </section>
 
-                <fieldset>
-                    <legend class="block text-sm text-gray-400 mb-2">@L["Settings.Notifications"]</legend>
-                    <div class="space-y-2">
+            <section class="space-y-4">
+                <h2 class="text-lg font-semibold text-white">@L["Settings.Notifications"]</h2>
+
+                <table class="text-sm text-white">
+                    <thead>
+                        <tr class="text-gray-400">
+                            <th class="text-left font-normal pr-6 pb-2"></th>
+                            @foreach (var channel in Channels)
+                            {
+                                <th class="font-normal px-3 pb-2">@L[$"Settings.Notifications.{channel}"]</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
                         @foreach (var category in NotificationCategories.All)
                         {
-                            <label class="flex items-center gap-3 text-sm text-white cursor-pointer">
-                                <input type="checkbox" class="@CheckboxClass" checked="@_form.NotificationOptIns.Contains(category)"
-                                       @onchange="e => ToggleOptIn(category, e.Value is true)"/>
-                                @L[$"NotificationCategory.{category}"]
-                            </label>
+                            var channels = NotificationCategories.ChannelsOf(category);
+                            <tr>
+                                <td class="pr-6 py-1">@L[$"NotificationCategory.{category}"]</td>
+                                @foreach (var channel in Channels)
+                                {
+                                    <td class="px-3 py-1 text-center">
+                                        @if (channels.HasFlag(channel))
+                                        {
+                                            <input type="checkbox" class="@CheckboxClass"
+                                                   aria-label="@($"{L[$"NotificationCategory.{category}"]}: {L[$"Settings.Notifications.{channel}"]}")"
+                                                   checked="@_form.IsEnabled(category, channel)"
+                                                   @onchange="e => _form.Toggle(category, channel, e.Value is true)"/>
+                                        }
+                                    </td>
+                                }
+                            </tr>
                         }
-                    </div>
-                    @FieldError(nameof(ProfileSettingsInput.NotificationOptIns))
-                </fieldset>
+                    </tbody>
+                </table>
+                @FieldError(nameof(ProfileSettingsInput.InAppOptOuts))
+                @FieldError(nameof(ProfileSettingsInput.NotificationOptIns))
+
+                <label class="flex items-center gap-3 text-sm text-white cursor-pointer">
+                    <input type="checkbox" class="@CheckboxClass" @bind="_form.NotificationSoundEnabled"/>
+                    @L["Settings.Notifications.Sound"]
+                </label>
             </section>
 
             <button type="submit" disabled="@_saving"
@@ -149,6 +179,7 @@
 
 @code {
     private const int MaxFavoriteGames = 10;
+    private static readonly NotificationChannels[] Channels = [NotificationChannels.InApp, NotificationChannels.Email];
     private const string CheckboxClass = "w-4 h-4 shrink-0 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-2 focus:ring-blue-600";
     private const string InputClass = "w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500";
 
@@ -189,6 +220,8 @@
             if (!ok)
                 return;   // inputs keep the user's entries
 
+            NotificationHub.NotifyPreferencesChanged(_userId);   // applies to all of the user's open tabs
+
             await LoadAsync();
             // The nav bar shows the name from the auth cookie; re-issue it after a nickname change.
             if (_settings?.Nickname != previousNickname)
@@ -208,14 +241,6 @@
 
     protected override void OnParametersSet() => _saved = SavedFlag == 1;
 
-    private void ToggleOptIn(string category, bool optedIn)
-    {
-        if (optedIn)
-            _form.NotificationOptIns.Add(category);
-        else
-            _form.NotificationOptIns.Remove(category);
-    }
-
     private IEnumerable<string> ChoicesWithCurrent(ProfileFieldDefinition field)
         => _settings?.FieldValues.GetValueOrDefault(field.Id) is { } current && !field.Choices.Contains(current)
             ? field.Choices.Append(current)
@@ -234,7 +259,25 @@
         public string? FavoriteGames { get; set; }   // one per line
         public string? ContactEmail { get; set; }
         public HashSet<string> NotificationOptIns { get; set; } = [];
+        public HashSet<string> InAppOptOuts { get; set; } = [];
+        public bool NotificationSoundEnabled { get; set; } = true;
         public Dictionary<Guid, string?> FieldValues { get; set; } = [];
+
+        // In-app is stored as opt-outs (default on), e-mail as opt-ins (default off).
+        public bool IsEnabled(string category, NotificationChannels channel) => channel == NotificationChannels.InApp
+            ? !InAppOptOuts.Contains(category)
+            : NotificationOptIns.Contains(category);
+
+        public void Toggle(string category, NotificationChannels channel, bool enabled)
+        {
+            var (set, add) = channel == NotificationChannels.InApp
+                ? (InAppOptOuts, !enabled)
+                : (NotificationOptIns, enabled);
+            if (add)
+                set.Add(category);
+            else
+                set.Remove(category);
+        }
 
         public static SettingsForm From(ProfileSettings settings) => new()
         {
@@ -245,6 +288,8 @@
             FavoriteGames = string.Join('\n', settings.FavoriteGames),
             ContactEmail = settings.ContactEmail,
             NotificationOptIns = [.. settings.NotificationOptIns],
+            InAppOptOuts = [.. settings.InAppOptOuts],
+            NotificationSoundEnabled = settings.NotificationSoundEnabled,
             FieldValues = settings.Fields.ToDictionary(f => f.Id, f => settings.FieldValues.GetValueOrDefault(f.Id))
         };
 
@@ -256,6 +301,8 @@
             (FavoriteGames ?? "").Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
             ContactEmail,
             NotificationOptIns,
+            InAppOptOuts,
+            NotificationSoundEnabled,
             FieldValues);
     }
 }

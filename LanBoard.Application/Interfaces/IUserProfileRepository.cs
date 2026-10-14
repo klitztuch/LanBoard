@@ -16,6 +16,9 @@ public interface IUserProfileRepository
     /// Users who opted into the category and have a contact e-mail.
     Task<IReadOnlyList<NotificationRecipient>> GetEmailRecipientsAsync(string category, CancellationToken ct = default);
 
+    /// Read-only; null if the user never saved settings.
+    Task<InAppNotificationSettings?> GetInAppSettingsAsync(Guid userId, CancellationToken ct = default);
+
     Task AddAsync(UserProfile profile, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
 }
