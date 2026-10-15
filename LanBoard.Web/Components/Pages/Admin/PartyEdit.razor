@@ -4,6 +4,7 @@
 @rendermode InteractiveServer
 @inherits ServicePageBase
 @inject IAdminService AdminService
+@inject ILocationService LocationService
 @inject NavigationManager Nav
 
 <PageTitle>@(_party is null ? L["Admin.Parties.New"] : _party.Name) – @L["Nav.Admin"]</PageTitle>
@@ -31,8 +32,21 @@
         </div>
         <div>
             <label class="block text-sm text-gray-400 mb-1">@L["Admin.Parties.Location"]</label>
-            <InputText @bind-Value="_form.Location"
-                       class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+            <div class="flex gap-3">
+                <InputSelect @bind-Value="_form.LocationId" id="party-location"
+                             class="flex-1 min-w-0 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">@L["Admin.PartyEdit.ChooseLocation"]</option>
+                    @foreach (var location in _locations)
+                    {
+                        <option value="@location.Id">@location.Name</option>
+                    }
+                </InputSelect>
+                <button type="button" @onclick="() => _showLocationModal = true"
+                        class="shrink-0 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors">
+                    @L["Admin.Locations.New"]
+                </button>
+            </div>
+            <ValidationMessage For="() => _form.LocationId" class="text-xs text-red-400 mt-1" />
         </div>
         @if (_party?.InviteCode is { } inviteCode)
         {
@@ -67,6 +81,25 @@
         <h2 class="text-lg font-semibold text-white mb-4">@L["Admin.PartyEdit.Seats"]</h2>
         <p class="text-xs text-gray-500 mb-4">@L["Admin.PartyEdit.SeatsHelp"]</p>
 
+        @if (_displaySeats.Count == 0 && _seatPlanSources.Count > 0)
+        {
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <label for="seat-plan-source" class="text-sm text-gray-400">@L["Admin.PartyEdit.CopySeatPlanFrom"]</label>
+                <select id="seat-plan-source" @bind="_copySourceId"
+                        class="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">@L["Admin.PartyEdit.ChooseParty"]</option>
+                    @foreach (var source in _seatPlanSources)
+                    {
+                        <option value="@source.Id">@source.Name (@source.Location.Name, @source.Date.ToString("d"))</option>
+                    }
+                </select>
+                <button type="button" @onclick="CopySeatsAsync" disabled="@(_copySourceId is null)"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
+                    @L["Admin.PartyEdit.CopySeatPlan"]
+                </button>
+            </div>
+        }
+
         <SeatGridLayout Seats="_displaySeats" ShowExpandBorder="true" CellSize="2.5rem" GapSize="4px">
             <CellTemplate Context="cell">
                 <div class="@CellClass(cell.Seat) h-full w-full" @onclick="() => ToggleSeat(cell.X, cell.Y, cell.Seat)">
@@ -80,17 +113,32 @@
     </div>
 }
 
+@if (_showLocationModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
+        <div class="w-full max-w-lg max-h-full overflow-y-auto bg-gray-800 rounded-xl border border-gray-700 p-5 space-y-4">
+            <h2 class="text-lg font-semibold text-white">@L["Admin.Locations.New"]</h2>
+            <LocationForm OnSaved="LocationCreatedAsync" OnCancel="() => _showLocationModal = false" />
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public Guid? Id { get; set; }
 
     private LanParty? _party;
     private List<Seat> _displaySeats = [];
+    private IReadOnlyList<Location> _locations = [];
+    private bool _showLocationModal;
+    private IReadOnlyList<LanParty> _seatPlanSources = [];
+    private Guid? _copySourceId;
 
     private readonly PartyForm _form = new();
     private readonly InfoBoardForm _infoForm = new();
 
     protected override async Task OnParametersSetAsync()
     {
+        _locations = await LocationService.GetAllAsync();
         if (Id is not null)
         {
             _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
@@ -98,11 +146,47 @@
             {
                 _form.Name = _party.Name;
                 _form.Date = _party.Date;
-                _form.Location = _party.Location;
+                _form.LocationId = _party.LocationId;
                 _infoForm.InfoBoard = _party.InfoBoard ?? "";
                 _displaySeats = [.. _party.Seats];
+                await LoadSeatPlanSourcesAsync();
             }
         }
+    }
+
+    private async Task LoadSeatPlanSourcesAsync()
+    {
+        if (_party is null || _displaySeats.Count > 0)
+        {
+            _seatPlanSources = [];
+            return;
+        }
+        _seatPlanSources = SeatPlanSources.Candidates(_party, await AdminService.GetAllPartiesAsync());
+        _copySourceId = SeatPlanSources.Default(_party, _seatPlanSources)?.Id;
+    }
+
+    // Only the selection changes: everything else typed into the party form stays as it is.
+    private async Task LocationCreatedAsync(Guid locationId)
+    {
+        _showLocationModal = false;
+        _locations = await LocationService.GetAllAsync();
+        _form.LocationId = locationId;
+    }
+
+    private async Task CopySeatsAsync()
+    {
+        if (_party is null || _copySourceId is not { } sourceId) return;
+        var userId = await CurrentUserIdAsync();
+        if (await RunAsync(() => AdminService.CopySeatsAsync(_party.Id, sourceId, userId)))
+            await ReloadSeatsAsync();
+    }
+
+    private async Task ReloadSeatsAsync()
+    {
+        if (Id is null) return;
+        _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
+        _displaySeats = [.. _party?.Seats ?? []];
+        await LoadSeatPlanSourcesAsync();
     }
 
     private async Task SaveInfoBoardAsync()
@@ -114,17 +198,17 @@
 
     private async Task SaveAsync()
     {
+        if (_form.LocationId is not { } locationId) return;   // [Required] already blocks the submit
         var userId = await CurrentUserIdAsync();
 
         if (Id is null)
         {
-            if (await RunAsync(() => AdminService.CreatePartyAsync(_form.Name, _form.Date, _form.Location, userId)) is { } party)
+            if (await RunAsync(() => AdminService.CreatePartyAsync(_form.Name, _form.Date, locationId, userId)) is { } party)
                 Nav.NavigateTo($"/admin/party/{party.Id}");
         }
-        else if (await RunAsync(() => AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, _form.Location, userId)))
+        else if (await RunAsync(() => AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, locationId, userId)))
         {
-            _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
-            _displaySeats = [.. _party?.Seats ?? []];
+            await ReloadSeatsAsync();
         }
     }
 
@@ -136,13 +220,20 @@
         {
             if (seat.AssignedUserId is not null) return;
             if (await RunAsync(async () => await AdminService.RemoveSeatAsync(seat.Id, await CurrentUserIdAsync())))
+            {
                 _displaySeats.RemoveAll(s => s.X == x && s.Y == y);
+                if (_displaySeats.Count == 0)
+                    await LoadSeatPlanSourcesAsync();
+            }
         }
         else
         {
             var userId = await CurrentUserIdAsync();
             if (await RunAsync(() => AdminService.AddSeatAsync(_party.Id, x, y, userId)) is { } newSeat)
+            {
                 _displaySeats.Add(newSeat);
+                _seatPlanSources = [];
+            }
         }
     }
 
@@ -159,7 +250,7 @@
         public string Name { get; set; } = "";
         public DateTime Date { get; set; } = DateTime.Today;
         [System.ComponentModel.DataAnnotations.Required]
-        public string Location { get; set; } = "";
+        public Guid? LocationId { get; set; }
     }
 
     private sealed class InfoBoardForm

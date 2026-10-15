@@ -42,7 +42,7 @@ public class ProfileService(
             .ToList();
 
         var pastParties = (await rsvps.GetAttendedPastPartiesAsync(userId, DateTime.UtcNow.Date, ct))
-            .Select(p => new PastPartyView(p.Id, p.Name, p.Date, p.Location))
+            .Select(p => new PastPartyView(p.Id, p.Name, p.Date, p.Location.Name))
             .ToList();
 
         var playedGames = (await sessions.GetByUserAsync(userId, ct))

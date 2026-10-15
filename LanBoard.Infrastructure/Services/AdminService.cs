@@ -9,6 +9,7 @@ namespace LanBoard.Infrastructure.Services;
 public class AdminService(
     ILanPartyRepository parties,
     ISeatRepository seats,
+    ILocationRepository locations,
     IAdminAuditLogRepository auditLog,
     IPermissionService permissions) : IAdminService
 {
@@ -17,16 +18,17 @@ public class AdminService(
     public Task<IReadOnlyList<LanParty>> GetAllPartiesAsync(CancellationToken ct = default)
         => parties.GetAllAsync(ct);
 
-    public async Task<LanParty> CreatePartyAsync(string name, DateTime date, string location, Guid createdByUserId, CancellationToken ct = default)
+    public async Task<LanParty> CreatePartyAsync(string name, DateTime date, Guid locationId, Guid createdByUserId, CancellationToken ct = default)
     {
         await permissions.EnsureAsync(createdByUserId, Permissions.PartyManage, ct);
+        await EnsureLocationExistsAsync(locationId, ct);
 
         var party = new LanParty
         {
             Id = Guid.NewGuid(),
             Name = name,
             Date = AsUtc(date),
-            Location = location,
+            LocationId = locationId,
             InviteCode = GenerateInviteCode(),
             CreatedByUserId = createdByUserId
         };
@@ -36,15 +38,16 @@ public class AdminService(
         return party;
     }
 
-    public async Task UpdatePartyAsync(Guid id, string name, DateTime date, string location, Guid performedByUserId, CancellationToken ct = default)
+    public async Task UpdatePartyAsync(Guid id, string name, DateTime date, Guid locationId, Guid performedByUserId, CancellationToken ct = default)
     {
         await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
 
         var party = await parties.GetByIdAsync(id, ct)
             ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
+        await EnsureLocationExistsAsync(locationId, ct);
         party.Name = name;
         party.Date = AsUtc(date);
-        party.Location = location;
+        party.LocationId = locationId;
         await parties.SaveChangesAsync(ct);
         await LogAsync(performedByUserId, AuditActions.PartyUpdated, $"Party \"{name}\" updated", ct);
     }
@@ -131,6 +134,38 @@ public class AdminService(
         await seats.SaveChangesAsync(ct);
     }
 
+    public async Task<int> CopySeatsAsync(Guid targetPartyId, Guid sourcePartyId, Guid performedByUserId, CancellationToken ct = default)
+    {
+        await permissions.EnsureAsync(performedByUserId, Permissions.PartyManage, ct);
+
+        var target = await parties.GetByIdAsync(targetPartyId, ct)
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
+        var source = await parties.GetByIdAsync(sourcePartyId, ct)
+            ?? throw new BusinessRuleException(ErrorCodes.PartyNotFound);
+        if ((await seats.GetByPartyAsync(targetPartyId, ct)).Count > 0)
+            throw new BusinessRuleException(ErrorCodes.SeatPlanNotEmpty);
+
+        var sourceSeats = await seats.GetByPartyAsync(sourcePartyId, ct);
+        if (sourceSeats.Count == 0)
+            return 0;   // also covers source == target, which is empty by the check above
+
+        foreach (var seat in sourceSeats)
+        {
+            await seats.AddAsync(new Seat
+            {
+                Id = Guid.NewGuid(),
+                PartyId = targetPartyId,
+                Label = seat.Label,
+                X = seat.X,
+                Y = seat.Y
+            }, ct);
+        }
+        await seats.SaveChangesAsync(ct);
+        await LogAsync(performedByUserId, AuditActions.PartySeatsCopied,
+            $"Seat plan of party \"{source.Name}\" ({sourceSeats.Count} seats) copied to party \"{target.Name}\"", ct);
+        return sourceSeats.Count;
+    }
+
     public async Task<IReadOnlyList<AdminAuditLogEntry>> GetRecentAuditLogAsync(Guid performedByUserId, int count = 50, CancellationToken ct = default)
     {
         await permissions.EnsureAsync(performedByUserId, Permissions.AuditView, ct);
@@ -148,6 +183,12 @@ public class AdminService(
             CreatedAt = DateTime.UtcNow
         }, ct);
         await auditLog.SaveChangesAsync(ct);
+    }
+
+    private async Task EnsureLocationExistsAsync(Guid locationId, CancellationToken ct)
+    {
+        if (await locations.GetByIdAsync(locationId, ct) is null)
+            throw new BusinessRuleException(ErrorCodes.LocationNotFound);
     }
 
     private static string GenerateInviteCode()

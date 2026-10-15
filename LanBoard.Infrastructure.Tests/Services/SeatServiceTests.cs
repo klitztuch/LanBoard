@@ -39,8 +39,8 @@ public class SeatServiceTests
     [Fact]
     public async Task GetActivePartyWithSeatsAsync_ActiveParty_ReturnsPartyWithSeats()
     {
-        var active = new LanParty { Id = PartyId, Name = "Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
-        var withSeats = new LanParty { Id = PartyId, Name = "Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        var active = new LanParty { Id = PartyId, Name = "Party", Location = new Location { Name = "Loc" }, CreatedByUserId = Guid.NewGuid() };
+        var withSeats = new LanParty { Id = PartyId, Name = "Party", Location = new Location { Name = "Loc" }, CreatedByUserId = Guid.NewGuid() };
         _parties.GetActiveAsync(Arg.Any<CancellationToken>()).Returns(active);
         _parties.GetWithSeatsAndSessionsAsync(PartyId, Arg.Any<CancellationToken>()).Returns(withSeats);
 
@@ -53,7 +53,7 @@ public class SeatServiceTests
     public async Task GetActivePartyWithSeatsAsync_ExplicitPartyId_BypassesActivePartyLookup()
     {
         var explicitPartyId = Guid.NewGuid();
-        var withSeats = new LanParty { Id = explicitPartyId, Name = "Other Party", Location = "Loc", CreatedByUserId = Guid.NewGuid() };
+        var withSeats = new LanParty { Id = explicitPartyId, Name = "Other Party", Location = new Location { Name = "Loc" }, CreatedByUserId = Guid.NewGuid() };
         _parties.GetWithSeatsAndSessionsAsync(explicitPartyId, Arg.Any<CancellationToken>()).Returns(withSeats);
 
         var result = await _sut.GetActivePartyWithSeatsAsync(explicitPartyId);

@@ -1,6 +1,7 @@
 using LanBoard.Application.Admin;
 using LanBoard.Application.Authorization;
 using LanBoard.Application.Interfaces;
+using LanBoard.Application.Locations;
 using LanBoard.Application.Notifications;
 using LanBoard.Application.Parties;
 using LanBoard.Application.Profiles;
@@ -32,6 +33,7 @@ public static class InfrastructureExtensions
 
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ILanPartyRepository, LanPartyRepository>();
+        builder.Services.AddScoped<ILocationRepository, LocationRepository>();
         builder.Services.AddScoped<ISeatRepository, SeatRepository>();
         builder.Services.AddScoped<ISessionRepository, SessionRepository>();
         builder.Services.AddScoped<IRsvpRepository, RsvpRepository>();
@@ -51,6 +53,7 @@ public static class InfrastructureExtensions
         builder.Services.AddScoped<ISeatService, SeatService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IPartyService, PartyService>();
+        builder.Services.AddScoped<ILocationService, LocationService>();
         builder.Services.AddScoped<ISessionService, SessionService>();
         builder.Services.AddScoped<IRsvpService, RsvpService>();
         builder.Services.AddScoped<ITournamentService, TournamentService>();

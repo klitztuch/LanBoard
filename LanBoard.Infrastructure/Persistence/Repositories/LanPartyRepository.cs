@@ -11,6 +11,7 @@ public class LanPartyRepository(AppDbContext db) : ILanPartyRepository
 
     public async Task<IReadOnlyList<LanParty>> GetAllAsync(CancellationToken ct = default)
         => await db.LanParties
+            .Include(p => p.Location)
             .Include(p => p.Seats)
             .OrderByDescending(p => p.Date)
             .ToListAsync(ct);
@@ -24,6 +25,7 @@ public class LanPartyRepository(AppDbContext db) : ILanPartyRepository
     public async Task<LanParty?> GetWithSeatsAndSessionsAsync(Guid id, CancellationToken ct = default)
         => await db.LanParties
             .AsNoTracking()
+            .Include(p => p.Location)
             .Include(p => p.Seats).ThenInclude(s => s.AssignedUser)
             .Include(p => p.Sessions)
             .FirstOrDefaultAsync(p => p.Id == id, ct);

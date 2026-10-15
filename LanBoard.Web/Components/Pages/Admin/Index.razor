@@ -17,6 +17,16 @@
                 <span class="text-gray-500">→</span>
             </a>
         </AuthorizeView>
+        <AuthorizeView Policy="@Permissions.PartyManage">
+            <a href="/admin/locations"
+               class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">
+                <div>
+                    <p class="text-white font-medium">@L["Admin.Locations.Title"]</p>
+                    <p class="text-sm text-gray-400">@L["Admin.Index.Locations"]</p>
+                </div>
+                <span class="text-gray-500">→</span>
+            </a>
+        </AuthorizeView>
         <AuthorizeView Policy="@Permissions.RolesManage">
             <a href="/admin/roles"
                class="flex items-center justify-between gap-4 bg-gray-800 hover:bg-gray-700 rounded-xl px-5 py-4 border border-gray-700 transition-colors">

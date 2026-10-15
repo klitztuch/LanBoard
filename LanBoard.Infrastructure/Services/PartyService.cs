@@ -9,7 +9,7 @@ public class PartyService(ILanPartyRepository parties) : IPartyService
     {
         var all = await parties.GetAllAsync(ct);
         return all
-            .Select(p => new PartySummary(p.Id, p.Name, p.Date, p.Location, p.IsActive))
+            .Select(p => new PartySummary(p.Id, p.Name, p.Date, p.Location.Name, p.IsActive))
             .ToList();
     }
 }
