@@ -24,8 +24,20 @@ jobs:
       - name: Restore
         run: dotnet restore LanBoard.slnx
 
+      - name: Restore tools
+        run: dotnet tool restore
+
       - name: Build
         run: dotnet build LanBoard.slnx --configuration Release --no-restore
+
+      # Uses the design-time AppDbContextFactory: no database or Steam API key needed.
+      - name: Check for pending EF model changes
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project LanBoard.Infrastructure
+          --startup-project LanBoard.Web
+          --configuration Release
+          --no-build
 
       - name: Test
         run: dotnet test LanBoard.slnx --configuration Release --no-build
