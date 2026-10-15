@@ -1,11 +1,12 @@
 @page "/tv"
 @layout LanBoard.Web.Components.Layout.TvLayout
 @rendermode InteractiveServer
-@implements IDisposable
+@implements IAsyncDisposable
 @inject ISeatService SeatService
 @inject IUserService UserService
 @inject ISessionService SessionService
 @inject ILanBoardNotifier Notifier
+@inject ILogger<Tv> Logger
 
 <PageTitle>LanBoard – TV</PageTitle>
 <HeadContent>
@@ -119,18 +120,13 @@ else
     private List<User> _attendees = [];
     private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
 
+    private LiveReload? _live;
+
     protected override async Task OnInitializedAsync()
     {
-        Notifier.OnChange += OnNotified;
-        _loading = true;
-        try
-        {
-            await LoadAsync();
-        }
-        finally
-        {
-            _loading = false;
-        }
+        _live = new LiveReload(Notifier, InvokeAsync, ReloadAsync, Logger);
+        if (RendererInfo.IsInteractive) _live.Start();
+        await _live.RunAsync(LoadAsync);
     }
 
     private async Task LoadAsync()
@@ -155,25 +151,10 @@ else
             .ThenBy(u => u.DisplayName)];
     }
 
-    private bool _loading;
-
-    private void OnNotified()
+    private async Task ReloadAsync()
     {
-        if (_disposed || _loading) return;
-        _ = InvokeAsync(async () =>
-        {
-            if (_disposed || _loading) return;
-            _loading = true;
-            try
-            {
-                await LoadAsync();
-                StateHasChanged();
-            }
-            finally
-            {
-                _loading = false;
-            }
-        });
+        await LoadAsync();
+        StateHasChanged();
     }
 
     private static string SeatClass(Seat seat)
@@ -181,11 +162,5 @@ else
             ? "bg-gray-800 border border-gray-700"
             : "bg-gray-900 border border-gray-700";
 
-    private volatile bool _disposed;
-
-    public void Dispose()
-    {
-        _disposed = true;
-        Notifier.OnChange -= OnNotified;
-    }
+    public ValueTask DisposeAsync() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
 }
