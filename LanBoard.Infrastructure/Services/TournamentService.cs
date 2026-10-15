@@ -101,15 +101,7 @@ public class TournamentService(
             }
         }
 
-        // A round-1 match with only one participant (an odd participant count doesn't fill the
-        // bracket evenly) is an automatic bye: that participant advances without playing.
-        foreach (var match in bracket.Values.Where(m => m.Round == 1))
-        {
-            if (match.Participant1Id is { } soleParticipant1 && match.Participant2Id is null)
-                AdvanceWinner(bracket, match, soleParticipant1, totalRounds);
-            else if (match.Participant2Id is { } soleParticipant2 && match.Participant1Id is null)
-                AdvanceWinner(bracket, match, soleParticipant2, totalRounds);
-        }
+        ResolveByes(bracket);
 
         tournament.IsStarted = true;
         await tournaments.SaveChangesAsync(ct);
@@ -128,31 +120,47 @@ public class TournamentService(
         if (match.Participant1Id != winnerParticipantId && match.Participant2Id != winnerParticipantId)
             throw new BusinessRuleException(ErrorCodes.MatchInvalidWinner);
 
-        match.WinnerId = winnerParticipantId;
-
-        var totalRounds = tournament.Matches.Max(m => m.Round);
-        if (match.Round < totalRounds)
-        {
-            var nextMatch = tournament.Matches.First(m => m.Round == match.Round + 1 && m.Slot == match.Slot / 2);
-            if (match.Slot % 2 == 0)
-                nextMatch.Participant1Id = winnerParticipantId;
-            else
-                nextMatch.Participant2Id = winnerParticipantId;
-        }
+        var bracket = tournament.Matches.ToDictionary(m => (m.Round, m.Slot));
+        AdvanceWinner(bracket, match, winnerParticipantId);
+        ResolveByes(bracket);
 
         await tournaments.SaveChangesAsync(ct);
     }
 
+    // A match whose feeders can never produce a participant is empty; a match with exactly one
+    // empty side is a bye that the other side wins without playing. Rounds are resolved in order
+    // so byes cascade: with bracketSize >= 8, whole round-1 matches can be empty (bye vs bye), and
+    // a reported winner can later face an empty branch. Re-running is idempotent.
+    private static void ResolveByes(IReadOnlyDictionary<(int Round, int Slot), TournamentMatch> bracket)
+    {
+        var empty = new HashSet<(int Round, int Slot)>();
+
+        foreach (var match in bracket.Values.OrderBy(m => m.Round))
+        {
+            var side1Empty = match.Round == 1
+                ? match.Participant1Id is null
+                : empty.Contains((match.Round - 1, match.Slot * 2));
+            var side2Empty = match.Round == 1
+                ? match.Participant2Id is null
+                : empty.Contains((match.Round - 1, match.Slot * 2 + 1));
+
+            if (side1Empty && side2Empty)
+                empty.Add((match.Round, match.Slot));
+            else if (side2Empty && match.Participant1Id is { } soleParticipant1)
+                AdvanceWinner(bracket, match, soleParticipant1);
+            else if (side1Empty && match.Participant2Id is { } soleParticipant2)
+                AdvanceWinner(bracket, match, soleParticipant2);
+        }
+    }
+
     private static void AdvanceWinner(
-        Dictionary<(int Round, int Slot), TournamentMatch> bracket,
+        IReadOnlyDictionary<(int Round, int Slot), TournamentMatch> bracket,
         TournamentMatch match,
-        Guid winnerId,
-        int totalRounds)
+        Guid winnerId)
     {
         match.WinnerId = winnerId;
-        if (match.Round >= totalRounds) return;
+        if (!bracket.TryGetValue((match.Round + 1, match.Slot / 2), out var nextMatch)) return;
 
-        var nextMatch = bracket[(match.Round + 1, match.Slot / 2)];
         if (match.Slot % 2 == 0)
             nextMatch.Participant1Id = winnerId;
         else
