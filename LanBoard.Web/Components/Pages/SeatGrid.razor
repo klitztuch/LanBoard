@@ -1,6 +1,6 @@
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@implements IDisposable
+@implements IAsyncDisposable
 @inject ISeatService SeatService
 @inject ISessionService SessionService
 @inject IRsvpService RsvpService
@@ -106,6 +106,7 @@ else
 
     private List<Seat>? _seats;
     private Guid? _userId;
+    private LiveReload? _live;
     private bool? _isAttending;
     private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
 
@@ -116,9 +117,9 @@ else
         if (claim is not null && Guid.TryParse(claim.Value, out var id))
             _userId = id;
 
-        Notifier.OnChange += OnNotified;
-        _loading = true;
-        try
+        _live = new LiveReload(Notifier, InvokeAsync, ReloadAsync, Logger);
+        if (RendererInfo.IsInteractive) _live.Start();
+        await _live.RunAsync(async () =>
         {
             if (_userId is { } userId)
             {
@@ -127,18 +128,17 @@ else
             }
 
             await LoadSeatsAsync();
-        }
-        finally
-        {
-            _loading = false;
-        }
+        });
     }
 
     private async Task SetRsvpAsync(bool attending)
     {
-        if (_userId is not { } userId) return;
-        await RsvpService.SetRsvpAsync(userId, PartyId, attending);
-        _isAttending = attending;
+        if (_userId is not { } userId || _live is null) return;
+        await _live.RunAsync(async () =>
+        {
+            await RsvpService.SetRsvpAsync(userId, PartyId, attending);
+            _isAttending = attending;
+        });
     }
 
     private string RsvpButtonClass(bool isYesButton)
@@ -156,39 +156,30 @@ else
         _sessionsByUser = await SessionService.GetActiveSessionsByPartyAsync(PartyId);
     }
 
-    private bool _loading;
-
-    private void OnNotified()
+    private async Task ReloadAsync()
     {
-        if (_disposed || _loading) return;
-        _ = InvokeAsync(async () =>
-        {
-            if (_disposed || _loading) return;
-            _loading = true;
-            try
-            {
-                await LoadSeatsAsync();
-                StateHasChanged();
-            }
-            finally
-            {
-                _loading = false;
-            }
-        });
+        await LoadSeatsAsync();
+        StateHasChanged();
     }
 
     private async Task ClaimSeat(Guid seatId)
     {
-        if (_userId is not { } userId) return;
-        if (await RunAsync(() => SeatService.ClaimSeatAsync(seatId, userId)) is null)
-            await LoadSeatsAsync(); // e.g. someone else claimed it first: show the current state
+        if (_userId is not { } userId || _live is null) return;
+        await _live.RunAsync(async () =>
+        {
+            if (await RunAsync(() => SeatService.ClaimSeatAsync(seatId, userId)) is null)
+                await LoadSeatsAsync(); // e.g. someone else claimed it first: show the current state
+        });
     }
 
     private async Task ReleaseSeat(Guid seatId)
     {
-        if (_userId is not { } userId) return;
-        if (!await RunAsync(() => SeatService.ReleaseSeatAsync(seatId, userId)))
-            await LoadSeatsAsync();
+        if (_userId is not { } userId || _live is null) return;
+        await _live.RunAsync(async () =>
+        {
+            if (!await RunAsync(() => SeatService.ReleaseSeatAsync(seatId, userId)))
+                await LoadSeatsAsync();
+        });
     }
 
     private string SeatClass(Seat seat)
@@ -200,11 +191,5 @@ else
         return "bg-gray-900 border border-gray-700 hover:border-gray-500 cursor-pointer";
     }
 
-    private volatile bool _disposed;
-
-    public void Dispose()
-    {
-        _disposed = true;
-        Notifier.OnChange -= OnNotified;
-    }
+    public ValueTask DisposeAsync() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
 }

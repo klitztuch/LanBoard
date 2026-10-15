@@ -2,7 +2,7 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@implements IDisposable
+@implements IAsyncDisposable
 @inject IUserService UserService
 @inject ISeatService SeatService
 @inject ISessionService SessionService
@@ -105,18 +105,13 @@
     private IReadOnlyDictionary<Guid, Session> _sessionsByUser = new Dictionary<Guid, Session>();
     private IReadOnlyDictionary<Guid, Rsvp> _rsvpByUser = new Dictionary<Guid, Rsvp>();
 
+    private LiveReload? _live;
+
     protected override async Task OnInitializedAsync()
     {
-        Notifier.OnChange += OnNotified;
-        _loading = true;
-        try
-        {
-            await LoadAsync();
-        }
-        finally
-        {
-            _loading = false;
-        }
+        _live = new LiveReload(Notifier, InvokeAsync, ReloadAsync, Logger);
+        if (RendererInfo.IsInteractive) _live.Start();
+        await _live.RunAsync(LoadAsync);
     }
 
     private async Task LoadAsync()
@@ -137,37 +132,10 @@
             : new Dictionary<Guid, Rsvp>();
     }
 
-    private bool _loading;
-
-    private void OnNotified()
+    private async Task ReloadAsync()
     {
-        if (_disposed || _loading) return;
-        _ = InvokeAsync(async () =>
-        {
-            if (_disposed || _loading) return;
-            _loading = true;
-            try
-            {
-                await LoadAsync();
-                StateHasChanged();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Blazor Server prerenders this page in a short-lived DI scope before the real
-                // interactive circuit takes over; the prerendered instance's OnChange
-                // subscription can still fire in the brief window before its own Dispose()
-                // runs, hitting an already-disposed AppDbContext. Harmless — that instance is
-                // being disposed anyway.
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Reloading attendees after a live update failed");
-            }
-            finally
-            {
-                _loading = false;
-            }
-        });
+        await LoadAsync();
+        StateHasChanged();
     }
 
     private static string? SteamUrl(User user)
@@ -176,11 +144,5 @@
         return identity is null ? null : $"https://steamcommunity.com/profiles/{identity.ProviderUserId}";
     }
 
-    private volatile bool _disposed;
-
-    public void Dispose()
-    {
-        _disposed = true;
-        Notifier.OnChange -= OnNotified;
-    }
+    public ValueTask DisposeAsync() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
 }

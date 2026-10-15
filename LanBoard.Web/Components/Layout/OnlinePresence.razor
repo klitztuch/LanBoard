@@ -9,6 +9,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Prerendered instances must not change presence: their OnChange would trigger reloads on DbContexts
+        // whose request scope is being disposed.
+        if (!RendererInfo.IsInteractive) return;
         var state = await Auth.GetAuthenticationStateAsync();
         if (state.User.GetUserId() is not { } id) return;
         _userId = id;
