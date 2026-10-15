@@ -35,6 +35,21 @@ public class TournamentServiceTests
     private static TournamentParticipant CreateParticipant(Guid tournamentId)
         => new() { Id = Guid.NewGuid(), TournamentId = tournamentId, UserId = Guid.NewGuid() };
 
+    private Tournament StartableTournament(int participantCount, out List<TournamentParticipant> participants)
+    {
+        var tournament = CreateTournament();
+        participants = Enumerable.Range(0, participantCount).Select(_ => CreateParticipant(tournament.Id)).ToList();
+        foreach (var p in participants)
+            tournament.Participants.Add(p);
+        _tournaments.GetWithDetailsAsync(tournament.Id, Arg.Any<CancellationToken>()).Returns(tournament);
+        _matches.When(m => m.AddAsync(Arg.Any<TournamentMatch>(), Arg.Any<CancellationToken>()))
+            .Do(call => tournament.Matches.Add(call.Arg<TournamentMatch>()));
+        return tournament;
+    }
+
+    private static TournamentMatch MatchAt(Tournament tournament, int round, int slot)
+        => tournament.Matches.Single(m => m.Round == round && m.Slot == slot);
+
     [Fact]
     public async Task CreateAsync_PersistsTournament()
     {
@@ -174,6 +189,52 @@ public class TournamentServiceTests
         var final = createdMatches.Single(m => m.Round == 2);
         Assert.Null(final.Participant1Id); // slot0 winner not decided yet
         Assert.Equal(p3.Id, final.Participant2Id); // bye winner already fed forward
+    }
+
+    [Fact]
+    public async Task StartAsync_FiveParticipants_ByeCascadesPastEmptyBranchIntoFinal()
+    {
+        var tournament = StartableTournament(5, out var participants);
+
+        await _sut.StartAsync(tournament.Id, AdminId);
+
+        // bracketSize=8: round-1 slot2 = p5 vs bye, slot3 = bye vs bye (empty branch)
+        var p5 = participants[4].Id;
+        var emptyMatch = MatchAt(tournament, 1, 3);
+        Assert.Null(emptyMatch.Participant1Id);
+        Assert.Null(emptyMatch.Participant2Id);
+        Assert.Null(emptyMatch.WinnerId);
+
+        var round2Bye = MatchAt(tournament, 2, 1);
+        Assert.Equal(p5, round2Bye.Participant1Id);
+        Assert.Null(round2Bye.Participant2Id);
+        Assert.Equal(p5, round2Bye.WinnerId);
+        Assert.Equal(p5, MatchAt(tournament, 3, 0).Participant2Id);
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(11)] // a reported winner faces an empty branch in round 3 and must advance on its own
+    public async Task SetMatchWinnerAsync_PlayingOutBracketWithByes_ProducesAChampion(int participantCount)
+    {
+        var tournament = StartableTournament(participantCount, out _);
+
+        await _sut.StartAsync(tournament.Id, AdminId);
+
+        // Each report decides one match, so a bracket can never need more reports than it has matches.
+        for (var reports = 0; reports <= tournament.Matches.Count; reports++)
+        {
+            if (tournament.Matches.FirstOrDefault(m => m is { Participant1Id: not null, Participant2Id: not null, WinnerId: null }) is not { } playable)
+                break;
+            await _sut.SetMatchWinnerAsync(tournament.Id, playable.Id, playable.Participant1Id!.Value, AdminId);
+        }
+
+        var final = Assert.Single(tournament.Matches, m => m.Round == tournament.Matches.Max(x => x.Round));
+        Assert.NotNull(final.WinnerId);
+        // No match is left stuck with a participant but without a winner.
+        Assert.DoesNotContain(tournament.Matches, m => (m.Participant1Id ?? m.Participant2Id) is not null && m.WinnerId is null);
     }
 
     [Fact]
