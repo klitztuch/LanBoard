@@ -19,13 +19,14 @@ public class PartyEditInfoBoardTests : BunitContext
     private readonly Guid _userId = Guid.NewGuid();
     private readonly LanParty _party = new()
     {
-        Id = Guid.NewGuid(), Name = "LAN #1", Location = "Garage", InfoBoard = "WLAN: lan2026", CreatedByUserId = Guid.NewGuid()
+        Id = Guid.NewGuid(), Name = "LAN #1", Location = new Location { Name = "Garage" }, InfoBoard = "WLAN: lan2026", CreatedByUserId = Guid.NewGuid()
     };
 
     public PartyEditInfoBoardTests()
     {
         TestLocalizer.UseCulture("en");
         Services.AddSingleton(_admin);
+        Services.AddSingleton(Substitute.For<LanBoard.Application.Locations.ILocationService>());
         Services.AddSingleton<IStringLocalizer<SharedResource>>(TestLocalizer.Create());
         AddAuthorization().SetAuthorized("Alice").SetClaims(new Claim(LanBoardClaims.UserId, _userId.ToString()));
         _admin.GetPartyWithSeatsAsync(_party.Id, Arg.Any<CancellationToken>()).Returns(_party);

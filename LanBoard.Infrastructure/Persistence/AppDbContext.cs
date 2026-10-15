@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<UserIdentity> UserIdentities => Set<UserIdentity>();
     public DbSet<LanParty> LanParties => Set<LanParty>();
+    public DbSet<Location> Locations => Set<Location>();
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Rsvp> Rsvps => Set<Rsvp>();

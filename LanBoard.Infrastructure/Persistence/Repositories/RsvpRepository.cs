@@ -17,10 +17,11 @@ public class RsvpRepository(AppDbContext db) : IRsvpRepository
 
     // The active party counts as running, so it's never "past" even if its date has passed.
     public async Task<IReadOnlyList<LanParty>> GetAttendedPastPartiesAsync(Guid userId, DateTime before, CancellationToken ct = default)
-        => await db.Rsvps
+        => await db.LanParties
             .AsNoTracking()
-            .Where(r => r.UserId == userId && r.IsAttending && !r.Party.IsActive && r.Party.Date < before)
-            .Select(r => r.Party)
+            .Include(p => p.Location)
+            .Where(p => !p.IsActive && p.Date < before
+                && db.Rsvps.Any(r => r.PartyId == p.Id && r.UserId == userId && r.IsAttending))
             .OrderByDescending(p => p.Date)
             .ToListAsync(ct);
 

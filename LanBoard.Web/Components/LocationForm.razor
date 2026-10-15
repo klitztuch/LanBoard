@@ -1,0 +1,113 @@
+@inherits ServicePageBase
+@inject ILocationService LocationService
+
+@* Shared by /admin/locations and the "new location" modal on the party form. *@
+<ErrorBanner Message="@Error" />
+
+<EditForm Model="_form" OnValidSubmit="SaveAsync" class="space-y-4">
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">@L["Location.Name"]</label>
+        <InputText @bind-Value="_form.Name" maxlength="200"
+                   class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+    </div>
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">@L["Location.Address"]</label>
+        <InputTextArea @bind-Value="_form.Address" rows="3" maxlength="4000"
+                       class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">@L["Location.Latitude"]</label>
+            <InputNumber @bind-Value="_form.Latitude" step="any" min="-90" max="90"
+                         class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">@L["Location.Longitude"]</label>
+            <InputNumber @bind-Value="_form.Longitude" step="any" min="-180" max="180"
+                         class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+    </div>
+    <p class="text-xs text-gray-500">@L["Location.CoordinatesHelp"]</p>
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">@L["Location.Directions"]</label>
+        <InputTextArea @bind-Value="_form.Directions" rows="3" maxlength="4000"
+                       class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+    </div>
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">@L["Location.Parking"]</label>
+        <InputTextArea @bind-Value="_form.Parking" rows="2" maxlength="4000"
+                       class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+    </div>
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">@L["Location.Notes"]</label>
+        <InputTextArea @bind-Value="_form.Notes" rows="4" maxlength="4000"
+                       class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500" />
+    </div>
+    <div class="flex gap-3">
+        <button type="submit"
+                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+            @(Location is null ? L["Common.Create"] : L["Common.Save"])
+        </button>
+        <button type="button" class="px-5 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+                @onclick="OnCancel">
+            @L["Common.Cancel"]
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    /// <summary>The location to edit; null creates a new one. Read once: give the component a @key to switch locations.</summary>
+    [Parameter] public Location? Location { get; set; }
+
+    /// <summary>Raised with the id of the created or updated location.</summary>
+    [Parameter] public EventCallback<Guid> OnSaved { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private LocationFormModel _form = new();
+
+    protected override void OnInitialized()
+    {
+        _form = Location is null
+            ? new LocationFormModel()
+            : new LocationFormModel
+            {
+                Name = Location.Name,
+                Address = Location.Address,
+                Latitude = Location.Latitude,
+                Longitude = Location.Longitude,
+                Directions = Location.Directions,
+                Parking = Location.Parking,
+                Notes = Location.Notes
+            };
+    }
+
+    private async Task SaveAsync()
+    {
+        var userId = await CurrentUserIdAsync();
+        var input = new LocationInput(_form.Name, _form.Address, _form.Latitude, _form.Longitude, _form.Directions, _form.Parking, _form.Notes);
+
+        if (Location is null)
+        {
+            if (await RunAsync(() => LocationService.CreateAsync(input, userId)) is { } created)
+                await OnSaved.InvokeAsync(created.Id);
+        }
+        else
+        {
+            var id = Location.Id;
+            if (await RunAsync(() => LocationService.UpdateAsync(id, input, userId)))
+                await OnSaved.InvokeAsync(id);
+        }
+    }
+
+    private sealed class LocationFormModel
+    {
+        public string Name { get; set; } = "";
+        public string? Address { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? Directions { get; set; }
+        public string? Parking { get; set; }
+        public string? Notes { get; set; }
+    }
+}

@@ -27,6 +27,9 @@
   <data name="Admin.Index.AuditLog" xml:space="preserve">
     <value>Protokoll durchgeführter Admin-Aktionen</value>
   </data>
+  <data name="Admin.Index.Locations" xml:space="preserve">
+    <value>Veranstaltungsorte, Adressen und Anfahrt verwalten</value>
+  </data>
   <data name="Admin.Index.Parties" xml:space="preserve">
     <value>Parties anlegen, bearbeiten und Sitzplätze verwalten</value>
   </data>
@@ -47,6 +50,18 @@
   </data>
   <data name="Admin.Index.Users" xml:space="preserve">
     <value>Rollen an Benutzer vergeben und entziehen</value>
+  </data>
+  <data name="Admin.Locations.Edit" xml:space="preserve">
+    <value>Ort bearbeiten</value>
+  </data>
+  <data name="Admin.Locations.New" xml:space="preserve">
+    <value>Neuer Ort</value>
+  </data>
+  <data name="Admin.Locations.None" xml:space="preserve">
+    <value>Noch keine Orte angelegt.</value>
+  </data>
+  <data name="Admin.Locations.Title" xml:space="preserve">
+    <value>Orte</value>
   </data>
   <data name="Admin.Parties.Active" xml:space="preserve">
     <value>Aktiv</value>
@@ -77,6 +92,18 @@
   </data>
   <data name="Admin.Parties.Title" xml:space="preserve">
     <value>LAN-Parties</value>
+  </data>
+  <data name="Admin.PartyEdit.ChooseLocation" xml:space="preserve">
+    <value>– Ort wählen –</value>
+  </data>
+  <data name="Admin.PartyEdit.ChooseParty" xml:space="preserve">
+    <value>– Party wählen –</value>
+  </data>
+  <data name="Admin.PartyEdit.CopySeatPlan" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="Admin.PartyEdit.CopySeatPlanFrom" xml:space="preserve">
+    <value>Sitzplan kopieren von</value>
   </data>
   <data name="Admin.PartyEdit.InfoBoard" xml:space="preserve">
     <value>Info-Board</value>
@@ -192,6 +219,15 @@
   <data name="Attendees.Title" xml:space="preserve">
     <value>Teilnehmer</value>
   </data>
+  <data name="Audit.LocationCreated" xml:space="preserve">
+    <value>Ort erstellt</value>
+  </data>
+  <data name="Audit.LocationDeleted" xml:space="preserve">
+    <value>Ort gelöscht</value>
+  </data>
+  <data name="Audit.LocationUpdated" xml:space="preserve">
+    <value>Ort bearbeitet</value>
+  </data>
   <data name="Audit.PartyActivated" xml:space="preserve">
     <value>Party aktiviert</value>
   </data>
@@ -203,6 +239,9 @@
   </data>
   <data name="Audit.PartyInfoBoardUpdated" xml:space="preserve">
     <value>Party-Info-Board bearbeitet</value>
+  </data>
+  <data name="Audit.PartySeatsCopied" xml:space="preserve">
+    <value>Sitzplan kopiert</value>
   </data>
   <data name="Audit.PartyUpdated" xml:space="preserve">
     <value>Party bearbeitet</value>
@@ -266,6 +305,24 @@
   </data>
   <data name="Error.Generic" xml:space="preserve">
     <value>Etwas ist schiefgelaufen. Bitte versuche es erneut.</value>
+  </data>
+  <data name="Error.Location.CoordinatesInvalid" xml:space="preserve">
+    <value>Breitengrad (−90 bis 90) und Längengrad (−180 bis 180) entweder beide oder gar nicht angeben.</value>
+  </data>
+  <data name="Error.Location.InUse" xml:space="preserve">
+    <value>Dieser Ort wird noch von Partys verwendet ({0}). Verschiebe sie zuerst an einen anderen Ort.</value>
+  </data>
+  <data name="Error.Location.NameInvalid" xml:space="preserve">
+    <value>Name muss 1–{0} Zeichen lang sein.</value>
+  </data>
+  <data name="Error.Location.NameTaken" xml:space="preserve">
+    <value>Ein Ort mit diesem Namen existiert bereits.</value>
+  </data>
+  <data name="Error.Location.NotFound" xml:space="preserve">
+    <value>Ort nicht gefunden.</value>
+  </data>
+  <data name="Error.Location.TextTooLong" xml:space="preserve">
+    <value>Texte dürfen höchstens {0} Zeichen lang sein.</value>
   </data>
   <data name="Error.Match.InvalidWinner" xml:space="preserve">
     <value>Der Gewinner muss ein Teilnehmer des Matches sein.</value>
@@ -372,6 +429,9 @@
   <data name="Error.Seat.NotFound" xml:space="preserve">
     <value>Platz nicht gefunden.</value>
   </data>
+  <data name="Error.Seat.PlanNotEmpty" xml:space="preserve">
+    <value>Ein Sitzplan kann nur in eine Party ohne Sitzplätze kopiert werden.</value>
+  </data>
   <data name="Error.Seat.Taken" xml:space="preserve">
     <value>Dieser Platz ist bereits belegt.</value>
   </data>
@@ -399,8 +459,38 @@
   <data name="Info.Empty" xml:space="preserve">
     <value>Für {0} wurden noch keine Infos hinterlegt.</value>
   </data>
+  <data name="Info.Location" xml:space="preserve">
+    <value>Veranstaltungsort</value>
+  </data>
+  <data name="Info.Location.Route" xml:space="preserve">
+    <value>Route in Google Maps</value>
+  </data>
   <data name="Info.Title" xml:space="preserve">
     <value>Info</value>
+  </data>
+  <data name="Location.Address" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="Location.CoordinatesHelp" xml:space="preserve">
+    <value>Optional. Wird statt der Adresse für den Routen-Link verwendet.</value>
+  </data>
+  <data name="Location.Directions" xml:space="preserve">
+    <value>Anfahrt</value>
+  </data>
+  <data name="Location.Latitude" xml:space="preserve">
+    <value>Breitengrad</value>
+  </data>
+  <data name="Location.Longitude" xml:space="preserve">
+    <value>Längengrad</value>
+  </data>
+  <data name="Location.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Location.Notes" xml:space="preserve">
+    <value>Hinweise</value>
+  </data>
+  <data name="Location.Parking" xml:space="preserve">
+    <value>Parken</value>
   </data>
   <data name="Nav.Admin" xml:space="preserve">
     <value>Admin</value>

@@ -211,7 +211,7 @@ public class ProfileServiceTests
     public async Task GetProfileAsync_PastParties_ComeFromRepositoryWithTodayAsCutoff()
     {
         var user = GivenUser();
-        var party = new LanParty { Id = Guid.NewGuid(), Name = "LAN 1", Location = "Hall", Date = new DateTime(2026, 1, 1) };
+        var party = new LanParty { Id = Guid.NewGuid(), Name = "LAN 1", Location = new Location { Name = "Hall" }, Date = new DateTime(2026, 1, 1) };
         _rsvps.GetAttendedPastPartiesAsync(user.Id, DateTime.UtcNow.Date, Arg.Any<CancellationToken>()).Returns([party]);
 
         var view = await _sut.GetProfileAsync(user.Id, Guid.NewGuid());
@@ -700,7 +700,7 @@ public class ProfileServiceTests
     [Fact]
     public async Task GetPartyOverviewAsync_AttendeesWithPublicAndOrgaColumnsOnly()
     {
-        var party = new LanParty { Id = Guid.NewGuid(), Name = "LAN", Location = "Hall" };
+        var party = new LanParty { Id = Guid.NewGuid(), Name = "LAN", Location = new Location { Name = "Hall" } };
         _parties.GetByIdAsync(party.Id, Arg.Any<CancellationToken>()).Returns(party);
         var discord = GivenField("discord", sortOrder: 1);
         var shirt = GivenField("shirt", visibility: FieldVisibility.Orga, sortOrder: 2);

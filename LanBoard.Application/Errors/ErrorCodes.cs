@@ -8,6 +8,13 @@ public static class ErrorCodes
     public const string SeatTaken = "Seat.Taken";
     public const string SeatNotAssignedToUser = "Seat.NotAssignedToUser";
     public const string SeatAssigned = "Seat.Assigned";
+    public const string SeatPlanNotEmpty = "Seat.PlanNotEmpty";
+    public const string LocationNotFound = "Location.NotFound";
+    public const string LocationNameInvalid = "Location.NameInvalid";                   // args: maxLength
+    public const string LocationNameTaken = "Location.NameTaken";
+    public const string LocationTextTooLong = "Location.TextTooLong";                   // args: maxLength
+    public const string LocationCoordinatesInvalid = "Location.CoordinatesInvalid";
+    public const string LocationInUse = "Location.InUse";                               // args: partyCount
     public const string TournamentNotFound = "Tournament.NotFound";
     public const string TournamentAlreadyStarted = "Tournament.AlreadyStarted";
     public const string TournamentTooFewParticipants = "Tournament.TooFewParticipants"; // args: min

@@ -74,10 +74,8 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -95,7 +93,50 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"IsActive\" = true");
 
+                    b.HasIndex("LocationId");
+
                     b.ToTable("LanParties");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.Location", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Directions")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Parking")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.ProfileFieldDefinition", b =>
@@ -554,7 +595,15 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("LanBoard.Core.Entities.Location", "Location")
+                        .WithMany("Parties")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.ProfileFieldValue", b =>
@@ -738,6 +787,11 @@ namespace LanBoard.Infrastructure.Persistence.Migrations
                     b.Navigation("Seats");
 
                     b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("LanBoard.Core.Entities.Location", b =>
+                {
+                    b.Navigation("Parties");
                 });
 
             modelBuilder.Entity("LanBoard.Core.Entities.Role", b =>

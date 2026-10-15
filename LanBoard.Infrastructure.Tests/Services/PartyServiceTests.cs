@@ -33,7 +33,7 @@ public class PartyServiceTests
             Id = Guid.NewGuid(),
             Name = "Summer LAN",
             Date = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc),
-            Location = "Basement",
+            Location = new Location { Name = "Basement" },
             InviteCode = "SECRET1",
             IsActive = true
         };
@@ -42,7 +42,7 @@ public class PartyServiceTests
             Id = Guid.NewGuid(),
             Name = "Winter LAN",
             Date = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc),
-            Location = "Garage",
+            Location = new Location { Name = "Garage" },
             InviteCode = "SECRET2",
             IsActive = false
         };

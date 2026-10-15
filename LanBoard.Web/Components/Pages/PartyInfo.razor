@@ -19,6 +19,30 @@
     {
         <div class="bg-gray-800 rounded-xl p-5 border border-gray-700 text-gray-200 text-sm whitespace-pre-wrap">@_party.InfoBoard</div>
     }
+
+    @if (_party?.Location is { } location)
+    {
+        <section id="location" class="mt-8 bg-gray-800 rounded-xl p-5 border border-gray-700 text-sm">
+            <h2 class="text-lg font-semibold text-white mb-1">@L["Info.Location"]</h2>
+            <p class="text-white font-medium">@location.Name</p>
+            @if (location.Address is { } address)
+            {
+                <p class="text-gray-300 whitespace-pre-wrap mt-1">@address</p>
+            }
+            @if (MapsLinks.Directions(location) is { } directionsUrl)
+            {
+                <a href="@directionsUrl" target="_blank" rel="noopener noreferrer"
+                   class="inline-block mt-3 text-blue-400 hover:text-blue-300 transition-colors">
+                    @L["Info.Location.Route"] ↗
+                </a>
+            }
+            @foreach (var (heading, text) in Details(location))
+            {
+                <h3 class="text-gray-400 font-medium mt-4 mb-1">@heading</h3>
+                <div class="text-gray-200 whitespace-pre-wrap">@text</div>
+            }
+        </section>
+    }
 </div>
 
 @code {
@@ -29,5 +53,12 @@
     protected override async Task OnInitializedAsync()
     {
         _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+    }
+
+    private IEnumerable<(string Heading, string Text)> Details(Location location)
+    {
+        if (location.Directions is { } directions) yield return (L["Location.Directions"], directions);
+        if (location.Parking is { } parking) yield return (L["Location.Parking"], parking);
+        if (location.Notes is { } notes) yield return (L["Location.Notes"], notes);
     }
 }
