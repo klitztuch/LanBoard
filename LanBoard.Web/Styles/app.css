@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @plugin "flowbite/plugin";
 
+/* Busy and otherwise disabled actions (ServicePageBase.IsBusy); per-button disabled: utilities still win. */
+@layer base {
+    button:disabled,
+    input[type="submit"]:disabled {
+        @apply opacity-50 cursor-not-allowed;
+    }
+}
+
 .blazor-error-boundary {
     @apply bg-red-700 text-white p-4 rounded;
 }

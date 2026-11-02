@@ -48,7 +48,7 @@
                                 @if (CanManage(role))
                                 {
                                     <button class="text-gray-500 hover:text-red-400 transition-colors" title="@L["Admin.Users.RemoveRole"]" aria-label="@L["Admin.Users.RemoveRole"]"
-                                            @onclick="() => UnassignAsync(user.UserId, role.Id)">
+                                            @onclick="() => UnassignAsync(user.UserId, role.Id)" disabled="@IsBusy">
                                         ×
                                     </button>
                                 }
@@ -59,7 +59,7 @@
                     @if (assignable.Count > 0)
                     {
                         <select @key="_selectVersion" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 text-xs focus:outline-none focus:border-blue-500"
-                                @onchange="e => AssignAsync(user.UserId, e.Value as string)">
+                                @onchange="e => AssignAsync(user.UserId, e.Value as string)" disabled="@IsBusy">
                             <option value="" selected>+ @L["Admin.Users.AddRole"]</option>
                             @foreach (var role in assignable)
                             {

@@ -3,9 +3,9 @@ using LanBoard.Application.Notifications;
 namespace LanBoard.Web.Components;
 
 /// <summary>
-/// Owns a component's live-update subscription and all of its DB work, so the work is serialised and
-/// awaited on dispose: the circuit's DI scope (and its <c>DbContext</c>) is then never disposed while a
-/// query is still running. Notifications that arrive during work coalesce into one reload afterwards.
+/// Owns a component's live-update subscription and orders its loads and live reloads: they run one after
+/// another, so results are applied in the order the work was started, and no reload starts after dispose.
+/// Notifications that arrive during work coalesce into one reload afterwards.
 /// All members except the <see cref="ILanBoardNotifier.OnChange"/> handler run on the Blazor dispatcher.
 /// </summary>
 public sealed class LiveReload(
