@@ -23,7 +23,7 @@ riderModule.iml
 # Docker Compose Overrides
 docker-compose.override.yml
 
-# Secrets & Umgebungsvariablen
+# Secrets & environment variables
 appsettings.local.json
 appsettings.*.local.json
 secrets.json
@@ -37,6 +37,9 @@ secrets.json
 node_modules/
 LanBoard.Web/wwwroot/app.css
 
-# Betriebssystem
+# Operating system
 .DS_Store
 Thumbs.db
+
+# Claude Code (personal settings)
+.claude/settings.local.json
