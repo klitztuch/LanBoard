@@ -1,6 +1,5 @@
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@implements IAsyncDisposable
 @inject ISeatService SeatService
 @inject ISessionService SessionService
 @inject IRsvpService RsvpService
@@ -191,5 +190,5 @@ else
         return "bg-gray-900 border border-gray-700 hover:border-gray-500 cursor-pointer";
     }
 
-    public ValueTask DisposeAsync() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
+    protected override ValueTask DisposeAsyncCore() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
 }

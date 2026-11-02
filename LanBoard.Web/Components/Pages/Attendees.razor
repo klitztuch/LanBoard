@@ -2,7 +2,6 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@implements IAsyncDisposable
 @inject IUserService UserService
 @inject ISeatService SeatService
 @inject ISessionService SessionService
@@ -144,5 +143,5 @@
         return identity is null ? null : $"https://steamcommunity.com/profiles/{identity.ProviderUserId}";
     }
 
-    public ValueTask DisposeAsync() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
+    protected override ValueTask DisposeAsyncCore() => _live?.DisposeAsync() ?? ValueTask.CompletedTask;
 }

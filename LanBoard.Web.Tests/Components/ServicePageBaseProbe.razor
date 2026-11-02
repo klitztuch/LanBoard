@@ -1,0 +1,65 @@
+@using LanBoard.Application.Errors
+@using Microsoft.AspNetCore.Components.Web
+@using LanBoard.Web.Components
+@inherits ServicePageBase
+
+@{ RenderedBusy.Add(IsBusy); }
+<p id="error">@Error</p>
+<button id="slow" @onclick="SlowAsync">slow</button>
+<button id="sync" @onclick="() => SyncClicks++">sync</button>
+<button id="throw" @onclick="ThrowAsync">throw</button>
+<button id="domain" @onclick="DomainAsync">domain</button>
+@if (OnSaved.HasDelegate)
+{
+    <button id="save" @onclick="SaveAsync">save</button>
+}
+@if (WithChild)
+{
+    <ServicePageBaseProbe OnSaved="ParentSavedAsync" />
+}
+
+@code {
+    [Parameter] public Func<Task>? OnInit { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public bool WithChild { get; set; }
+
+    public bool Busy => IsBusy;
+    public string? ErrorMessage => Error;
+    public List<bool> RenderedBusy { get; } = [];
+    public List<string> Calls { get; } = [];
+    public Queue<TaskCompletionSource> Gates { get; } = new();
+    public int SyncClicks { get; private set; }
+    public bool ParentSaved { get; private set; }
+    public bool SaveCompleted { get; private set; }
+
+    protected override Task OnInitializedAsync() => OnInit?.Invoke() ?? Task.CompletedTask;
+
+    private async Task SlowAsync()
+    {
+        var n = Calls.Count(c => c.StartsWith("start")) + 1;
+        Calls.Add($"start {n}");
+        await Gates.Dequeue().Task;
+        Calls.Add($"end {n}");
+    }
+
+    private async Task ThrowAsync()
+    {
+        await Task.Yield();
+        throw new InvalidOperationException("boom");
+    }
+
+    private Task DomainAsync() => RunAsync(() => throw new BusinessRuleException(ErrorCodes.PartyNotFound));
+
+    private async Task SaveAsync()
+    {
+        await Task.Yield();
+        await OnSaved.InvokeAsync();
+        SaveCompleted = true;
+    }
+
+    private async Task ParentSavedAsync()
+    {
+        await Task.Yield();
+        ParentSaved = true;
+    }
+}
