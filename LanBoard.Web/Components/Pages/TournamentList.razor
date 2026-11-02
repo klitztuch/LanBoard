@@ -2,8 +2,8 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject ISeatService SeatService
-@inject ITournamentService TournamentService
+@inject PerCall<ISeatService> SeatService
+@inject PerCall<ITournamentService> TournamentService
 @inject NavigationManager Nav
 
 <PageTitle>@L["Tournaments.Title"]</PageTitle>
@@ -68,16 +68,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        _party = await SeatService.Run(s => s.GetActivePartyWithSeatsAsync(PartyId));
         if (_party is not null)
-            _tournaments = await TournamentService.GetByPartyAsync(_party.Id);
+            _tournaments = await TournamentService.Run(s => s.GetByPartyAsync(_party.Id));
     }
 
     private async Task CreateAsync()
     {
         if (_party is null) return;
         var userId = await CurrentUserIdAsync();
-        if (await RunAsync(() => TournamentService.CreateAsync(_party.Id, _form.Name, userId)) is { } tournament)
+        if (await RunAsync(() => TournamentService.Run(s => s.CreateAsync(_party.Id, _form.Name, userId))) is { } tournament)
             Nav.NavigateTo($"/tournaments/{tournament.Id}");
     }
 

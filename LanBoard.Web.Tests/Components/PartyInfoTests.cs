@@ -2,6 +2,7 @@ using Bunit;
 using LanBoard.Application.Seats;
 using LanBoard.Core.Entities;
 using LanBoard.Web.Components.Pages;
+using LanBoard.Web.Services;
 using LanBoard.Web.Tests.Localization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public class PartyInfoTests : BunitContext
         TestLocalizer.UseCulture("en");
         Services.AddSingleton(_seats);
         Services.AddSingleton<IStringLocalizer<SharedResource>>(TestLocalizer.Create());
+        Services.AddTransient(typeof(PerCall<>));
     }
 
     [Fact]

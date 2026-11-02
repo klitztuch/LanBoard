@@ -3,8 +3,8 @@
 @attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject IAdminService AdminService
-@inject ILocationService LocationService
+@inject PerCall<IAdminService> AdminService
+@inject PerCall<ILocationService> LocationService
 @inject NavigationManager Nav
 
 <PageTitle>@(_party is null ? L["Admin.Parties.New"] : _party.Name) – @L["Nav.Admin"]</PageTitle>
@@ -138,10 +138,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _locations = await LocationService.GetAllAsync();
+        _locations = await LocationService.Run(s => s.GetAllAsync());
         if (Id is not null)
         {
-            _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
+            _party = await AdminService.Run(s => s.GetPartyWithSeatsAsync(Id.Value));
             if (_party is not null)
             {
                 _form.Name = _party.Name;
@@ -161,7 +161,7 @@
             _seatPlanSources = [];
             return;
         }
-        _seatPlanSources = SeatPlanSources.Candidates(_party, await AdminService.GetAllPartiesAsync());
+        _seatPlanSources = SeatPlanSources.Candidates(_party, await AdminService.Run(s => s.GetAllPartiesAsync()));
         _copySourceId = SeatPlanSources.Default(_party, _seatPlanSources)?.Id;
     }
 
@@ -169,7 +169,7 @@
     private async Task LocationCreatedAsync(Guid locationId)
     {
         _showLocationModal = false;
-        _locations = await LocationService.GetAllAsync();
+        _locations = await LocationService.Run(s => s.GetAllAsync());
         _form.LocationId = locationId;
     }
 
@@ -177,14 +177,14 @@
     {
         if (_party is null || _copySourceId is not { } sourceId) return;
         var userId = await CurrentUserIdAsync();
-        if (await RunAsync(() => AdminService.CopySeatsAsync(_party.Id, sourceId, userId)))
+        if (await RunAsync(() => AdminService.Run(s => s.CopySeatsAsync(_party.Id, sourceId, userId))))
             await ReloadSeatsAsync();
     }
 
     private async Task ReloadSeatsAsync()
     {
         if (Id is null) return;
-        _party = await AdminService.GetPartyWithSeatsAsync(Id.Value);
+        _party = await AdminService.Run(s => s.GetPartyWithSeatsAsync(Id.Value));
         _displaySeats = [.. _party?.Seats ?? []];
         await LoadSeatPlanSourcesAsync();
     }
@@ -193,7 +193,7 @@
     {
         if (Id is null) return;
         var userId = await CurrentUserIdAsync();
-        await RunAsync(() => AdminService.UpdateInfoBoardAsync(Id.Value, _infoForm.InfoBoard, userId));
+        await RunAsync(() => AdminService.Run(s => s.UpdateInfoBoardAsync(Id.Value, _infoForm.InfoBoard, userId)));
     }
 
     private async Task SaveAsync()
@@ -203,10 +203,10 @@
 
         if (Id is null)
         {
-            if (await RunAsync(() => AdminService.CreatePartyAsync(_form.Name, _form.Date, locationId, userId)) is { } party)
+            if (await RunAsync(() => AdminService.Run(s => s.CreatePartyAsync(_form.Name, _form.Date, locationId, userId))) is { } party)
                 Nav.NavigateTo($"/admin/party/{party.Id}");
         }
-        else if (await RunAsync(() => AdminService.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, locationId, userId)))
+        else if (await RunAsync(() => AdminService.Run(s => s.UpdatePartyAsync(Id.Value, _form.Name, _form.Date, locationId, userId))))
         {
             await ReloadSeatsAsync();
         }
@@ -219,7 +219,8 @@
         if (seat is not null)
         {
             if (seat.AssignedUserId is not null) return;
-            if (await RunAsync(async () => await AdminService.RemoveSeatAsync(seat.Id, await CurrentUserIdAsync())))
+            var userId = await CurrentUserIdAsync();
+            if (await RunAsync(() => AdminService.Run(s => s.RemoveSeatAsync(seat.Id, userId))))
             {
                 _displaySeats.RemoveAll(s => s.X == x && s.Y == y);
                 if (_displaySeats.Count == 0)
@@ -229,7 +230,7 @@
         else
         {
             var userId = await CurrentUserIdAsync();
-            if (await RunAsync(() => AdminService.AddSeatAsync(_party.Id, x, y, userId)) is { } newSeat)
+            if (await RunAsync(() => AdminService.Run(s => s.AddSeatAsync(_party.Id, x, y, userId))) is { } newSeat)
             {
                 _displaySeats.Add(newSeat);
                 _seatPlanSources = [];

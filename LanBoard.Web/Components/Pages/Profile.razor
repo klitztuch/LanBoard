@@ -3,7 +3,7 @@
 @inherits ServicePageBase
 @using LanBoard.Web.Extensions
 @using Microsoft.Extensions.Options
-@inject IProfileService ProfileService
+@inject PerCall<IProfileService> ProfileService
 @inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
 
 <PageTitle>@(_profile?.DisplayName ?? L["Profile.Title"])</PageTitle>
@@ -147,7 +147,7 @@
         _profile = null;
         _notFound = false;
         var viewerId = await CurrentUserIdAsync();
-        _profile = await RunAsync(() => ProfileService.GetProfileAsync(Id, viewerId));
+        _profile = await RunAsync(() => ProfileService.Run(s => s.GetProfileAsync(Id, viewerId)));
         // The only business rule GetProfileAsync can violate is an unknown user id.
         _notFound = _profile is null && Error is not null;
     }

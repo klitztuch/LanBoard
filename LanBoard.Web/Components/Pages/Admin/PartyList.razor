@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject IAdminService AdminService
+@inject PerCall<IAdminService> AdminService
 
 <PageTitle>@L["Admin.Parties.Title"] – @L["Nav.Admin"]</PageTitle>
 
@@ -106,22 +106,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await AdminService.GetAllPartiesAsync();
+        var result = await AdminService.Run(s => s.GetAllPartiesAsync());
         _parties = result.ToList();
     }
 
     private async Task DeleteParty(Guid id)
     {
         _confirmDeleteId = null;
-        if (await RunAsync(async () => await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync())))
+        var userId = await CurrentUserIdAsync();
+        if (await RunAsync(() => AdminService.Run(s => s.DeletePartyAsync(id, userId))))
             _parties?.RemoveAll(p => p.Id == id);
     }
 
     private async Task SetActive(Guid id)
     {
-        if (!await RunAsync(async () => await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync())))
+        var userId = await CurrentUserIdAsync();
+        if (!await RunAsync(() => AdminService.Run(s => s.SetActivePartyAsync(id, userId))))
             return;
-        var result = await AdminService.GetAllPartiesAsync();
+        var result = await AdminService.Run(s => s.GetAllPartiesAsync());
         _parties = result.ToList();
     }
 }

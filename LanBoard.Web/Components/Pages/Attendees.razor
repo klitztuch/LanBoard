@@ -2,10 +2,10 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject IUserService UserService
-@inject ISeatService SeatService
-@inject ISessionService SessionService
-@inject IRsvpService RsvpService
+@inject PerCall<IUserService> UserService
+@inject PerCall<ISeatService> SeatService
+@inject PerCall<ISessionService> SessionService
+@inject PerCall<IRsvpService> RsvpService
 @inject ILanBoardNotifier Notifier
 
 <PageTitle>@L["Attendees.Title"]</PageTitle>
@@ -115,8 +115,8 @@
 
     private async Task LoadAsync()
     {
-        _users = await UserService.GetAllWithIdentitiesAsync();
-        var party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        _users = await UserService.Run(s => s.GetAllWithIdentitiesAsync());
+        var party = await SeatService.Run(s => s.GetActivePartyWithSeatsAsync(PartyId));
         _seatByUser = [];
         foreach (var seat in party?.Seats ?? [])
         {
@@ -124,10 +124,10 @@
                 _seatByUser[userId] = seat;
         }
         _sessionsByUser = party is not null
-            ? await SessionService.GetActiveSessionsByPartyAsync(party.Id)
+            ? await SessionService.Run(s => s.GetActiveSessionsByPartyAsync(party.Id))
             : new Dictionary<Guid, Session>();
         _rsvpByUser = party is not null
-            ? await RsvpService.GetRsvpsByPartyAsync(party.Id)
+            ? await RsvpService.Run(s => s.GetRsvpsByPartyAsync(party.Id))
             : new Dictionary<Guid, Rsvp>();
     }
 

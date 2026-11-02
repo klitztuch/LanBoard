@@ -1,8 +1,8 @@
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject ISeatService SeatService
-@inject ISessionService SessionService
-@inject IRsvpService RsvpService
+@inject PerCall<ISeatService> SeatService
+@inject PerCall<ISessionService> SessionService
+@inject PerCall<IRsvpService> RsvpService
 @inject ILanBoardNotifier Notifier
 @inject AuthenticationStateProvider Auth
 
@@ -122,7 +122,7 @@ else
         {
             if (_userId is { } userId)
             {
-                var rsvp = await RsvpService.GetMyRsvpAsync(userId, PartyId);
+                var rsvp = await RsvpService.Run(s => s.GetMyRsvpAsync(userId, PartyId));
                 _isAttending = rsvp?.IsAttending;
             }
 
@@ -135,7 +135,7 @@ else
         if (_userId is not { } userId || _live is null) return;
         await _live.RunAsync(async () =>
         {
-            await RsvpService.SetRsvpAsync(userId, PartyId, attending);
+            await RsvpService.Run(s => s.SetRsvpAsync(userId, PartyId, attending));
             _isAttending = attending;
         });
     }
@@ -150,9 +150,9 @@ else
 
     private async Task LoadSeatsAsync()
     {
-        var result = await SeatService.GetSeatsByPartyAsync(PartyId);
+        var result = await SeatService.Run(s => s.GetSeatsByPartyAsync(PartyId));
         _seats = result.ToList();
-        _sessionsByUser = await SessionService.GetActiveSessionsByPartyAsync(PartyId);
+        _sessionsByUser = await SessionService.Run(s => s.GetActiveSessionsByPartyAsync(PartyId));
     }
 
     private async Task ReloadAsync()
@@ -166,7 +166,7 @@ else
         if (_userId is not { } userId || _live is null) return;
         await _live.RunAsync(async () =>
         {
-            if (await RunAsync(() => SeatService.ClaimSeatAsync(seatId, userId)) is null)
+            if (await RunAsync(() => SeatService.Run(s => s.ClaimSeatAsync(seatId, userId))) is null)
                 await LoadSeatsAsync(); // e.g. someone else claimed it first: show the current state
         });
     }
@@ -176,7 +176,7 @@ else
         if (_userId is not { } userId || _live is null) return;
         await _live.RunAsync(async () =>
         {
-            if (!await RunAsync(() => SeatService.ReleaseSeatAsync(seatId, userId)))
+            if (!await RunAsync(() => SeatService.Run(s => s.ReleaseSeatAsync(seatId, userId))))
                 await LoadSeatsAsync();
         });
     }

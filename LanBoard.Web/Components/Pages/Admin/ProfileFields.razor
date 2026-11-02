@@ -4,7 +4,7 @@
 @inherits ServicePageBase
 @using LanBoard.Web.Extensions
 @using Microsoft.Extensions.Options
-@inject IProfileFieldService ProfileFieldService
+@inject PerCall<IProfileFieldService> ProfileFieldService
 @inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
 
 <PageTitle>@L["Admin.ProfileFields.Title"] – @L["Nav.Admin"]</PageTitle>
@@ -209,7 +209,7 @@
 
     private async Task LoadAsync()
     {
-        _fields = await ProfileFieldService.GetAllAsync();
+        _fields = await ProfileFieldService.Run(s => s.GetAllAsync());
     }
 
     private void StartCreate()
@@ -238,8 +238,8 @@
         var userId = await CurrentUserIdAsync();
 
         var saved = await RunAsync(() => form.FieldId is { } fieldId
-            ? ProfileFieldService.UpdateAsync(fieldId, form.ToInput(), userId)
-            : ProfileFieldService.CreateAsync(form.ToInput(), form.Key, userId));
+            ? ProfileFieldService.Run(s => s.UpdateAsync(fieldId, form.ToInput(), userId))
+            : ProfileFieldService.Run(s => s.CreateAsync(form.ToInput(), form.Key, userId)));
         if (saved)
             _editing = null;
         // Reload also on failure: ProfileField.NotFound means someone else deleted the field meanwhile.
@@ -250,7 +250,7 @@
     {
         _confirmDeleteId = null;
         var userId = await CurrentUserIdAsync();
-        await RunAsync(() => ProfileFieldService.DeleteAsync(fieldId, userId));
+        await RunAsync(() => ProfileFieldService.Run(s => s.DeleteAsync(fieldId, userId)));
         await LoadAsync();
     }
 

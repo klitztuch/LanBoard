@@ -2,8 +2,8 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject ITournamentService TournamentService
-@inject IUserService UserService
+@inject PerCall<ITournamentService> TournamentService
+@inject PerCall<IUserService> UserService
 @inject AuthenticationStateProvider Auth
 @inject IAuthorizationService AuthorizationService
 
@@ -118,13 +118,13 @@ else
     {
         var state = await Auth.GetAuthenticationStateAsync();
         _canManage = (await AuthorizationService.AuthorizeAsync(state.User, Permissions.TournamentManage)).Succeeded;
-        _allUsers = await UserService.GetAllWithIdentitiesAsync();
+        _allUsers = await UserService.Run(s => s.GetAllWithIdentitiesAsync());
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
-        _tournament = await TournamentService.GetWithDetailsAsync(Id);
+        _tournament = await TournamentService.Run(s => s.GetWithDetailsAsync(Id));
         _roundsOrdered = _tournament?.Matches
             .GroupBy(m => m.Round)
             .OrderBy(g => g.Key)
@@ -135,20 +135,22 @@ else
     {
         var performedByUserId = await CurrentUserIdAsync();
         await RunAsync(() => add
-            ? TournamentService.AddParticipantAsync(Id, userId, performedByUserId)
-            : TournamentService.RemoveParticipantAsync(Id, userId, performedByUserId));
+            ? TournamentService.Run(s => s.AddParticipantAsync(Id, userId, performedByUserId))
+            : TournamentService.Run(s => s.RemoveParticipantAsync(Id, userId, performedByUserId)));
         await LoadAsync();
     }
 
     private async Task StartAsync()
     {
-        await RunAsync(async () => await TournamentService.StartAsync(Id, await CurrentUserIdAsync()));
+        var userId = await CurrentUserIdAsync();
+        await RunAsync(() => TournamentService.Run(s => s.StartAsync(Id, userId)));
         await LoadAsync();
     }
 
     private async Task SetWinnerAsync(Guid matchId, Guid winnerParticipantId)
     {
-        await RunAsync(async () => await TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId, await CurrentUserIdAsync()));
+        var userId = await CurrentUserIdAsync();
+        await RunAsync(() => TournamentService.Run(s => s.SetMatchWinnerAsync(Id, matchId, winnerParticipantId, userId)));
         await LoadAsync();
     }
 
