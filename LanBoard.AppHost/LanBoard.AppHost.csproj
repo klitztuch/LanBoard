@@ -1,6 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-    <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.1" />
+<Project Sdk="Aspire.AppHost.Sdk/13.6.4">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -8,6 +6,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>da741c02-196f-4033-a267-c9f04bf12a45</UserSecretsId>
+        <!-- DCP and dashboard come from NuGet, so CI builds without an installed Aspire CLI. -->
+        <AspireUseCliBundle>false</AspireUseCliBundle>
+        <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
