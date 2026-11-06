@@ -1,0 +1,64 @@
+# Production stack behind an existing Traefik. Values come from .env next to this file (see .env.example).
+name: lanboard
+
+x-connection-string: &connection-string
+  ConnectionStrings__postgres: Host=postgres;Database=${POSTGRES_DB:-lanboard};Username=${POSTGRES_USER:-lanboard};Password=${POSTGRES_PASSWORD:?}
+
+services:
+  postgres:
+    image: postgres:18.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lanboard}
+      POSTGRES_USER: ${POSTGRES_USER:-lanboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    image: ghcr.io/klitztuch/lanboard-migrate:${LANBOARD_TAG:-latest}
+    environment:
+      <<: *connection-string
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: ghcr.io/klitztuch/lanboard-web:${LANBOARD_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      <<: *connection-string
+      Steam__ApiKey: ${STEAM_API_KEY:?}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # The image has no curl; Kestrel only listens once startup (incl. options validation) has succeeded.
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    networks:
+      - default
+      - traefik
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:?}
+      traefik.http.routers.lanboard.rule: Host(`${LANBOARD_HOST:?}`)
+      traefik.http.routers.lanboard.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.lanboard.tls.certresolver: ${TRAEFIK_CERTRESOLVER:?}
+      traefik.http.services.lanboard.loadbalancer.server.port: "8080"
+
+volumes:
+  postgres-data:
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:?}

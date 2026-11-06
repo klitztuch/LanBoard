@@ -1,0 +1,110 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  WEB_IMAGE: ghcr.io/klitztuch/lanboard-web
+  MIGRATE_IMAGE: ghcr.io/klitztuch/lanboard-migrate
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: LanBoard.Web/package-lock.json
+
+      - id: tag
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore
+        run: dotnet restore LanBoard.slnx
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Publish web image
+        run: >
+          dotnet publish LanBoard.Web/LanBoard.Web.csproj
+          --configuration Release
+          /t:PublishContainer
+          -p:ContainerRegistry=ghcr.io
+          -p:ContainerRepository=klitztuch/lanboard-web
+          -p:ContainerImageTags='"latest;${{ steps.tag.outputs.tag }}"'
+
+      - name: Build migration bundle
+        run: >
+          dotnet ef migrations bundle
+          --project LanBoard.Infrastructure
+          --startup-project LanBoard.Web
+          --configuration Release
+          --self-contained -r linux-x64
+          --output deploy/efbundle
+          --force
+
+      - name: Publish migrate image
+        run: |
+          docker build -f deploy/migrate.Dockerfile \
+            -t "$MIGRATE_IMAGE:latest" -t "$MIGRATE_IMAGE:${{ steps.tag.outputs.tag }}" deploy
+          docker push --all-tags "$MIGRATE_IMAGE"
+
+  deploy:
+    needs: images
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'lanboard' }}
+      TAG: ${{ needs.images.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf 'Host *\n  IdentityFile ~/.ssh/id_deploy\n  IdentitiesOnly yes\n' > ~/.ssh/config
+
+      - name: Copy compose file
+        run: scp deploy/docker-compose.yml "$TARGET:$DEPLOY_PATH/docker-compose.yml"
+
+      # --wait fails the job if migrate exits non-zero or web doesn't become healthy.
+      - name: Pull and start
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh "$TARGET" "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+          ssh "$TARGET" "cd '$DEPLOY_PATH' && export LANBOARD_TAG='$TAG' && docker compose pull && docker compose up -d --wait --remove-orphans"
+
+      - name: Show state on failure
+        if: failure()
+        run: ssh "$TARGET" "cd '$DEPLOY_PATH' && docker compose ps -a && docker compose logs --tail 50 migrate web"
