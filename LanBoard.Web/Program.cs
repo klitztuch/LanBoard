@@ -6,6 +6,7 @@ using LanBoard.Web.Extensions;
 using LanBoard.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,15 @@ builder.Services.AddSingleton<INotificationPublisher>(sp => sp.GetRequiredServic
 builder.Services.AddHostedService<SessionPollingService>();
 builder.Services.AddTransient(typeof(PerCall<>));
 
+// Production runs behind Traefik, which is the only way into the container's network.
+// Without this, the Steam OpenID return URL is built with http and the login fails.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(options =>
         options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromSeconds(30));
@@ -31,6 +41,7 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
+    app.UseForwardedHeaders();
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
