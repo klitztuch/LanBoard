@@ -18,6 +18,7 @@ using LanBoard.Infrastructure.Configuration;
 using LanBoard.Infrastructure.Persistence;
 using LanBoard.Infrastructure.Persistence.Repositories;
 using LanBoard.Infrastructure.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,6 +31,11 @@ public static class InfrastructureExtensions
     public static IHostApplicationBuilder AddInfrastructure(this IHostApplicationBuilder builder)
     {
         builder.AddNpgsqlDbContext<AppDbContext>("postgres");
+
+        // Keys survive container restarts, so auth cookies stay valid across deploys.
+        builder.Services.AddDataProtection()
+            .SetApplicationName("LanBoard")
+            .PersistKeysToDbContext<AppDbContext>();
 
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<ILanPartyRepository, LanPartyRepository>();

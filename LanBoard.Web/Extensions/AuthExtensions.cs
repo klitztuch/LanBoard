@@ -24,6 +24,10 @@ public static class AuthExtensions
             .AddSteam(options =>
             {
                 options.ApplicationKey = builder.Configuration["Steam:ApiKey"];
+                // The default (Secure, SameSite=None) is dropped by browsers over plain http, e.g. when the
+                // app runs on a PC in the party network. Steam returns with a top-level GET, so Lax is enough.
+                options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.CorrelationCookie.SameSite = SameSiteMode.Lax;
                 options.Events.OnTicketReceived = async ctx =>
                 {
                     var nameIdentifier = ctx.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);

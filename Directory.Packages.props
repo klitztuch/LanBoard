@@ -30,6 +30,7 @@
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.8.0" />
   </ItemGroup>
   <ItemGroup Label="Auth">
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.14" />
     <PackageVersion Include="AspNet.Security.OpenId.Steam" Version="10.0.0" />
     <PackageVersion Include="AngleSharp" Version="1.8.4" />
   </ItemGroup>
