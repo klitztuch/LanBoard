@@ -1,6 +1,6 @@
 @page "/info"
 @attribute [Authorize]
-@inject ISeatService SeatService
+@inject PerCall<ISeatService> SeatService
 
 <PageTitle>@L["Info.Title"]</PageTitle>
 
@@ -52,7 +52,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        _party = await SeatService.Run(s => s.GetActivePartyWithSeatsAsync(PartyId));
     }
 
     private IEnumerable<(string Heading, string Text)> Details(Location location)

@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject ILocationService LocationService
+@inject PerCall<ILocationService> LocationService
 
 <PageTitle>@L["Admin.Locations.Title"] – @L["Nav.Admin"]</PageTitle>
 
@@ -60,7 +60,7 @@
                         @if (_confirmDeleteId == location.Id)
                         {
                             <button class="text-red-400 hover:text-red-300 transition-colors"
-                                    @onclick="() => DeleteAsync(location.Id)">
+                                    @onclick="() => DeleteAsync(location.Id)" disabled="@IsBusy">
                                 @L["Common.Confirm"]
                             </button>
                             <button class="text-gray-400 hover:text-gray-300 transition-colors"
@@ -95,7 +95,7 @@
 
     private async Task LoadAsync()
     {
-        _locations = await LocationService.GetAllAsync();
+        _locations = await LocationService.Run(s => s.GetAllAsync());
     }
 
     private void StartEdit(Location? location)
@@ -121,7 +121,7 @@
     {
         _confirmDeleteId = null;
         var userId = await CurrentUserIdAsync();
-        if (await RunAsync(() => LocationService.DeleteAsync(locationId, userId)))
+        if (await RunAsync(() => LocationService.Run(s => s.DeleteAsync(locationId, userId))))
             await LoadAsync();
     }
 }

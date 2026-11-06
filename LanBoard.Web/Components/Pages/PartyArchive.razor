@@ -1,6 +1,6 @@
 @page "/parties"
 @attribute [Authorize]
-@inject IPartyService PartyService
+@inject PerCall<IPartyService> PartyService
 
 <PageTitle>@L["Parties.Title"]</PageTitle>
 
@@ -50,6 +50,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _parties = await PartyService.GetAllAsync();
+        _parties = await PartyService.Run(s => s.GetAllAsync());
     }
 }

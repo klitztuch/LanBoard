@@ -2,9 +2,9 @@
 @layout LanBoard.Web.Components.Layout.TvLayout
 @rendermode InteractiveServer
 @implements IAsyncDisposable
-@inject ISeatService SeatService
-@inject IUserService UserService
-@inject ISessionService SessionService
+@inject PerCall<ISeatService> SeatService
+@inject PerCall<IUserService> UserService
+@inject PerCall<ISessionService> SessionService
 @inject ILanBoardNotifier Notifier
 @inject ILogger<Tv> Logger
 
@@ -131,7 +131,7 @@ else
 
     private async Task LoadAsync()
     {
-        _party = await SeatService.GetActivePartyWithSeatsAsync();
+        _party = await SeatService.Run(s => s.GetActivePartyWithSeatsAsync());
         if (_party is null)
         {
             _seats = [];
@@ -141,9 +141,9 @@ else
         }
 
         _seats = [.. _party.Seats];
-        _sessionsByUser = await SessionService.GetActiveSessionsByPartyAsync(_party.Id);
+        _sessionsByUser = await SessionService.Run(s => s.GetActiveSessionsByPartyAsync(_party.Id));
 
-        var users = await UserService.GetAllWithIdentitiesAsync();
+        var users = await UserService.Run(s => s.GetAllWithIdentitiesAsync());
         var seatedUserIds = _seats.Select(s => s.AssignedUserId).OfType<Guid>().ToHashSet();
         _attendees = [.. users
             .Where(u => seatedUserIds.Contains(u.Id))

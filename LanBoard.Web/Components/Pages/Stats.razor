@@ -1,7 +1,7 @@
 @page "/stats"
 @attribute [Authorize]
-@inject ISeatService SeatService
-@inject IPartyStatsService StatsService
+@inject PerCall<ISeatService> SeatService
+@inject PerCall<IPartyStatsService> StatsService
 
 <PageTitle>@L["Stats.Title"]</PageTitle>
 
@@ -85,9 +85,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        _party = await SeatService.Run(s => s.GetActivePartyWithSeatsAsync(PartyId));
         if (_party is not null)
-            _stats = await StatsService.GetStatsAsync(_party.Id);
+            _stats = await StatsService.Run(s => s.GetStatsAsync(_party.Id));
     }
 
     private string FormatDuration(TimeSpan duration) => DurationFormat.Format(L, duration);

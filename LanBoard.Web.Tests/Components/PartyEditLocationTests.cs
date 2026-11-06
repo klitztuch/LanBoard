@@ -5,6 +5,7 @@ using LanBoard.Application.Locations;
 using LanBoard.Core.Entities;
 using LanBoard.Web.Auth;
 using LanBoard.Web.Components.Pages.Admin;
+using LanBoard.Web.Services;
 using LanBoard.Web.Tests.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -26,6 +27,7 @@ public class PartyEditLocationTests : BunitContext
         Services.AddSingleton(_admin);
         Services.AddSingleton(_locations);
         Services.AddSingleton<IStringLocalizer<SharedResource>>(TestLocalizer.Create());
+        Services.AddTransient(typeof(PerCall<>));
         AddAuthorization().SetAuthorized("Alice").SetClaims(new Claim(LanBoardClaims.UserId, _userId.ToString()));
         _locations.GetAllAsync(Arg.Any<CancellationToken>()).Returns([_basement, _garage]);
     }

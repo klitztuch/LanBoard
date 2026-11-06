@@ -1,5 +1,5 @@
 @page "/"
-@inject ISeatService SeatService
+@inject PerCall<ISeatService> SeatService
 
 <PageTitle>LanBoard</PageTitle>
 
@@ -42,6 +42,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _party = await SeatService.GetActivePartyWithSeatsAsync(PartyId);
+        _party = await SeatService.Run(s => s.GetActivePartyWithSeatsAsync(PartyId));
     }
 }

@@ -5,8 +5,8 @@
 @inherits ServicePageBase
 @using LanBoard.Web.Extensions
 @using Microsoft.Extensions.Options
-@inject IAdminService AdminService
-@inject IProfileService ProfileService
+@inject PerCall<IAdminService> AdminService
+@inject PerCall<IProfileService> ProfileService
 @inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
 @inject NavigationManager Nav
 
@@ -89,7 +89,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _parties ??= await AdminService.GetAllPartiesAsync();
+        _parties ??= await AdminService.Run(s => s.GetAllPartiesAsync());
         // Default: the active party, else the newest one.
         _selectedPartyId = PartyId
                            ?? _parties.FirstOrDefault(p => p.IsActive)?.Id
@@ -98,7 +98,7 @@
         if (_selectedPartyId is { } partyId)
         {
             var userId = await CurrentUserIdAsync();
-            _overview = await RunAsync(() => ProfileService.GetPartyOverviewAsync(partyId, userId));
+            _overview = await RunAsync(() => ProfileService.Run(s => s.GetPartyOverviewAsync(partyId, userId)));
         }
     }
 

@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Permissions.UsersManage)]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject IRoleService RoleService
+@inject PerCall<IRoleService> RoleService
 @inject AuthenticationStateProvider Auth
 @inject IAuthorizationService AuthorizationService
 
@@ -48,7 +48,7 @@
                                 @if (CanManage(role))
                                 {
                                     <button class="text-gray-500 hover:text-red-400 transition-colors" title="@L["Admin.Users.RemoveRole"]" aria-label="@L["Admin.Users.RemoveRole"]"
-                                            @onclick="() => UnassignAsync(user.UserId, role.Id)">
+                                            @onclick="() => UnassignAsync(user.UserId, role.Id)" disabled="@IsBusy">
                                         ×
                                     </button>
                                 }
@@ -59,7 +59,7 @@
                     @if (assignable.Count > 0)
                     {
                         <select @key="_selectVersion" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-gray-300 text-xs focus:outline-none focus:border-blue-500"
-                                @onchange="e => AssignAsync(user.UserId, e.Value as string)">
+                                @onchange="e => AssignAsync(user.UserId, e.Value as string)" disabled="@IsBusy">
                             <option value="" selected>+ @L["Admin.Users.AddRole"]</option>
                             @foreach (var role in assignable)
                             {
@@ -83,14 +83,14 @@
     {
         var state = await Auth.GetAuthenticationStateAsync();
         _canManageRoles = (await AuthorizationService.AuthorizeAsync(state.User, Permissions.RolesManage)).Succeeded;
-        _roles = await RoleService.GetAllAsync();
+        _roles = await RoleService.Run(s => s.GetAllAsync());
         await LoadUsersAsync();
     }
 
     private async Task LoadUsersAsync()
     {
         var userId = await CurrentUserIdAsync();
-        _users = await RunAsync(() => RoleService.GetUsersWithRolesAsync(userId)) ?? _users;
+        _users = await RunAsync(() => RoleService.Run(s => s.GetUsersWithRolesAsync(userId))) ?? _users;
     }
 
     // Admin role changes additionally require roles.manage; the service enforces this too.
@@ -101,14 +101,14 @@
         if (!Guid.TryParse(roleIdValue, out var roleId)) return;
         _selectVersion++;
         var performedByUserId = await CurrentUserIdAsync();
-        if (await RunAsync(() => RoleService.AssignAsync(userId, roleId, performedByUserId)))
+        if (await RunAsync(() => RoleService.Run(s => s.AssignAsync(userId, roleId, performedByUserId))))
             await LoadUsersAsync();
     }
 
     private async Task UnassignAsync(Guid userId, Guid roleId)
     {
         var performedByUserId = await CurrentUserIdAsync();
-        if (await RunAsync(() => RoleService.UnassignAsync(userId, roleId, performedByUserId)))
+        if (await RunAsync(() => RoleService.Run(s => s.UnassignAsync(userId, roleId, performedByUserId))))
             await LoadUsersAsync();
     }
 }

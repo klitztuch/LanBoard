@@ -1,0 +1,9 @@
+{
+  "name": "double-click-smoke",
+  "private": true,
+  "type": "module",
+  "description": "Regression smoke test for issue #45: same-tick double-clicks on 'Set active' must not crash the circuit.",
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}

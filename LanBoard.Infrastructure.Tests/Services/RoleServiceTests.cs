@@ -190,6 +190,17 @@ public class RoleServiceTests
         _roles.DidNotReceive().Remove(Arg.Any<Role>());
     }
 
+    [Fact]
+    public async Task DeleteAsync_RoleNotFound_Throws()
+    {
+        _roles.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Role?)null);
+
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _sut.DeleteAsync(Guid.NewGuid(), CallerId));
+        Assert.Equal(ErrorCodes.RoleNotFound, ex.Code);
+
+        _roles.DidNotReceive().Remove(Arg.Any<Role>());
+    }
+
     // --- Assignments ---
 
     [Fact]

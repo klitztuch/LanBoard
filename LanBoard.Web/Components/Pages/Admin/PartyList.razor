@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Permissions.PartyManage)]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject IAdminService AdminService
+@inject PerCall<IAdminService> AdminService
 
 <PageTitle>@L["Admin.Parties.Title"] – @L["Nav.Admin"]</PageTitle>
 
@@ -57,7 +57,7 @@
                                 else
                                 {
                                     <button class="text-gray-500 hover:text-white transition-colors text-xs"
-                                            @onclick="() => SetActive(party.Id)">
+                                            @onclick="() => SetActive(party.Id)" disabled="@IsBusy">
                                         @L["Admin.Parties.SetActive"]
                                     </button>
                                 }
@@ -76,7 +76,7 @@
                                 @if (_confirmDeleteId == party.Id)
                                 {
                                     <button class="text-red-400 hover:text-red-300 transition-colors"
-                                            @onclick="() => DeleteParty(party.Id)">
+                                            @onclick="() => DeleteParty(party.Id)" disabled="@IsBusy">
                                         @L["Common.Confirm"]
                                     </button>
                                     <button class="text-gray-400 hover:text-gray-300 transition-colors"
@@ -106,22 +106,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await AdminService.GetAllPartiesAsync();
+        var result = await AdminService.Run(s => s.GetAllPartiesAsync());
         _parties = result.ToList();
     }
 
     private async Task DeleteParty(Guid id)
     {
         _confirmDeleteId = null;
-        if (await RunAsync(async () => await AdminService.DeletePartyAsync(id, await CurrentUserIdAsync())))
+        var userId = await CurrentUserIdAsync();
+        if (await RunAsync(() => AdminService.Run(s => s.DeletePartyAsync(id, userId))))
             _parties?.RemoveAll(p => p.Id == id);
     }
 
     private async Task SetActive(Guid id)
     {
-        if (!await RunAsync(async () => await AdminService.SetActivePartyAsync(id, await CurrentUserIdAsync())))
+        var userId = await CurrentUserIdAsync();
+        if (!await RunAsync(() => AdminService.Run(s => s.SetActivePartyAsync(id, userId))))
             return;
-        var result = await AdminService.GetAllPartiesAsync();
+        var result = await AdminService.Run(s => s.GetAllPartiesAsync());
         _parties = result.ToList();
     }
 }

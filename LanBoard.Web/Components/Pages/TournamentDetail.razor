@@ -2,8 +2,8 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject ITournamentService TournamentService
-@inject IUserService UserService
+@inject PerCall<ITournamentService> TournamentService
+@inject PerCall<IUserService> UserService
 @inject AuthenticationStateProvider Auth
 @inject IAuthorizationService AuthorizationService
 
@@ -32,7 +32,7 @@ else
                     {
                         var isIn = _tournament.Participants.Any(p => p.UserId == user.Id);
                         <label class="flex items-center gap-3 bg-gray-800 rounded-lg px-3 py-2 border border-gray-700 @(_canManage ? "cursor-pointer" : "")">
-                            <input type="checkbox" checked="@isIn" disabled="@(!_canManage)"
+                            <input type="checkbox" checked="@isIn" disabled="@(IsBusy || !_canManage)"
                                    @onchange="e => ToggleParticipantAsync(user.Id, (bool)(e.Value ?? false))"/>
                             <UserLink UserId="user.Id" Name="@user.DisplayName" CssClass="text-sm text-white hover:underline"/>
                         </label>
@@ -41,7 +41,7 @@ else
                 @if (_canManage)
                 {
                     <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
-                            disabled="@(_tournament.Participants.Count < 2)"
+                            disabled="@(IsBusy || _tournament.Participants.Count < 2)"
                             @onclick="StartAsync">
                         @L["Tournament.Start"]
                     </button>
@@ -75,7 +75,7 @@ else
                                     @if (canDecide)
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
-                                                @onclick="() => SetWinnerAsync(match.Id, participant1Id)">
+                                                @onclick="() => SetWinnerAsync(match.Id, participant1Id)" disabled="@IsBusy">
                                             @L["Tournament.Win"]
                                         </button>
                                     }
@@ -92,7 +92,7 @@ else
                                     @if (canDecide)
                                     {
                                         <button class="text-xs text-gray-500 hover:text-white transition-colors shrink-0"
-                                                @onclick="() => SetWinnerAsync(match.Id, participant2Id)">
+                                                @onclick="() => SetWinnerAsync(match.Id, participant2Id)" disabled="@IsBusy">
                                             @L["Tournament.Win"]
                                         </button>
                                     }
@@ -118,13 +118,13 @@ else
     {
         var state = await Auth.GetAuthenticationStateAsync();
         _canManage = (await AuthorizationService.AuthorizeAsync(state.User, Permissions.TournamentManage)).Succeeded;
-        _allUsers = await UserService.GetAllWithIdentitiesAsync();
+        _allUsers = await UserService.Run(s => s.GetAllWithIdentitiesAsync());
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
-        _tournament = await TournamentService.GetWithDetailsAsync(Id);
+        _tournament = await TournamentService.Run(s => s.GetWithDetailsAsync(Id));
         _roundsOrdered = _tournament?.Matches
             .GroupBy(m => m.Round)
             .OrderBy(g => g.Key)
@@ -135,20 +135,22 @@ else
     {
         var performedByUserId = await CurrentUserIdAsync();
         await RunAsync(() => add
-            ? TournamentService.AddParticipantAsync(Id, userId, performedByUserId)
-            : TournamentService.RemoveParticipantAsync(Id, userId, performedByUserId));
+            ? TournamentService.Run(s => s.AddParticipantAsync(Id, userId, performedByUserId))
+            : TournamentService.Run(s => s.RemoveParticipantAsync(Id, userId, performedByUserId)));
         await LoadAsync();
     }
 
     private async Task StartAsync()
     {
-        await RunAsync(async () => await TournamentService.StartAsync(Id, await CurrentUserIdAsync()));
+        var userId = await CurrentUserIdAsync();
+        await RunAsync(() => TournamentService.Run(s => s.StartAsync(Id, userId)));
         await LoadAsync();
     }
 
     private async Task SetWinnerAsync(Guid matchId, Guid winnerParticipantId)
     {
-        await RunAsync(async () => await TournamentService.SetMatchWinnerAsync(Id, matchId, winnerParticipantId, await CurrentUserIdAsync()));
+        var userId = await CurrentUserIdAsync();
+        await RunAsync(() => TournamentService.Run(s => s.SetMatchWinnerAsync(Id, matchId, winnerParticipantId, userId)));
         await LoadAsync();
     }
 

@@ -4,7 +4,7 @@
 @inherits ServicePageBase
 @using LanBoard.Web.Extensions
 @using Microsoft.Extensions.Options
-@inject IProfileService ProfileService
+@inject PerCall<IProfileService> ProfileService
 @inject IOptions<LanBoardLocalizationOptions> LocalizationOptions
 @inject NavigationManager Nav
 @inject InAppNotificationHub NotificationHub
@@ -169,7 +169,7 @@
                 </label>
             </section>
 
-            <button type="submit" disabled="@_saving"
+            <button type="submit" disabled="@IsBusy"
                     class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
                 @L["Common.Save"]
             </button>
@@ -187,7 +187,6 @@
     private ProfileSettings? _settings;
     private SettingsForm _form = new();
     private Dictionary<string, string> _fieldErrors = [];
-    private bool _saving;
     private bool _saved;
 
     protected override async Task OnInitializedAsync()
@@ -198,43 +197,35 @@
 
     private async Task LoadAsync()
     {
-        _settings = await RunAsync(() => ProfileService.GetSettingsAsync(_userId));
+        _settings = await RunAsync(() => ProfileService.Run(s => s.GetSettingsAsync(_userId)));
         if (_settings is not null)
             _form = SettingsForm.From(_settings);
     }
 
     private async Task SaveAsync()
     {
-        if (_settings is null || _saving)
+        if (_settings is null)
             return;
 
-        _saving = true;
         _saved = false;
-        try
-        {
-            var previousNickname = _settings.Nickname;
-            var ok = await RunAsync(() => ProfileService.SaveSettingsAsync(_userId, _form.ToInput()));
-            _fieldErrors = ValidationErrors
-                .GroupBy(e => e.Field)
-                .ToDictionary(g => g.Key, g => ErrorMessages.For(L, g.First()));
-            if (!ok)
-                return;   // inputs keep the user's entries
+        var previousNickname = _settings.Nickname;
+        var ok = await RunAsync(() => ProfileService.Run(s => s.SaveSettingsAsync(_userId, _form.ToInput())));
+        _fieldErrors = ValidationErrors
+            .GroupBy(e => e.Field)
+            .ToDictionary(g => g.Key, g => ErrorMessages.For(L, g.First()));
+        if (!ok)
+            return;   // inputs keep the user's entries
 
-            NotificationHub.NotifyPreferencesChanged(_userId);   // applies to all of the user's open tabs
+        NotificationHub.NotifyPreferencesChanged(_userId);   // applies to all of the user's open tabs
 
-            await LoadAsync();
-            // The nav bar shows the name from the auth cookie; re-issue it after a nickname change.
-            if (_settings?.Nickname != previousNickname)
-            {
-                Nav.NavigateTo("/auth/refresh?returnUrl=%2Fsettings%3Fsaved%3D1", forceLoad: true);
-                return;
-            }
-            _saved = true;
-        }
-        finally
+        await LoadAsync();
+        // The nav bar shows the name from the auth cookie; re-issue it after a nickname change.
+        if (_settings?.Nickname != previousNickname)
         {
-            _saving = false;
+            Nav.NavigateTo("/auth/refresh?returnUrl=%2Fsettings%3Fsaved%3D1", forceLoad: true);
+            return;
         }
+        _saved = true;
     }
 
     [SupplyParameterFromQuery(Name = "saved")] public int? SavedFlag { get; set; }

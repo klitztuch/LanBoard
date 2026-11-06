@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Permissions.RolesManage)]
 @rendermode InteractiveServer
 @inherits ServicePageBase
-@inject IRoleService RoleService
+@inject PerCall<IRoleService> RoleService
 
 <PageTitle>@L["Admin.Roles.Title"] – @L["Nav.Admin"]</PageTitle>
 
@@ -48,7 +48,7 @@
             </div>
             <div class="flex gap-3">
                 <button class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                        @onclick="SaveAsync">
+                        @onclick="SaveAsync" disabled="@IsBusy">
                     @(_editing.RoleId is null ? L["Common.Create"] : L["Common.Save"])
                 </button>
                 <button class="px-5 py-2 text-gray-400 hover:text-white text-sm transition-colors"
@@ -94,7 +94,7 @@
                             @if (_confirmDeleteId == role.Id)
                             {
                                 <button class="text-red-400 hover:text-red-300 transition-colors"
-                                        @onclick="() => DeleteAsync(role.Id)">
+                                        @onclick="() => DeleteAsync(role.Id)" disabled="@IsBusy">
                                     @L["Common.Confirm"]
                                 </button>
                                 <button class="text-gray-400 hover:text-gray-300 transition-colors"
@@ -129,7 +129,7 @@
 
     private async Task LoadAsync()
     {
-        _roles = await RoleService.GetAllAsync();
+        _roles = await RoleService.Run(s => s.GetAllAsync());
     }
 
     private IEnumerable<string> PermissionLabels(Role role)
@@ -177,8 +177,8 @@
         var userId = await CurrentUserIdAsync();
 
         var saved = await RunAsync(() => form.RoleId is { } roleId
-            ? RoleService.UpdateAsync(roleId, form.Name, form.Permissions, userId)
-            : RoleService.CreateAsync(form.Name, form.Permissions, userId));
+            ? RoleService.Run(s => s.UpdateAsync(roleId, form.Name, form.Permissions, userId))
+            : RoleService.Run(s => s.CreateAsync(form.Name, form.Permissions, userId)));
         if (!saved) return;
 
         _editing = null;
@@ -189,7 +189,7 @@
     {
         _confirmDeleteId = null;
         var userId = await CurrentUserIdAsync();
-        if (await RunAsync(() => RoleService.DeleteAsync(roleId, userId)))
+        if (await RunAsync(() => RoleService.Run(s => s.DeleteAsync(roleId, userId))))
             await LoadAsync();
     }
 

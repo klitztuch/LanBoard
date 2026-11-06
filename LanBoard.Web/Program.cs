@@ -21,6 +21,7 @@ builder.Services.AddSingleton<ILanBoardNotifier, LanBoardNotifier>();
 builder.Services.AddSingleton<InAppNotificationHub>();
 builder.Services.AddSingleton<INotificationPublisher>(sp => sp.GetRequiredService<InAppNotificationHub>());
 builder.Services.AddHostedService<SessionPollingService>();
+builder.Services.AddTransient(typeof(PerCall<>));
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(options =>
