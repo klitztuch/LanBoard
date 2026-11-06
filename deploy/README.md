@@ -67,3 +67,26 @@ This does not roll back migrations. The next deploy from `main` replaces the pin
 docker compose logs -f web
 docker compose logs migrate
 ```
+
+## Running on a PC at the party
+
+Without Traefik, the LAN override publishes `web` directly on `LANBOARD_PORT` (default 80). Build the images locally (no push), then start the stack:
+
+```sh
+dotnet publish LanBoard.Web/LanBoard.Web.csproj -c Release /t:PublishContainer \
+  -p:ContainerRepository=lanboard-web -p:ContainerImageTag=local
+docker tag lanboard-web:local ghcr.io/klitztuch/lanboard-web:lan
+dotnet ef migrations bundle --project LanBoard.Infrastructure --startup-project LanBoard.Web \
+  --configuration Release --self-contained -r linux-x64 --output deploy/efbundle --force
+docker build -f deploy/migrate.Dockerfile -t ghcr.io/klitztuch/lanboard-migrate:lan deploy
+
+# .env as above, with LANBOARD_TAG=lan; TRAEFIK_* and LANBOARD_HOST can be any value
+docker compose -p lanboard -f deploy/docker-compose.yml -f deploy/docker-compose.lan.yml \
+  --env-file ~/lanboard/.env up -d --wait
+```
+
+Guests open `http://<ip-of-the-pc>/`. Steam login works over the LAN IP, because Steam only redirects the browser back. The PC needs internet access for the Steam API.
+
+Don't use the AppHost for this: Development enables `/auth/dev-login`, so anyone in the network could log in as an admin.
+
+Avahi on a Docker host may announce `<hostname>.local` with a Docker bridge address, so share the IP instead.
