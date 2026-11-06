@@ -1,0 +1,12 @@
+# Override for running the stack on a PC in the party network, without Traefik:
+#   docker compose -f docker-compose.yml -f docker-compose.lan.yml up -d --wait
+# TRAEFIK_* and LANBOARD_HOST are unused but must be set (any value).
+services:
+  web:
+    networks: !reset [default]
+    labels: !reset {}
+    ports:
+      - "${LANBOARD_PORT:-80}:8080"
+
+networks:
+  traefik: !reset {}
